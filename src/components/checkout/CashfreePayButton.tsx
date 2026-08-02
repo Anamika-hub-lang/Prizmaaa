@@ -20,12 +20,12 @@ export function CashfreePayButton({ classId, purpose, planTier, label, className
     setError(null)
     setLoading(true)
     try {
-      const { paymentSessionId } = await createCashfreeOrder(getToken, {
+      const { paymentSessionId, mode } = await createCashfreeOrder(getToken, {
         classId,
         purpose,
         planTier,
       })
-      await openCashfreeCheckout(paymentSessionId)
+      await openCashfreeCheckout(paymentSessionId, mode)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Payment could not start')
       setLoading(false)

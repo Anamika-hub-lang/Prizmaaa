@@ -659,7 +659,10 @@ async function handleCashfreeCreateOrder(
       returnUrl,
       orderNote: JSON.stringify(note),
     })
-    json(res, 200, { paymentSessionId: created.paymentSessionId })
+    json(res, 200, {
+      paymentSessionId: created.paymentSessionId,
+      mode: cfg.mode === 'production' ? 'production' : 'sandbox',
+    })
   } catch (err) {
     console.error('[dev-api] cashfree create', err)
     json(res, 500, {
