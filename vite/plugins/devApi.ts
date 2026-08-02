@@ -720,12 +720,7 @@ async function handleCashfreeConfirm(
   }
 
   try {
-    const order = await cashfreeFetchOrder(cfg, orderId)
-    const status = order.orderStatus.toUpperCase()
-    if (status !== 'PAID' && status !== 'ACTIVE') {
-      json(res, 400, { error: 'Payment not completed yet. Try again in a moment.' })
-      return
-    }
+    const order = await fetchPaidCashfreeOrder(cfg, orderId)
 
     const note = parseOrderNote(order.orderNote)
     if (!note || note.clerkId !== clerkId) {
@@ -744,10 +739,36 @@ async function handleCashfreeConfirm(
     json(res, 200, { ok: true, redirect })
   } catch (err) {
     console.error('[dev-api] cashfree confirm', err)
-    json(res, 500, {
-      error: err instanceof Error ? err.message : 'Could not confirm payment',
-    })
+    const message = err instanceof Error ? err.message : 'Could not confirm payment'
+    const status = message.includes('not completed yet') ? 400 : 500
+    json(res, status, { error: message })
   }
+}
+
+function isCashfreeOrderPaid(status: string): boolean {
+  const s = status.toUpperCase()
+  return (
+    s === 'PAID' ||
+    s === 'ACTIVE' ||
+    s === 'SUCCESS' ||
+    s === 'COMPLETED' ||
+    s === 'CAPTURED' ||
+    s === 'PAYMENT_SUCCESS'
+  )
+}
+
+async function fetchPaidCashfreeOrder(cfg: CashfreeServerConfig, orderId: string) {
+  const delays = [0, 1500, 3000, 5000]
+  let lastStatus = ''
+  for (const delay of delays) {
+    if (delay > 0) await new Promise((r) => setTimeout(r, delay))
+    const order = await cashfreeFetchOrder(cfg, orderId)
+    lastStatus = order.orderStatus
+    if (isCashfreeOrderPaid(lastStatus)) return order
+  }
+  throw new Error(
+    `Payment not completed yet (status: ${lastStatus || 'unknown'}). Wait a moment and open this page again from your dashboard.`,
+  )
 }
 
 function attachDevApi(

@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import {
   ChevronDown,
   Video,
@@ -6,7 +6,7 @@ import {
   ArrowRight,
   Clock,
 } from 'lucide-react'
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { AppButton } from '../components/ui/AppButton'
 import { MyCourseCard, type EnrolledCourse } from '../components/student/MyCourseCard'
 import { computeDashboardStats } from '../data/studentDashboard'
@@ -21,11 +21,18 @@ import { useStudentEnrollments } from '../hooks/useStudentEnrollments'
 import { enrollmentToEnrolledCourse, daysSinceFirstEnrollment } from '../lib/enrolledCourses'
 
 export function StudentDashboard() {
+  const [searchParams] = useSearchParams()
   const [activeFilter, setActiveFilter] = useState('all')
   const { assignments, classes, freeCourses } = useMentorContent()
-  const { enrollments, cancelEnrollment, updateEnrollmentProgress } = useStudentEnrollments()
+  const { enrollments, cancelEnrollment, updateEnrollmentProgress, refresh } = useStudentEnrollments()
   const [editCourse, setEditCourse] = useState<EnrolledCourse | null>(null)
   const [editProgress, setEditProgress] = useState(0)
+
+  useEffect(() => {
+    if (searchParams.get('enrolled') === '1') {
+      void refresh()
+    }
+  }, [searchParams, refresh])
 
   const myCourses = useMemo(() => {
     const list: EnrolledCourse[] = []

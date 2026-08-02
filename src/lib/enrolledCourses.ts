@@ -15,21 +15,43 @@ export function enrollmentToEnrolledCourse(
   classItem?: ManagedClass,
   freeItem?: FreeCourse,
 ): EnrolledCourse | null {
-  if (enrollment.kind === 'online' && classItem) {
+  if (enrollment.kind === 'online' && enrollment.classId) {
     const daysLeft = daysUntilTrialEnd(enrollment.trialEndsAt)
+    if (classItem) {
+      return {
+        id: classItem.id,
+        enrollmentId: enrollment.id,
+        image: classItem.image,
+        title: classItem.title,
+        mentor: classItem.mentor,
+        mentorImage: classItem.mentorImage,
+        progress: enrollment.progress,
+        status: enrollment.status,
+        nextSession: classItem.nextSessionLabel
+          ? `${classItem.nextSessionLabel} · Google Meet`
+          : undefined,
+        category: categoryLabels[classItem.categoryId] ?? classItem.categoryId,
+        type: 'online',
+        billingStatus: enrollment.billingStatus,
+        planTier: enrollment.planTier,
+        trialEndsAt: enrollment.trialEndsAt,
+        trialDaysLeft: enrollment.billingStatus === 'trial' ? daysLeft : null,
+        paymentLabel: enrollment.paymentMethodLabel,
+      }
+    }
+
     return {
-      id: classItem.id,
+      id: enrollment.classId,
       enrollmentId: enrollment.id,
-      image: classItem.image,
-      title: classItem.title,
-      mentor: classItem.mentor,
-      mentorImage: classItem.mentorImage,
+      image:
+        'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=600&q=80',
+      title: 'Your live class',
+      mentor: 'Mentor',
+      mentorImage:
+        'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=600&q=80',
       progress: enrollment.progress,
       status: enrollment.status,
-      nextSession: classItem.nextSessionLabel
-        ? `${classItem.nextSessionLabel} · Google Meet`
-        : undefined,
-      category: categoryLabels[classItem.categoryId] ?? classItem.categoryId,
+      category: 'Online class',
       type: 'online',
       billingStatus: enrollment.billingStatus,
       planTier: enrollment.planTier,

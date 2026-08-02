@@ -174,6 +174,12 @@ export function useStudentEnrollments() {
   }, [refresh])
 
   useEffect(() => {
+    const onFocus = () => void refresh()
+    window.addEventListener('focus', onFocus)
+    return () => window.removeEventListener('focus', onFocus)
+  }, [refresh])
+
+  useEffect(() => {
     if (!clerkId || !supabase) return
     const client = supabase
     const channel = client

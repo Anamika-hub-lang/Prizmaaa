@@ -120,6 +120,7 @@ export async function cashfreeFetchOrder(cfg: CashfreeServerConfig, orderId: str
   const data = (await res.json()) as {
     order_status?: string
     order_note?: string
+    order_notes?: string
     message?: string
   }
 
@@ -129,6 +130,6 @@ export async function cashfreeFetchOrder(cfg: CashfreeServerConfig, orderId: str
 
   return {
     orderStatus: data.order_status ?? '',
-    orderNote: data.order_note,
+    orderNote: data.order_note ?? data.order_notes,
   }
 }

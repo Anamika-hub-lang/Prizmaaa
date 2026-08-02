@@ -30,6 +30,27 @@ import {
   activeEnrollmentBlockedMessage,
 } from './enrollmentPolicy.js'
 
+function enrollmentWriteError(error: { message?: string; code?: string }): Error {
+  const msg = error.message ?? 'Could not save enrollment'
+  if (
+    error.code === '42703' ||
+    msg.includes('billing_status') ||
+    msg.includes('trial_ends_at') ||
+    msg.includes('payment_method')
+  ) {
+    return new Error(
+      'Trial billing columns missing in Supabase. Run supabase/enrollment-billing.sql in the SQL Editor.',
+    )
+  }
+  if (error.code === '23503') {
+    return new Error('Class not found in database. Mentor must publish the class in Supabase first.')
+  }
+  if (error.code === '23505') {
+    return new Error('Enrollment already exists for this class.')
+  }
+  return new Error(msg)
+}
+
 export async function upsertEnrollmentAfterPayment(
   supabase: SupabaseClient,
   note: PaymentOrderNote,
@@ -62,9 +83,11 @@ export async function upsertEnrollmentAfterPayment(
       auto_renew: true,
     }
     if (existing?.id) {
-      await supabase.from('student_enrollments').update(row).eq('id', existing.id)
+      const { error } = await supabase.from('student_enrollments').update(row).eq('id', existing.id)
+      if (error) throw enrollmentWriteError(error)
     } else {
-      await supabase.from('student_enrollments').insert(row)
+      const { error } = await supabase.from('student_enrollments').insert(row)
+      if (error) throw enrollmentWriteError(error)
     }
     return
   }
@@ -84,8 +107,10 @@ export async function upsertEnrollmentAfterPayment(
     auto_renew: true,
   }
   if (existing?.id) {
-    await supabase.from('student_enrollments').update(row).eq('id', existing.id)
+    const { error } = await supabase.from('student_enrollments').update(row).eq('id', existing.id)
+    if (error) throw enrollmentWriteError(error)
   } else {
-    await supabase.from('student_enrollments').insert(row)
+    const { error } = await supabase.from('student_enrollments').insert(row)
+    if (error) throw enrollmentWriteError(error)
   }
 }
