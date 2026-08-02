@@ -64,7 +64,21 @@ export async function upsertEnrollmentAfterPayment(
     .eq('class_id', note.classId)
     .maybeSingle()
 
-  if (existing && isActiveEnrollmentRow(existing)) {
+  if (
+    existing &&
+    isActiveEnrollmentRow(existing) &&
+    note.purpose === 'trial'
+  ) {
+    throw new Error(activeEnrollmentBlockedMessage(existing.plan_tier))
+  }
+
+  if (
+    existing &&
+    isActiveEnrollmentRow(existing) &&
+    note.purpose === 'paid' &&
+    existing.plan_tier !== 'trial' &&
+    existing.billing_status !== 'trial'
+  ) {
     throw new Error(activeEnrollmentBlockedMessage(existing.plan_tier))
   }
 
@@ -80,7 +94,7 @@ export async function upsertEnrollmentAfterPayment(
       trial_ends_at: trialEndIso(trialDays),
       payment_method_type: 'card',
       payment_method_label: paymentLabel,
-      auto_renew: true,
+      auto_renew: false,
     }
     if (existing?.id) {
       const { error } = await supabase.from('student_enrollments').update(row).eq('id', existing.id)
@@ -104,7 +118,7 @@ export async function upsertEnrollmentAfterPayment(
     trial_ends_at: null,
     payment_method_type: 'card',
     payment_method_label: paymentLabel,
-    auto_renew: true,
+    auto_renew: false,
   }
   if (existing?.id) {
     const { error } = await supabase.from('student_enrollments').update(row).eq('id', existing.id)

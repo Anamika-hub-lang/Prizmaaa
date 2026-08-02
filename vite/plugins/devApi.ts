@@ -370,6 +370,49 @@ async function handleGetProfile(
   json(res, 200, { profile: data ?? null })
 }
 
+async function handleGetEnrollments(
+  req: IncomingMessage,
+  res: ServerResponse,
+  env: DevApiEnv,
+): Promise<void> {
+  if (req.method !== 'GET') {
+    res.statusCode = 405
+    res.end()
+    return
+  }
+
+  if (!env.clerkSecretKey) {
+    json(res, 503, { error: 'Server missing CLERK_SECRET_KEY.' })
+    return
+  }
+
+  const supabase = requireSupabaseAdmin(env)
+  if (!supabase) {
+    json(res, 503, { error: 'Server missing Supabase service configuration.' })
+    return
+  }
+
+  const userId = await verifyClerkSession(req, env.clerkSecretKey)
+  if (!userId) {
+    json(res, 401, { error: 'Missing or invalid session token' })
+    return
+  }
+
+  const { data, error } = await supabase
+    .from('student_enrollments')
+    .select('*')
+    .eq('clerk_id', userId)
+    .order('enrolled_at', { ascending: true })
+
+  if (error) {
+    console.error('[dev-api] enrollments list', error)
+    json(res, 500, { error: 'Could not load enrollments' })
+    return
+  }
+
+  json(res, 200, { enrollments: data ?? [] })
+}
+
 async function handleProfileSync(
   req: IncomingMessage,
   res: ServerResponse,
@@ -616,8 +659,14 @@ async function handleCashfreeCreateOrder(
     .maybeSingle()
 
   if (activeEnr && isActiveEnrollmentRow(activeEnr)) {
-    json(res, 409, { error: activeEnrollmentBlockedMessage(activeEnr.plan_tier) })
-    return
+    const upgradingFromTrial =
+      purpose === 'paid' &&
+      activeEnr.billing_status === 'trial' &&
+      activeEnr.plan_tier === 'trial'
+    if (!upgradingFromTrial) {
+      json(res, 409, { error: activeEnrollmentBlockedMessage(activeEnr.plan_tier) })
+      return
+    }
   }
 
   const categoryId = classRow.category_id as string
@@ -638,7 +687,7 @@ async function handleCashfreeCreateOrder(
 
   const orderId = `edu_${Date.now()}`
   const origin = paymentReturnBase(env, req)
-  const returnUrl = `${origin}/student/payment/return?order_id=${encodeURIComponent(orderId)}`
+  const returnUrl = `${origin}/student/payment/return?order_id={order_id}`
 
   const note = {
     v: 1 as const,
@@ -661,6 +710,8 @@ async function handleCashfreeCreateOrder(
     })
     json(res, 200, {
       paymentSessionId: created.paymentSessionId,
+      orderId,
+      returnUrl,
       mode: cfg.mode === 'production' ? 'production' : 'sandbox',
     })
   } catch (err) {
@@ -819,6 +870,14 @@ export function handleDevApiRequest(
   if (path === '/api/user/profile') {
     void handleGetProfile(req, res, env).catch((err) => {
       console.error('[dev-api] profile get', err)
+      json(res, 500, { error: 'Internal server error' })
+    })
+    return true
+  }
+
+  if (path === '/api/user/enrollments') {
+    void handleGetEnrollments(req, res, env).catch((err) => {
+      console.error('[dev-api] enrollments', err)
       json(res, 500, { error: 'Internal server error' })
     })
     return true

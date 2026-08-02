@@ -12,6 +12,7 @@ import {
 import { Link, Outlet, useLocation } from 'react-router-dom'
 import { tintedSurface } from '../ui/dashboardCardStyles'
 import { PortalUserAvatar } from './PortalUserAvatar'
+import { CashfreePendingConfirm } from '../checkout/CashfreePendingConfirm'
 import { formatBrowsePricingSummary } from '../../data/classCatalog'
 
 const nav = [
@@ -84,6 +85,7 @@ export function StudentLayout() {
         </div>
       </header>
 
+      <CashfreePendingConfirm />
       <Outlet />
     </div>
   )

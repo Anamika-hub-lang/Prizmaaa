@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { useUser } from '@clerk/clerk-react'
+import { useAuth, useUser } from '@clerk/clerk-react'
 import { supabase } from '../lib/supabase'
 import { TRIAL_DAYS } from '../data/pricingPlans'
 import {
@@ -11,6 +11,7 @@ import {
   assertCanEnrollInClass,
   getActiveEnrollmentForClass,
 } from '../lib/classEnrollmentPolicy'
+import { ENROLLMENTS_REFRESH_EVENT } from '../lib/enrollmentRefresh'
 import { enrollmentFromRow, type EnrollmentRow, type PaymentMethodType, type StudentEnrollment } from '../types/enrollment'
 
 const LOCAL_KEY = 'educture_student_enrollments'
@@ -116,7 +117,30 @@ async function insertEnrollmentRow(row: Record<string, unknown>): Promise<Studen
   return enrollmentFromRow(data as EnrollmentRow)
 }
 
-export async function fetchEnrollmentsForClerk(clerkId: string): Promise<StudentEnrollment[]> {
+export async function fetchEnrollmentsForClerk(
+  clerkId: string,
+  getToken?: () => Promise<string | null>,
+): Promise<StudentEnrollment[]> {
+  if (getToken) {
+    try {
+      const token = await getToken()
+      if (token) {
+        const res = await fetch('/api/user/enrollments', {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        const text = await res.text()
+        if (res.ok) {
+          const data = JSON.parse(text) as { enrollments?: EnrollmentRow[] }
+          const rows = (data.enrollments ?? []).map((r) => enrollmentFromRow(r))
+          return applyTrialBillingRules(rows)
+        }
+        console.warn('[enrollments] API list failed:', text.slice(0, 160))
+      }
+    } catch (err) {
+      console.warn('[enrollments] API list error', err)
+    }
+  }
+
   if (!supabase) {
     return applyTrialBillingRules(readLocal(clerkId))
   }
@@ -132,28 +156,13 @@ export async function fetchEnrollmentsForClerk(clerkId: string): Promise<Student
     return applyTrialBillingRules(readLocal(clerkId))
   }
 
-  let rows = (data ?? []).map((r: EnrollmentRow) => enrollmentFromRow(r))
-  const afterRules = applyTrialBillingRules(rows)
-  for (let i = 0; i < rows.length; i++) {
-    const before = rows[i]
-    const after = afterRules[i]
-    if (
-      before.billingStatus !== after.billingStatus ||
-      before.planTier !== after.planTier ||
-      before.status !== after.status
-    ) {
-      await patchEnrollmentDb(after.id, {
-        billing_status: after.billingStatus,
-        plan_tier: after.planTier,
-        status: after.status,
-      })
-    }
-  }
-  return afterRules
+  const rows = (data ?? []).map((r: EnrollmentRow) => enrollmentFromRow(r))
+  return applyTrialBillingRules(rows)
 }
 
 export function useStudentEnrollments() {
   const { user } = useUser()
+  const { getToken } = useAuth()
   const clerkId = user?.id
   const [enrollments, setEnrollments] = useState<StudentEnrollment[]>([])
   const [loading, setLoading] = useState(true)
@@ -164,10 +173,10 @@ export function useStudentEnrollments() {
       setLoading(false)
       return
     }
-    const rows = await fetchEnrollmentsForClerk(clerkId)
+    const rows = await fetchEnrollmentsForClerk(clerkId, getToken)
     setEnrollments(rows)
     setLoading(false)
-  }, [clerkId])
+  }, [clerkId, getToken])
 
   useEffect(() => {
     void refresh()
@@ -175,8 +184,13 @@ export function useStudentEnrollments() {
 
   useEffect(() => {
     const onFocus = () => void refresh()
+    const onRefresh = () => void refresh()
     window.addEventListener('focus', onFocus)
-    return () => window.removeEventListener('focus', onFocus)
+    window.addEventListener(ENROLLMENTS_REFRESH_EVENT, onRefresh)
+    return () => {
+      window.removeEventListener('focus', onFocus)
+      window.removeEventListener(ENROLLMENTS_REFRESH_EVENT, onRefresh)
+    }
   }, [refresh])
 
   useEffect(() => {

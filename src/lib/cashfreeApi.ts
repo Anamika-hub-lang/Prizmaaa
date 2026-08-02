@@ -7,7 +7,7 @@ export type CreateCashfreeOrderBody = {
 export async function createCashfreeOrder(
   getToken: () => Promise<string | null>,
   body: CreateCashfreeOrderBody,
-): Promise<{ paymentSessionId: string; mode: 'sandbox' | 'production' }> {
+): Promise<{ paymentSessionId: string; orderId: string; mode: 'sandbox' | 'production' }> {
   const token = await getToken()
   if (!token) throw new Error('Sign in required')
 
@@ -21,7 +21,12 @@ export async function createCashfreeOrder(
   })
 
   const text = await res.text()
-  let data: { paymentSessionId?: string; mode?: 'sandbox' | 'production'; error?: string }
+  let data: {
+    paymentSessionId?: string
+    orderId?: string
+    mode?: 'sandbox' | 'production'
+    error?: string
+  }
   try {
     data = JSON.parse(text) as typeof data
   } catch {
@@ -36,12 +41,12 @@ export async function createCashfreeOrder(
     throw new Error(data.error ?? 'Could not start Cashfree payment')
   }
 
-  if (!data.paymentSessionId) {
+  if (!data.paymentSessionId || !data.orderId) {
     throw new Error('Invalid Cashfree response')
   }
 
   const mode = data.mode === 'production' ? 'production' : 'sandbox'
-  return { paymentSessionId: data.paymentSessionId, mode }
+  return { paymentSessionId: data.paymentSessionId, orderId: data.orderId, mode }
 }
 
 export async function confirmCashfreeOrder(

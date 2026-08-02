@@ -66,7 +66,7 @@ export function StudentTrialPaymentPage() {
           <p className="text-xs font-bold uppercase text-sky-600">Starter plan</p>
           <p className="font-bold mt-1">{item.title}</p>
           <p className="text-sm text-gray-600 mt-1">
-            {TRIAL_DAYS} days free · then ₹{monthly.toLocaleString('en-IN')}/month (demo auto-debit after trial)
+            {TRIAL_DAYS} days free · then pay ₹{monthly.toLocaleString('en-IN')}/month via Cashfree when you choose Growth
           </p>
           {cashfreeOn && (
             <p className="text-xs text-gray-500 mt-2">

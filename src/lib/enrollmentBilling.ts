@@ -13,7 +13,7 @@ export function daysUntilTrialEnd(trialEndsAt: string | null): number | null {
   return Math.max(0, Math.ceil(ms / 86400000))
 }
 
-/** Demo auto-billing after trial — production: Cashfree Subscriptions / mandate for recurring debit. */
+/** Trial expiry — no auto-debit; student pays again via Cashfree checkout for Growth/Premium. */
 export function applyTrialBillingRules(enrollments: StudentEnrollment[]): StudentEnrollment[] {
   const now = Date.now()
   return enrollments.map((e) => {
@@ -21,14 +21,7 @@ export function applyTrialBillingRules(enrollments: StudentEnrollment[]): Studen
     if (e.billingStatus !== 'trial' || !e.trialEndsAt) return e
     const ended = new Date(e.trialEndsAt).getTime() <= now
     if (!ended) return e
-    if (!e.autoRenew) {
-      return { ...e, billingStatus: 'cancelled', status: 'draft' }
-    }
-    return {
-      ...e,
-      billingStatus: 'active',
-      planTier: e.planTier === 'trial' ? 'monthly' : e.planTier,
-    }
+    return { ...e, status: 'draft', autoRenew: false }
   })
 }
 
