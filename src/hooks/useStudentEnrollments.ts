@@ -351,23 +351,11 @@ export function useStudentEnrollments() {
 
   const cancelEnrollment = useCallback(
     async (enrollmentId: string) => {
-      const patch = {
-        billing_status: 'cancelled',
-        auto_renew: false,
-        status: 'draft',
-      }
-      if (supabase) await patchEnrollmentDb(enrollmentId, patch)
-      else if (clerkId) {
-        const local = readLocal(clerkId).map((e) =>
-          e.id === enrollmentId
-            ? {
-                ...e,
-                billingStatus: 'cancelled' as const,
-                autoRenew: false,
-                status: 'draft' as const,
-              }
-            : e,
-        )
+      if (supabase) {
+        const { error } = await supabase.from('student_enrollments').delete().eq('id', enrollmentId)
+        if (error) throw enrollmentDbError(error)
+      } else if (clerkId) {
+        const local = readLocal(clerkId).filter((e) => e.id !== enrollmentId)
         writeLocalForClerk(clerkId, local)
       }
       await refresh()

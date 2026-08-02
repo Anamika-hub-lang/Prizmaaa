@@ -23,7 +23,7 @@ export function CourseCardActions({
   function handleCancel() {
     if (!onCancelClass) return
     const ok = window.confirm(
-      'Cancel this class? Your plan stops and you can choose a different plan later from checkout.',
+        'Cancel this class? It will be removed from your dashboard and you can enroll again from checkout.',
     )
     if (ok) onCancelClass()
   }

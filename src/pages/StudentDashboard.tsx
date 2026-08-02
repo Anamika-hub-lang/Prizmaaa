@@ -34,9 +34,14 @@ export function StudentDashboard() {
     }
   }, [searchParams, refresh])
 
+  const visibleEnrollments = useMemo(
+    () => enrollments.filter((e) => e.billingStatus !== 'cancelled'),
+    [enrollments],
+  )
+
   const myCourses = useMemo(() => {
     const list: EnrolledCourse[] = []
-    for (const en of enrollments) {
+    for (const en of visibleEnrollments) {
       const classItem = en.classId ? classes.find((c) => c.id === en.classId) : undefined
       const freeItem = en.freeCourseId
         ? freeCourses.find((f) => f.id === en.freeCourseId)
@@ -45,9 +50,9 @@ export function StudentDashboard() {
       if (course) list.push(course)
     }
     return list
-  }, [enrollments, classes, freeCourses])
+  }, [visibleEnrollments, classes, freeCourses])
 
-  const learningDays = daysSinceFirstEnrollment(enrollments)
+  const learningDays = daysSinceFirstEnrollment(visibleEnrollments)
   const dashboard = useMemo(
     () => computeDashboardStats(myCourses, assignments, learningDays),
     [myCourses, assignments, learningDays],
