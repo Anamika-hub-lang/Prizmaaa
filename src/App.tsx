@@ -49,6 +49,9 @@ export default function App() {
         <Route path="/login" element={<Navigate to="/sign-in" replace />} />
         <Route path="/signup" element={<Navigate to="/sign-up" replace />} />
 
+        {/* Cashfree return — public so order_id is preserved before sign-in */}
+        <Route path="/student/payment/return" element={<StudentPaymentReturnPage />} />
+
         <Route path="/courses" element={<Navigate to="/sign-in" replace />} />
         <Route path="/mentors" element={<Navigate to="/about" replace />} />
         <Route path="/contact" element={<Navigate to="/about" replace />} />
@@ -77,7 +80,6 @@ export default function App() {
                 <Route path="/student/class/:classId" element={<StudentClassDetailPage />} />
                 <Route path="/student/checkout/:classId" element={<StudentCheckoutPage />} />
                 <Route path="/student/checkout/:classId/trial" element={<StudentTrialPaymentPage />} />
-                <Route path="/student/payment/return" element={<StudentPaymentReturnPage />} />
                 <Route path="/student/enrolled/:classId" element={<StudentEnrolledPage />} />
                 <Route path="/student/assignments" element={<StudentAssignmentsPage />} />
                 <Route path="/student/calendar" element={<StudentCalendarPage />} />

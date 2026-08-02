@@ -14,7 +14,13 @@ export function RequireAuth() {
   }
 
   if (!isSignedIn) {
-    return <Navigate to="/sign-in" replace state={{ from: location.pathname }} />
+    const returnTo = `${location.pathname}${location.search}`
+    try {
+      sessionStorage.setItem('educture_auth_return', returnTo)
+    } catch {
+      /* ignore */
+    }
+    return <Navigate to="/sign-in" replace state={{ from: returnTo }} />
   }
 
   return <Outlet />

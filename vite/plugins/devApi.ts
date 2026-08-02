@@ -49,18 +49,19 @@ function requestOrigin(req: IncomingMessage): string {
   return `${proto}://${host}`
 }
 
-/** Cashfree return_url must be https in production; override with PUBLIC_APP_URL when testing locally. */
+/** Cashfree return_url must be https in production; stay on same host so Clerk + stored order id match. */
 function paymentReturnBase(env: DevApiEnv, req: IncomingMessage): string {
+  const origin = requestOrigin(req)
   const configured = env.publicAppUrl?.trim().replace(/\/$/, '')
-  if (configured) {
-    if (!configured.startsWith('https://')) {
-      throw new Error('PUBLIC_APP_URL must start with https:// (required by Cashfree).')
-    }
-    return configured
+  const mode = env.cashfreeMode === 'production' ? 'production' : 'sandbox'
+
+  if (origin.startsWith('https://')) {
+    return origin
   }
 
-  const origin = requestOrigin(req)
-  const mode = env.cashfreeMode === 'production' ? 'production' : 'sandbox'
+  if (configured?.startsWith('https://')) {
+    return configured
+  }
 
   if (mode === 'production' && origin.startsWith('http://')) {
     throw new Error(
