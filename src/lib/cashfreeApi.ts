@@ -20,7 +20,17 @@ export async function createCashfreeOrder(
     body: JSON.stringify(body),
   })
 
-  const data = (await res.json()) as { paymentSessionId?: string; error?: string }
+  const text = await res.text()
+  let data: { paymentSessionId?: string; error?: string }
+  try {
+    data = JSON.parse(text) as typeof data
+  } catch {
+    throw new Error(
+      res.ok
+        ? 'Invalid server response'
+        : text.slice(0, 120) || `Payment API error (${res.status})`,
+    )
+  }
 
   if (!res.ok) {
     throw new Error(data.error ?? 'Could not start Cashfree payment')
@@ -49,7 +59,17 @@ export async function confirmCashfreeOrder(
     body: JSON.stringify({ orderId }),
   })
 
-  const data = (await res.json()) as { redirect?: string; error?: string }
+  const text = await res.text()
+  let data: { redirect?: string; error?: string }
+  try {
+    data = JSON.parse(text) as typeof data
+  } catch {
+    throw new Error(
+      res.ok
+        ? 'Invalid server response'
+        : text.slice(0, 120) || `Payment API error (${res.status})`,
+    )
+  }
 
   if (!res.ok) {
     throw new Error(data.error ?? 'Payment confirmation failed')
