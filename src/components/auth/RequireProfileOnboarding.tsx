@@ -17,7 +17,7 @@ export function RequireProfileOnboardingOnly({ children }: { children: ReactNode
     )
   }
 
-  if (isAdminUser(user?.id)) {
+  if (isAdminUser(user)) {
     return <Navigate to="/admin" replace />
   }
 

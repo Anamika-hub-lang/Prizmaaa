@@ -1,8 +1,10 @@
+export type ProfileRole = 'admin' | 'student' | 'teacher' | 'counsellor' | 'intern'
+
 export type ProfileUpsertRow = {
   clerk_id: string
   full_name: string | null
   email: string | null
-  role: 'student' | 'teacher' | null
+  role: ProfileRole | null
   avatar_url: string | null
 }
 
@@ -26,8 +28,16 @@ export type ProfileDetailsRow = {
   profile_details_complete: boolean
 }
 
-function normalizeRole(value: unknown): 'student' | 'teacher' | null {
-  if (value === 'student' || value === 'teacher') return value
+export function normalizeRole(value: unknown): ProfileRole | null {
+  if (
+    value === 'admin' ||
+    value === 'student' ||
+    value === 'teacher' ||
+    value === 'counsellor' ||
+    value === 'intern'
+  ) {
+    return value
+  }
   return null
 }
 

@@ -37,7 +37,7 @@ export function AuthCallbackPage() {
     )
   }
 
-  if (isAdminUser(user?.id)) {
+  if (isAdminUser(user)) {
     clearStoredAuthReturn()
     return <Navigate to="/admin" replace />
   }

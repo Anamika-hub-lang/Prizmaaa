@@ -28,6 +28,8 @@ import {
   upsertCounsellingBookingIntent,
 } from './lib/counsellingBookingIntent'
 import { validateIndianPhoneServer, validateScheduledDateTime } from './lib/phoneValidation'
+import { resolveBookingAssignment } from './lib/counsellorAssign'
+import { tryHandleRoleDashboardApi } from './roleDashboardApi'
 
 const TRIAL_VERIFY_INR = 1
 const COUNSELLING_PRICE_INR = 200
@@ -136,8 +138,20 @@ function parseAdminClerkUserIds(env: DevApiEnv): Set<string> {
   )
 }
 
-function isAdminClerkUser(clerkId: string, env: DevApiEnv): boolean {
+function isAdminClerkUserAllowlist(clerkId: string, env: DevApiEnv): boolean {
   return parseAdminClerkUserIds(env).has(clerkId)
+}
+
+async function isAdminClerkUser(clerkId: string, env: DevApiEnv): Promise<boolean> {
+  if (isAdminClerkUserAllowlist(clerkId, env)) return true
+  if (!env.clerkSecretKey) return false
+  try {
+    const clerk = createClerkClient({ secretKey: env.clerkSecretKey })
+    const user = await clerk.users.getUser(clerkId)
+    return user.publicMetadata?.role === 'admin'
+  } catch {
+    return false
+  }
 }
 
 async function syncClerkUserIdToSupabase(clerkUserId: string, env: DevApiEnv): Promise<void> {
@@ -266,6 +280,11 @@ async function handleSetRole(
   const user = await clerk.users.getUser(userId)
   const existingRole = user.publicMetadata?.role
   const complete = user.publicMetadata?.onboardingComplete === true
+
+  if (existingRole && existingRole !== role) {
+    json(res, 403, { error: 'Account role is already set' })
+    return
+  }
 
   if (complete && existingRole && existingRole !== role) {
     json(res, 403, { error: 'Account role is already set' })
@@ -832,7 +851,7 @@ async function handleCounsellingConfirm(
       .maybeSingle()
 
     if (!existing) {
-      const { error: insertErr } = await supabase.from('counselling_requests').insert({
+      const baseRow = {
         full_name: intent.full_name,
         email: intent.email,
         phone: intent.phone,
@@ -845,7 +864,29 @@ async function handleCounsellingConfirm(
         scheduled_time: intent.scheduled_time,
         clerk_id: intent.clerk_id,
         group_id: intent.group_id,
-      })
+      }
+
+      let insertErr: { code?: string; message?: string } | null = null
+      try {
+        const assignment = await resolveBookingAssignment(supabase, intent.group_id)
+        const withAssign = await supabase.from('counselling_requests').insert({
+          ...baseRow,
+          type_id: assignment.typeId,
+          counsellor_clerk_id: assignment.counsellorClerkId,
+          assignment_status: assignment.assignmentStatus,
+          session_status: assignment.sessionStatus,
+        })
+        insertErr = withAssign.error
+        if (insertErr?.code === '42703') {
+          const legacy = await supabase.from('counselling_requests').insert(baseRow)
+          insertErr = legacy.error
+        }
+      } catch (assignErr) {
+        console.warn('[dev-api] counselling assign skipped', assignErr)
+        const legacy = await supabase.from('counselling_requests').insert(baseRow)
+        insertErr = legacy.error
+      }
+
       if (insertErr && insertErr.code !== '42P01' && insertErr.code !== 'PGRST205') {
         console.error('[dev-api] counselling confirm insert', insertErr)
         json(res, 500, { error: 'Could not save confirmed booking' })
@@ -990,19 +1031,40 @@ async function handleAdminCounsellingBookings(
     return
   }
 
-  if (!isAdminClerkUser(clerkId, env)) {
+  if (!(await isAdminClerkUser(clerkId, env))) {
     json(res, 403, { error: 'Admin access required' })
     return
   }
 
   try {
-    const { data: paidRows, error: paidError } = await supabase
-      .from('counselling_requests')
-      .select(
-        'id, full_name, email, phone, category_id, group_id, preferred_mode, note, payment_status, scheduled_date, scheduled_time, cashfree_order_id, clerk_id, created_at',
-      )
-      .order('created_at', { ascending: false })
-      .limit(500)
+    const paidSelectWithAssign =
+      'id, full_name, email, phone, category_id, group_id, preferred_mode, note, payment_status, scheduled_date, scheduled_time, cashfree_order_id, clerk_id, counsellor_clerk_id, assignment_status, session_status, created_at'
+    const paidSelectLegacy =
+      'id, full_name, email, phone, category_id, group_id, preferred_mode, note, payment_status, scheduled_date, scheduled_time, cashfree_order_id, clerk_id, created_at'
+
+    let paidRows: Array<Record<string, unknown>> | null = null
+    let paidError: { code?: string; message?: string } | null = null
+
+    {
+      const first = await supabase
+        .from('counselling_requests')
+        .select(paidSelectWithAssign)
+        .order('created_at', { ascending: false })
+        .limit(500)
+      paidRows = (first.data as Array<Record<string, unknown>> | null) ?? null
+      paidError = first.error
+
+      // Schema not migrated yet — new assignment columns missing (Postgres 42703).
+      if (paidError?.code === '42703') {
+        const second = await supabase
+          .from('counselling_requests')
+          .select(paidSelectLegacy)
+          .order('created_at', { ascending: false })
+          .limit(500)
+        paidRows = (second.data as Array<Record<string, unknown>> | null) ?? null
+        paidError = second.error
+      }
+    }
 
     if (paidError && paidError.code !== '42P01' && paidError.code !== 'PGRST205') {
       console.error('[dev-api] admin counselling paid', paidError)
@@ -1039,6 +1101,9 @@ async function handleAdminCounsellingBookings(
       scheduledTime: string | null
       cashfreeOrderId: string | null
       clerkId: string | null
+      counsellorClerkId: string | null
+      assignmentStatus: 'assigned' | 'unassigned' | null
+      sessionStatus: 'upcoming' | 'completed' | null
       amountInr: number
       createdAt: string
     }
@@ -1047,9 +1112,11 @@ async function handleAdminCounsellingBookings(
       const rawStatus = (row.payment_status as string | null) ?? 'paid'
       const paymentStatus: AdminBooking['paymentStatus'] =
         rawStatus === 'pending' || rawStatus === 'failed' ? rawStatus : 'paid'
+      const assignmentRaw = (row.assignment_status as string | null | undefined) ?? null
+      const sessionRaw = (row.session_status as string | null | undefined) ?? null
       return {
         id: row.id as string,
-        source: 'paid',
+        source: 'paid' as const,
         fullName: row.full_name as string,
         email: row.email as string,
         phone: row.phone as string,
@@ -1062,6 +1129,10 @@ async function handleAdminCounsellingBookings(
         scheduledTime: (row.scheduled_time as string | null) ?? null,
         cashfreeOrderId: (row.cashfree_order_id as string | null) ?? null,
         clerkId: (row.clerk_id as string | null) ?? null,
+        counsellorClerkId: (row.counsellor_clerk_id as string | null | undefined) ?? null,
+        assignmentStatus:
+          assignmentRaw === 'assigned' || assignmentRaw === 'unassigned' ? assignmentRaw : null,
+        sessionStatus: sessionRaw === 'upcoming' || sessionRaw === 'completed' ? sessionRaw : null,
         amountInr: COUNSELLING_PRICE_INR,
         createdAt: row.created_at as string,
       }
@@ -1082,6 +1153,9 @@ async function handleAdminCounsellingBookings(
       scheduledTime: (row.scheduled_time as string | null) ?? null,
       cashfreeOrderId: row.order_id as string,
       clerkId: (row.clerk_id as string | null) ?? null,
+      counsellorClerkId: null,
+      assignmentStatus: null,
+      sessionStatus: null,
       amountInr: Number(row.amount_inr ?? COUNSELLING_PRICE_INR),
       createdAt: (row.created_at as string | null) ?? new Date().toISOString(),
     }))
@@ -1491,6 +1565,20 @@ export function handleDevApiRequest(
   env: DevApiEnv,
 ): boolean {
   const path = req.url?.split('?')[0]
+
+  if (
+    path &&
+    tryHandleRoleDashboardApi(path, req, res, env, {
+      json,
+      verifyClerkSession,
+      requireSupabaseAdmin,
+      isAdminClerkUser,
+      readBodyJson,
+      syncClerkUserIdToSupabase,
+    })
+  ) {
+    return true
+  }
 
   if (path === '/api/user/role') {
     void handleSetRole(req, res, env).catch((err) => {

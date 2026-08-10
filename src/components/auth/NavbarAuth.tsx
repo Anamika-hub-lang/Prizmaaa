@@ -26,7 +26,7 @@ function DashboardLink({ onNavigate }: { onNavigate?: () => void }) {
 
 function AdminLink({ onNavigate }: { onNavigate?: () => void }) {
   const { user } = useUser()
-  if (!isAdminUser(user?.id)) return null
+  if (!isAdminUser(user)) return null
   return (
     <Link
       to="/admin"

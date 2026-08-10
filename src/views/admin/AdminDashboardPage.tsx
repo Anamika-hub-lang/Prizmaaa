@@ -1,28 +1,56 @@
 import { Link } from 'react-router-dom'
-import { CalendarCheck, CreditCard, Users } from 'lucide-react'
+import {
+  CalendarCheck,
+  CreditCard,
+  FileSpreadsheet,
+  Tags,
+  UserRound,
+  Users,
+} from 'lucide-react'
 import { AdminPageHeader } from '../../components/layout/AdminLayout'
 import { dashboardCardBorder, dashboardTint } from '../../components/ui/dashboardCardStyles'
 
 const tiles = [
   {
+    to: '/admin/users',
+    title: 'Users management',
+    desc: 'View all users, filter by role, and assign mentor, counsellor, or intern.',
+    icon: Users,
+    tint: 0,
+  },
+  {
+    to: '/admin/counselling-types',
+    title: 'Counselling types',
+    desc: 'Create Career, Abroad, Tech and custom types with subdomains.',
+    icon: Tags,
+    tint: 1,
+  },
+  {
+    to: '/admin/counsellors',
+    title: 'Counsellor management',
+    desc: 'Assign types, availability, and review counsellor bookings.',
+    icon: UserRound,
+    tint: 2,
+  },
+  {
+    to: '/admin/uploads',
+    title: 'CSV approvals',
+    desc: 'Approve or reject intern class CSV uploads before they go live.',
+    icon: FileSpreadsheet,
+    tint: 3,
+  },
+  {
     to: '/admin/counselling',
     title: 'Counselling bookings',
-    desc: 'See who booked, when their session is, and whether payment went through.',
+    desc: 'See who booked, assignees, and whether payment went through.',
     icon: CalendarCheck,
-    tint: 0,
+    tint: 4,
   },
   {
     to: '/admin/counselling?status=paid',
     title: 'Paid sessions',
     desc: 'Confirmed Cashfree payments ready for Meet or call.',
     icon: CreditCard,
-    tint: 2,
-  },
-  {
-    to: '/admin/counselling?status=pending',
-    title: 'Pending payment',
-    desc: 'Students who started checkout but have not finished paying yet.',
-    icon: Users,
     tint: 5,
   },
 ] as const
@@ -32,7 +60,7 @@ export function AdminDashboardPage() {
     <div>
       <AdminPageHeader
         title="Admin overview"
-        subtitle="Manage counselling schedules and payment status for PRIZMA students."
+        subtitle="Manage users, counselling, counsellors, and CSV catalog approvals."
       />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">

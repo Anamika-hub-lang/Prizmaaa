@@ -17,7 +17,7 @@ export function RequireOnboarding({ children }: { children: ReactNode }) {
     )
   }
 
-  if (isAdminUser(user?.id)) {
+  if (isAdminUser(user)) {
     return <Navigate to="/admin" replace />
   }
 
@@ -39,7 +39,7 @@ export function RequireRoleOnboardingOnly({ children }: { children: ReactNode })
     )
   }
 
-  if (isAdminUser(user?.id)) {
+  if (isAdminUser(user)) {
     return <Navigate to="/admin" replace />
   }
 

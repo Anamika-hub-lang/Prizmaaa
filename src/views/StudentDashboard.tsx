@@ -22,6 +22,7 @@ import { useStudentCounsellingBookings } from '../hooks/useStudentCounsellingBoo
 import { CounsellingBookingsPanel } from '../components/student/CounsellingBookingsPanel'
 import { enrollmentToEnrolledCourse, daysSinceFirstEnrollment } from '../lib/enrolledCourses'
 import { isActiveClassEnrollment } from '../lib/classEnrollmentPolicy'
+import { counsellingGroups } from '../data/counsellingServices'
 
 export function StudentDashboard() {
   const [searchParams] = useSearchParams()
@@ -102,6 +103,37 @@ export function StudentDashboard() {
         <section>
           <h2 className="text-sm font-bold text-gray-500 uppercase tracking-wide mb-4 text-left">Overview</h2>
           <StudentOverviewGrid stats={dashboard} />
+        </section>
+
+        <section className="rounded-2xl border border-orange-100 bg-white p-5 sm:p-6">
+          <div className="flex flex-wrap items-end justify-between gap-3 mb-4">
+            <div>
+              <h2 className="text-sm font-bold text-gray-500 uppercase tracking-wide text-left">
+                Book counselling
+              </h2>
+              <p className="text-sm text-gray-500 mt-1">
+                Choose a counselling type and continue to schedule + pay.
+              </p>
+            </div>
+            <AppButton to="/counselling" className="shrink-0">
+              View all
+            </AppButton>
+          </div>
+          <div className="grid sm:grid-cols-3 gap-3">
+            {counsellingGroups.map((group) => (
+              <Link
+                key={group.id}
+                to={`/counselling/${group.id}`}
+                className={`group ${dashboardCardBorder} ${dashboardTint(2).bg} ${dashboardTint(2).border} rounded-2xl p-4 card-lift`}
+              >
+                <p className="font-bold text-[#1d1d1d]">{group.title}</p>
+                <p className="text-xs text-gray-500 mt-1 line-clamp-2">{group.subtitle}</p>
+                <span className="inline-flex items-center gap-1 mt-3 text-xs font-semibold text-educture-orange">
+                  Proceed <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                </span>
+              </Link>
+            ))}
+          </div>
         </section>
 
         <CounsellingBookingsPanel

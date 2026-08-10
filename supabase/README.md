@@ -60,6 +60,22 @@ To remove old seeded rows from an earlier version of the app, run `supabase/clea
 
 Without `VITE_SUPABASE_*` set, portals show empty lists (no demo fill-in).
 
-## 6. Security note
+## 6. Roles, counselling types & CSV uploads
 
-Current policies allow anyone with the anon key to read/write. Before launch, add Supabase Auth and restrict writes to mentor roles.
+After the core + counselling scripts, run:
+
+`supabase/roles-counselling-uploads.sql`
+
+This:
+
+- Widens `profiles.role` to `admin | student | teacher | counsellor | intern`
+- Creates `counselling_types`, `counsellor_profiles`, `counsellor_type_assignments`, `csv_uploads`
+- Adds counsellor assignment columns on `counselling_requests`
+- Seeds Career / Abroad / Tech counselling types
+
+Intern CSV uploads stay `pending` until an admin approves them into `classes`.
+
+## 7. Security note
+
+Current policies allow anyone with the anon key to read/write content tables. Privileged tables (uploads, counsellor profiles) deny anon select; use the service role from the API. Before launch, tighten RLS further.
+

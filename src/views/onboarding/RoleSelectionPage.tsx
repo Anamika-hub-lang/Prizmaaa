@@ -4,11 +4,11 @@ import { motion } from 'framer-motion'
 import { BrandLogo, BRAND_NAME } from '../../components/brand/BrandLogo'
 import { useAuth, useUser } from '@clerk/nextjs'
 import { useState } from 'react'
-import type { UserRole } from '../../types/auth'
+import type { SelfServeRole } from '../../types/auth'
 import { saveUserRole } from '../../lib/saveUserRole'
 
 const roles: {
-  id: UserRole
+  id: SelfServeRole
   title: string
   description: string
   icon: typeof BookOpen
@@ -21,7 +21,7 @@ const roles: {
   },
   {
     id: 'teacher',
-    title: 'Teacher',
+    title: 'Mentor',
     description: 'Publish classes, free courses, Meet links, and assignments.',
     icon: Users,
   },
@@ -31,7 +31,7 @@ export function RoleSelectionPage() {
   const navigate = useNavigate()
   const { getToken } = useAuth()
   const { user } = useUser()
-  const [selected, setSelected] = useState<UserRole | null>(null)
+  const [selected, setSelected] = useState<SelfServeRole | null>(null)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 

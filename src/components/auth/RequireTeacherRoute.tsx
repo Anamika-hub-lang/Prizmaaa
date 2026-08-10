@@ -4,7 +4,7 @@ import { Navigate } from 'react-router-dom'
 import { useUser } from '@clerk/nextjs'
 import type { ReactNode } from 'react'
 import { isAdminUser } from '../../lib/adminAccess'
-import { getRoleHomePath, getUserRole } from '../../lib/userRole'
+import { getPostAuthPath, getRoleHomePath, getUserRole } from '../../lib/userRole'
 
 export function RequireTeacherRoute({ children }: { children: ReactNode }) {
   const { isLoaded, user } = useUser()
@@ -17,16 +17,16 @@ export function RequireTeacherRoute({ children }: { children: ReactNode }) {
     )
   }
 
-  if (isAdminUser(user?.id)) {
+  if (isAdminUser(user)) {
     return <Navigate to="/admin" replace />
   }
 
   const role = getUserRole(user)
-  if (role === 'student') {
-    return <Navigate to={getRoleHomePath('student')} replace />
+  if (role && role !== 'teacher') {
+    return <Navigate to={getRoleHomePath(role)} replace />
   }
   if (role !== 'teacher') {
-    return <Navigate to="/onboarding/role" replace />
+    return <Navigate to={getPostAuthPath(user)} replace />
   }
 
   return <>{children}</>

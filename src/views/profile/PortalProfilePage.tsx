@@ -17,9 +17,24 @@ import {
 } from '../../components/onboarding/OnboardingFormFields'
 
 function roleLabel(role: UserRole | null) {
-  if (role === 'teacher') return 'Mentor / Teacher'
-  if (role === 'student') return 'Student'
-  return 'Member'
+  switch (role) {
+    case 'admin':
+      return 'Admin'
+    case 'student':
+      return 'Student'
+    case 'teacher':
+      return 'Mentor'
+    case 'counsellor':
+      return 'Counsellor'
+    case 'intern':
+      return 'Intern'
+    case null:
+      return 'Member'
+    default: {
+      const _exhaustive: never = role
+      return _exhaustive
+    }
+  }
 }
 
 function FieldRow({

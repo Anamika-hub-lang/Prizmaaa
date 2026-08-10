@@ -1,14 +1,11 @@
 import type { UserRole } from '../types/auth'
+import { isUserRole } from '../types/auth'
 import { isAdminUser } from './adminAccess'
 
 type UserWithRoleMetadata = {
-  id?: string
+  id?: string | null
   publicMetadata?: UserPublicMetadata
 } | null | undefined
-
-function isUserRole(value: unknown): value is UserRole {
-  return value === 'student' || value === 'teacher'
-}
 
 export function getUserRole(user: UserWithRoleMetadata): UserRole | null {
   const role = user?.publicMetadata?.role
@@ -17,19 +14,40 @@ export function getUserRole(user: UserWithRoleMetadata): UserRole | null {
 
 export function isOnboardingComplete(user: UserWithRoleMetadata): boolean {
   if (!user) return false
+  if (isAdminUser(user)) return true
   if (user.publicMetadata?.onboardingComplete !== true) return false
-  return getUserRole(user) !== null
+  const role = getUserRole(user)
+  return role !== null && role !== 'admin'
 }
 
 export function getRoleHomePath(role: UserRole): string {
-  return role === 'student' ? '/student' : '/teacher'
+  switch (role) {
+    case 'admin':
+      return '/admin'
+    case 'student':
+      return '/student'
+    case 'teacher':
+      return '/teacher'
+    case 'counsellor':
+      return '/counsellor'
+    case 'intern':
+      return '/data-upload'
+    default: {
+      const _exhaustive: never = role
+      return _exhaustive
+    }
+  }
 }
 
 /** After Google/Clerk login — admins always land on /admin, never student/mentor portals. */
 export function getPostAuthPath(user: UserWithRoleMetadata): string {
-  if (isAdminUser(user?.id)) return '/admin'
-  if (!getUserRole(user)) return '/onboarding/role'
-  if (!isOnboardingComplete(user)) return '/onboarding/profile'
+  if (isAdminUser(user)) return '/admin'
   const role = getUserRole(user)
-  return role ? getRoleHomePath(role) : '/onboarding/role'
+  if (!role) return '/onboarding/role'
+  if (role === 'admin') return '/admin'
+  if (!isOnboardingComplete(user)) {
+    if (role === 'counsellor' || role === 'intern') return getRoleHomePath(role)
+    return '/onboarding/profile'
+  }
+  return getRoleHomePath(role)
 }

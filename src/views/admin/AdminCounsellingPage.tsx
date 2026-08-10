@@ -213,12 +213,35 @@ export function AdminCounsellingPage() {
                         {topic?.title ?? booking.categoryId}
                       </p>
                     </div>
-                    <span
-                      className={`shrink-0 rounded-full border px-3 py-1 text-[10px] font-bold uppercase ${paymentBadge(booking.paymentStatus)}`}
-                    >
-                      {paymentLabel(booking.paymentStatus)}
-                    </span>
+                    <div className="flex flex-col items-end gap-2 shrink-0">
+                      <span
+                        className={`rounded-full border px-3 py-1 text-[10px] font-bold uppercase ${paymentBadge(booking.paymentStatus)}`}
+                      >
+                        {paymentLabel(booking.paymentStatus)}
+                      </span>
+                      {booking.assignmentStatus ? (
+                        <span
+                          className={`rounded-full border px-3 py-1 text-[10px] font-bold uppercase ${
+                            booking.assignmentStatus === 'assigned'
+                              ? 'bg-emerald-100 border-emerald-200 text-emerald-800'
+                              : 'bg-orange-100 border-orange-200 text-orange-900'
+                          }`}
+                        >
+                          {booking.assignmentStatus}
+                        </span>
+                      ) : null}
+                    </div>
                   </div>
+
+                  {booking.counsellorClerkId ? (
+                    <p className="mt-2 text-xs text-gray-500">
+                      Counsellor: <span className="font-mono">{booking.counsellorClerkId}</span>
+                    </p>
+                  ) : booking.paymentStatus === 'paid' ? (
+                    <p className="mt-2 text-xs text-orange-700 font-medium">
+                      Unassigned — assign a counsellor from Counsellor management.
+                    </p>
+                  ) : null}
 
                   <div className="grid sm:grid-cols-2 gap-3 mt-4 text-sm text-gray-700">
                     <div className="flex items-center gap-2">

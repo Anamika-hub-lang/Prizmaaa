@@ -4,7 +4,7 @@ import { Navigate } from 'react-router-dom'
 import { useUser } from '@clerk/nextjs'
 import type { ReactNode } from 'react'
 import { isAdminUser } from '../../lib/adminAccess'
-import { getPostAuthPath } from '../../lib/userRole'
+import { getPostAuthPath, getRoleHomePath, getUserRole } from '../../lib/userRole'
 
 export function RequireAdminRoute({ children }: { children: ReactNode }) {
   const { isLoaded, user } = useUser()
@@ -17,7 +17,7 @@ export function RequireAdminRoute({ children }: { children: ReactNode }) {
     )
   }
 
-  if (!user || !isAdminUser(user.id)) {
+  if (!user || !isAdminUser(user)) {
     return <Navigate to={getPostAuthPath(user)} replace />
   }
 

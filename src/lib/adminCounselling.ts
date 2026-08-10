@@ -13,6 +13,9 @@ export type AdminCounsellingBooking = {
   scheduledTime: string | null
   cashfreeOrderId: string | null
   clerkId: string | null
+  counsellorClerkId?: string | null
+  assignmentStatus?: 'assigned' | 'unassigned' | null
+  sessionStatus?: 'upcoming' | 'completed' | null
   amountInr: number
   createdAt: string
 }

@@ -22,7 +22,7 @@ export function SignUpPage() {
   const from = readStoredAuthReturn()
 
   if (isLoaded && isSignedIn) {
-    if (isAdminUser(user?.id)) {
+    if (isAdminUser(user)) {
       return <Navigate to="/admin" replace />
     }
     const target = from && from.startsWith('/') ? from : getPostAuthPath(user)

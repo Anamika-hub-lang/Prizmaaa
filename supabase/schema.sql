@@ -57,7 +57,7 @@ create table if not exists public.profiles (
   clerk_id text not null unique,
   full_name text,
   email text,
-  role text check (role is null or role in ('student', 'teacher')),
+  role text check (role is null or role in ('admin', 'student', 'teacher', 'counsellor', 'intern')),
   avatar_url text,
   created_at timestamptz not null default now()
 );
