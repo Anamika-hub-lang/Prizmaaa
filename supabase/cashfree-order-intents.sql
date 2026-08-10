@@ -10,6 +10,8 @@ create table if not exists public.cashfree_order_intents (
   created_at timestamptz not null default now()
 );
 
+//hello
+
 create index if not exists cashfree_order_intents_clerk_id_idx
   on public.cashfree_order_intents (clerk_id);
 
