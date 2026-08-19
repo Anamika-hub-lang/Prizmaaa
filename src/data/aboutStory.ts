@@ -1,24 +1,26 @@
 export const homeStoryPreviewCount = 3
 
 export const prizmaMissionLine =
-  'From picking the right college to mastering skills in live classes — PRIZMA connects every step on one orange hub.'
+  'A place for students to connect with peers and seniors, share real experiences, discover opportunities, and grow together — with AI resume review and opportunity matching built in.'
 
 export const aboutPlatformBullets = [
-  'Live mentoring classes on Google Meet — Skills, Professional & Academic tracks with trial, monthly, or 3-month plans.',
-  '1-on-1 expert counselling at ₹200/hour when you need career, domain, or future clarity before you commit.',
-  'University reviews written by students — honest ratings on academics, campus life, and placements across India.',
-  'University counseling (coming soon) — verified campus insiders for SGT, GD Goenka, K.R. Mangalam, Amity & more.',
-  'One student dashboard for enrolled classes, assignments, and paid counselling sessions after checkout.',
-  'Mentors publish classes, free courses, and assignments from a single teacher portal — students see it all in one place.',
+  'Peer learning circles on Google Meet — skills, academics, and career tracks you explore alongside other students.',
+  '1-on-1 guidance at ₹199 per call from people who understand your journey — career questions, domain skills, or what comes next.',
+  'AI Resume + Profile Review — upload or paste your resume for free gap analysis and improvement tips.',
+  'AI Opportunity Matcher — match your profile to internships, scholarships, courses & competitions.',
+  'Campus experiences shared by students — honest takes on academics, campus life, and placements across India.',
+  'Campus connect (coming soon) — seniors and insiders from SGT, GD Goenka, K.R. Mangalam, Amity & more.',
+  'One student space for groups you join, projects you share, and conversations that help you move forward.',
+  'Seniors and mentors host discussions, resources, and collaborative sessions — students find each other in one place.',
 ]
 
 export const whyWeStartedBullets = [
-  'College marketing was loud, but real student voices were hard to find before you paid lakhs in fees.',
-  'Career advice lived in random DMs and generic videos — not tied to what you should actually study next.',
-  'Live classes existed on one app, college research on another, and counseling agents on a third.',
-  'We built PRIZMA so discover → decide → learn happens in one flow: reviews, counselling, then classes.',
-  'Transparent pricing: ₹200 counselling sessions, class trials, then monthly plans — pay only when you are ready.',
-  'University counseling is launching next so every question before enrollment has a human answer, not just a brochure.',
+  'College ads were everywhere, but real student voices were hard to find before you chose a path.',
+  'Advice lived in random DMs and generic videos — not tied to people who had already been there.',
+  'Peer learning sat on one app, campus stories on another, and connections on a third.',
+  'We built PRIZMA so connect → discover → grow happens in one flow: people, experiences, then learning together.',
+  'Transparent access: ₹199 guidance calls, ₹99 mock interviews, free AI tools, peer sessions with trials — join when you are ready.',
+  'Campus connect is launching next so every question about student life has a human answer, not just a brochure.',
 ]
 
 export type PrizmaPillar = {
@@ -34,38 +36,48 @@ export type PrizmaPillar = {
 export const prizmaPillars: PrizmaPillar[] = [
   {
     id: 'reviews',
-    title: 'University reviews',
+    title: 'Campus experiences',
     description:
-      'Read what students really say about campus, faculty, and placements — then write your own for the next batch.',
+      'Read what students really say about campus life, faculty, and placements — then share your own for the next batch.',
     link: '/universities',
-    linkLabel: 'Browse reviews',
+    linkLabel: 'Browse experiences',
     accent: 'sky',
   },
   {
     id: 'counselling',
-    title: 'Expert counselling',
+    title: 'Peer & mentor guidance',
     description:
-      'Stuck between courses or careers? Book a ₹200 live session — Career, Domain, or Future — on Meet or call.',
+      'Stuck between paths? Book a ₹199 live call — Career, Domain, or Future — with people who get your journey.',
     link: '/counselling',
-    linkLabel: 'Book ₹200 session',
+    linkLabel: 'Book ₹199 call',
     accent: 'orange',
   },
   {
     id: 'classes',
-    title: 'Live classes',
+    title: 'Learn together',
     description:
-      'Turn your roadmap into skills. Mentors teach live on Google Meet with assignments you submit on PRIZMA.',
+      'Build skills with peers and seniors. Live Meet sessions, shared projects, and feedback that helps you grow.',
     link: '/sign-up',
-    linkLabel: 'Explore classes',
+    linkLabel: 'Explore sessions',
     accent: 'orange',
   },
   {
-    id: 'univ-counseling',
-    title: 'University counseling',
+    id: 'ai-tools',
+    title: 'PRIZMA AI',
     description:
-      'Soon: 1:1 counselors who know specific campuses — course fit, fees, and whether that college is right for you.',
+      'Upload your resume for AI gap analysis, or match your profile to internships, scholarships, courses & competitions.',
+    link: '/ai',
+    linkLabel: 'Try AI free',
+    badge: 'Free',
+    accent: 'violet',
+  },
+  {
+    id: 'univ-counseling',
+    title: 'Campus connect',
+    description:
+      'Soon: 1:1 chats with seniors who know specific campuses — fit, culture, and whether that place is right for you.',
     link: '/university-counseling',
-    linkLabel: 'See what\'s coming',
+    linkLabel: "See what's coming",
     badge: 'Soon',
     accent: 'violet',
   },
@@ -81,27 +93,27 @@ export type PrizmaJourneyStep = {
 export const prizmaJourneySteps: PrizmaJourneyStep[] = [
   {
     step: '01',
-    title: 'Discover honestly',
-    description: 'Start with university reviews and our counseling hub — hear from students, not just ads.',
-    tiesTo: 'Reviews → Counseling',
+    title: 'Connect with people',
+    description: 'Meet students like you and seniors who have already been there — start with real voices, not ads.',
+    tiesTo: 'Peers → Seniors',
   },
   {
     step: '02',
-    title: 'Decide with a human',
-    description: 'Book expert counselling for a clear roadmap — which course, which path, what to do next.',
-    tiesTo: 'Counselling ₹200/hr',
+    title: 'Ask & get clarity',
+    description: 'Book a guided call for a clear next step — which path, which skills, what to do next.',
+    tiesTo: 'Guidance ₹199/call',
   },
   {
     step: '03',
-    title: 'Learn live',
-    description: 'Enroll in mentor-led classes that match your goals. Trial first, then monthly or 3-month plans.',
-    tiesTo: 'Live classes & dashboard',
+    title: 'Learn & collaborate',
+    description: 'Join peer sessions that match your goals. Try first, then monthly or 3-month plans with your group.',
+    tiesTo: 'Sessions & projects',
   },
   {
     step: '04',
-    title: 'Track in one place',
-    description: 'Your dashboard shows classes, assignments, and counselling bookings — the full picture.',
-    tiesTo: 'Student portal',
+    title: 'Grow in one place',
+    description: 'Your space shows groups, projects, and conversations — the full picture of your student journey.',
+    tiesTo: 'Student space',
   },
 ]
 
@@ -111,10 +123,10 @@ export type AboutHighlight = {
 }
 
 export const aboutHeroHighlights: AboutHighlight[] = [
-  { iconName: 'star', label: 'Reviews + counselling before you commit' },
-  { iconName: 'rupee', label: '₹200 sessions · class trials & monthly plans' },
-  { iconName: 'video', label: 'Live Google Meet classes with mentors' },
-  { iconName: 'graduation', label: 'Student dashboard for everything booked' },
+  { iconName: 'users', label: 'Peers & seniors before you decide alone' },
+  { iconName: 'rupee', label: '₹199 calls · AI resume & matcher · session plans' },
+  { iconName: 'video', label: 'Live Meet circles with students & mentors' },
+  { iconName: 'graduation', label: 'One student space for everything you join' },
 ]
 
 export type AboutValue = {
@@ -126,28 +138,28 @@ export type AboutValue = {
 export const aboutProcessValues: AboutValue[] = [
   {
     iconName: 'target',
-    title: 'Clarity before commitment',
-    text: 'Reviews and counselling help you pick the right college and course — before you pay semester fees.',
+    title: 'People before pressure',
+    text: 'Real student experiences and guided calls help you choose a path — before you commit alone.',
   },
   {
     iconName: 'users',
     title: 'Humans at every step',
-    text: 'Student voices, expert counsellors, and live mentors — not passive videos or anonymous forums.',
+    text: 'Peers, seniors, and mentors — not passive videos or anonymous forums. Ask questions. Get real answers.',
   },
   {
     iconName: 'award',
-    title: 'One connected journey',
-    text: 'From “which university?” to “which class?” — PRIZMA links discovery, decisions, and learning on one platform.',
+    title: 'Better together',
+    text: 'From “who can help?” to “what should I learn next?” — PRIZMA links connections, discovery, and growth.',
   },
 ]
 
 export const pricingEcosystemIntro =
-  'Class plans are one part of PRIZMA. Pair them with ₹200 counselling when you need direction, and university reviews when you need honesty — university counseling for specific campuses is launching soon.'
+  'Peer learning plans are one part of PRIZMA. Pair them with ₹199 guidance calls, AI resume review, opportunity matching, and campus experiences — campus connect for specific universities is launching soon.'
 
 export const contactSectionCopy = {
-  title: 'Ready to start your journey?',
-  body: 'Whether you need a counselling slot, want to read university reviews, or enroll in a live class — tell us where you are and we will point you to the right place on PRIZMA.',
+  title: "You don't have to figure out student life alone.",
+  body: 'Whether you want to meet peers, read campus experiences, or join a learning circle — tell us where you are and we will point you to the right place on PRIZMA.',
 }
 
 export const footerTagline =
-  'College clarity, expert counselling, honest reviews, and live mentor classes — connected on one platform for ambitious students across India.'
+  'Connect with students, share experiences, discover opportunities, and grow together — a hub for ambitious students across India.'

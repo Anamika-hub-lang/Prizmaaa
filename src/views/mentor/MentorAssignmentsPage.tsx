@@ -8,7 +8,7 @@ import { dashboardCardBorder, dashboardTint } from '../../components/ui/dashboar
 type MentorTab = 'all' | 'awaiting' | 'submitted'
 
 export function MentorAssignmentsPage() {
-  const { assignments, addAssignment, updateAssignment } = useMentorContent()
+  const { myAssignments, addAssignment, updateAssignment } = useMentorContent()
   const [tab, setTab] = useState<MentorTab>('all')
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editTitle, setEditTitle] = useState('')
@@ -19,11 +19,11 @@ export function MentorAssignmentsPage() {
   const [due, setDue] = useState('')
   const [img, setImg] = useState('https://images.unsplash.com/photo-1561070791-2526d30994b5?w=400&q=80')
 
-  const awaiting = assignments.filter((a) => a.status === 'pending')
-  const submitted = assignments.filter((a) => a.status === 'submitted')
+  const awaiting = myAssignments.filter((a) => a.status === 'pending')
+  const submitted = myAssignments.filter((a) => a.status === 'submitted')
 
   const visible =
-    tab === 'all' ? assignments : tab === 'awaiting' ? awaiting : submitted
+    tab === 'all' ? myAssignments : tab === 'awaiting' ? awaiting : submitted
 
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault()
@@ -34,7 +34,7 @@ export function MentorAssignmentsPage() {
   }
 
   const tabs: { id: MentorTab; label: string; count: number }[] = [
-    { id: 'all', label: 'All', count: assignments.length },
+    { id: 'all', label: 'All', count: myAssignments.length },
     { id: 'awaiting', label: 'Awaiting submit', count: awaiting.length },
     { id: 'submitted', label: 'Student submitted', count: submitted.length },
   ]

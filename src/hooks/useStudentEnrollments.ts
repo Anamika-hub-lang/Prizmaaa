@@ -14,6 +14,7 @@ import {
 } from '../lib/classEnrollmentPolicy'
 import { ENROLLMENTS_REFRESH_EVENT } from '../lib/enrollmentRefresh'
 import { isCashfreeClientEnabled } from '../lib/cashfreeCheckout'
+import { isUpiQrCheckoutEnabled } from '../lib/upiCheckout'
 import { enrollmentFromRow, type EnrollmentRow, type PaymentMethodType, type StudentEnrollment } from '../types/enrollment'
 
 const LOCAL_KEY = 'educture_student_enrollments'
@@ -96,10 +97,12 @@ async function upsertClassEnrollment(
         tier === 'trial'
           ? 'Starter trial'
           : tier === 'monthly'
-            ? 'Growth (monthly)'
+            ? 'Monthly plan'
             : tier === 'three-month'
-              ? 'Premium (3 months)'
-              : 'your current plan'
+              ? '3 Months plan'
+              : tier === 'six-month'
+                ? '6 Months plan'
+                : 'your current plan'
       throw new Error(
         `You are already enrolled on ${label} for this class. Cancel from your dashboard first, then you can pick a different plan.`,
       )
@@ -222,7 +225,7 @@ export function useStudentEnrollments() {
 
   const enrollInClass = useCallback(
     async (classId: string, planTier?: string) => {
-      if (isCashfreeClientEnabled()) {
+      if (isCashfreeClientEnabled() && !isUpiQrCheckoutEnabled()) {
         throw new Error('Choose a plan and pay with Cashfree to enroll in live classes.')
       }
       if (!clerkId) return
@@ -271,11 +274,11 @@ export function useStudentEnrollments() {
   const enrollWithPaidPlan = useCallback(
     async (
       classId: string,
-      planTier: 'monthly' | 'three-month',
+      planTier: 'monthly' | 'three-month' | 'six-month',
       paymentMethodType: PaymentMethodType,
       paymentRaw: string,
     ) => {
-      if (isCashfreeClientEnabled()) {
+      if (isCashfreeClientEnabled() && !isUpiQrCheckoutEnabled()) {
         throw new Error('Complete payment through Cashfree checkout. Enrollment is created only after payment succeeds.')
       }
       if (!clerkId) return

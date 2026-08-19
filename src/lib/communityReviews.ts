@@ -77,17 +77,26 @@ export type MentorApplicationPayload = {
   fullName: string
   email: string
   phone?: string
+  college?: string
   expertise: string
   experience?: string
+  portfolioUrl?: string
   message?: string
 }
 
 export async function submitMentorApplication(payload: MentorApplicationPayload): Promise<void> {
-  const res = await fetch('/api/mentor/apply', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  })
+  let res: Response
+  try {
+    res = await fetch('/api/mentor/apply', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+  } catch {
+    throw new Error(
+      'Could not reach the server — check your internet connection and try again. If this keeps happening, wait a few seconds and retry.',
+    )
+  }
   if (!res.ok) {
     let msg = 'Could not submit application'
     try {

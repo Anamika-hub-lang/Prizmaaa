@@ -9,7 +9,7 @@ export function StudentBrowsePage() {
     <>
       <StudentPageHeader
         title="Browse online classes"
-        subtitle={`Official plan prices: ${pricingLine}. Choose Starter trial, monthly Growth, or 3-month Premium at checkout.`}
+        subtitle={`Official plan prices: ${pricingLine}. Choose monthly, 3 months, or 6 months at checkout.`}
       />
       <main className="max-w-7xl mx-auto w-full min-w-0 px-3 sm:px-4 md:px-6 py-6 sm:py-8 lg:py-12">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">

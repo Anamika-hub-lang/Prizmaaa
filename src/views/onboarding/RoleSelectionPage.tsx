@@ -1,12 +1,13 @@
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { BookOpen, Users } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { BrandLogo, BRAND_NAME } from '../../components/brand/BrandLogo'
 import { useAuth, useUser } from '@clerk/nextjs'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { SelfServeRole } from '../../types/auth'
 import { saveUserRole } from '../../lib/saveUserRole'
-
+import { fetchMentorEligible } from '../../lib/mentorEligible'
+import { getUserRole } from '../../lib/userRole'
 const roles: {
   id: SelfServeRole
   title: string
@@ -22,7 +23,7 @@ const roles: {
   {
     id: 'teacher',
     title: 'Mentor',
-    description: 'Publish classes, free courses, Meet links, and assignments.',
+    description: 'After admin approves your request — host live classes & sessions.',
     icon: Users,
   },
 ]
@@ -34,7 +35,16 @@ export function RoleSelectionPage() {
   const [selected, setSelected] = useState<SelfServeRole | null>(null)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [mentorAllowed, setMentorAllowed] = useState(false)
+  const currentRole = getUserRole(user)
+  const isUpgrade = currentRole === 'student' && mentorAllowed
 
+  useEffect(() => {
+    void fetchMentorEligible(getToken).then((result) => {
+      setMentorAllowed(result.allowed)
+      if (result.allowed) setSelected('teacher')
+    })
+  }, [getToken])
   async function handleContinue() {
     if (!selected) return
     setError(null)
@@ -63,29 +73,37 @@ export function RoleSelectionPage() {
           className="w-full max-w-2xl text-center mb-10"
         >
           <p className="text-educture-orange font-bold text-xs uppercase tracking-[0.2em] mb-3">
-            Step 1 of 2
+            {isUpgrade ? 'Switch to mentor' : 'Step 1 of 2'}
           </p>
           <h1 className="text-3xl sm:text-4xl font-bold text-[#1d1d1d] mb-3">
-            How will you use {BRAND_NAME}?
+            {isUpgrade ? 'Your mentor access is approved' : `How will you use ${BRAND_NAME}?`}
           </h1>
           <p className="text-gray-500 text-sm max-w-md mx-auto">
-            Choose a role for this account. You won&apos;t be asked again after you continue.
-          </p>
-        </motion.div>
+            {isUpgrade
+              ? 'Choose Mentor below to open your mentor dashboard. Your application details will auto-fill on the next step.'
+              : 'Everyone can join as a student. To mentor, submit a request first — admin will approve your email.'}
+          </p>        </motion.div>
 
         <div className="w-full max-w-2xl grid sm:grid-cols-2 gap-4 mb-8">
           {roles.map((role) => {
             const Icon = role.icon
             const active = selected === role.id
+            const locked = role.id === 'teacher' && !mentorAllowed
             return (
               <button
                 key={role.id}
                 type="button"
-                onClick={() => setSelected(role.id)}
+                disabled={locked}
+                onClick={() => {
+                  if (locked) return
+                  setSelected(role.id)
+                }}
                 className={`text-left rounded-3xl border-[3px] p-6 transition-all ${
-                  active
-                    ? 'border-educture-orange bg-white shadow-[0_12px_40px_rgba(243,112,33,0.15)]'
-                    : 'border-orange-100 bg-white hover:border-educture-orange/50'
+                  locked
+                    ? 'border-gray-100 bg-gray-50 opacity-70 cursor-not-allowed'
+                    : active
+                      ? 'border-educture-orange bg-white shadow-[0_12px_40px_rgba(243,112,33,0.15)]'
+                      : 'border-orange-100 bg-white hover:border-educture-orange/50'
                 }`}
               >
                 <span
@@ -97,6 +115,14 @@ export function RoleSelectionPage() {
                 </span>
                 <h2 className="text-xl font-bold text-[#1d1d1d] mb-2">{role.title}</h2>
                 <p className="text-sm text-gray-500">{role.description}</p>
+                {locked ? (
+                  <p className="text-xs text-gray-500 mt-2">
+                    <Link to="/become-mentor" className="text-educture-orange font-semibold hover:underline">
+                      Submit mentor request
+                    </Link>
+                    {' '}→ admin approves → choose Mentor here.
+                  </p>
+                ) : null}
               </button>
             )
           })}

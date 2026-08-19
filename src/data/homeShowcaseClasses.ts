@@ -9,7 +9,7 @@ export const homeShowcaseClasses: {
 }[] = [
   {
     id: 'showcase-ux',
-    title: 'UI/UX — Live cohort',
+    title: 'UI/UX — Peer circle',
     categoryId: 'skills',
     image: 'https://images.unsplash.com/photo-1561070791-2526d30994b5?w=600&q=80',
   },
@@ -21,7 +21,7 @@ export const homeShowcaseClasses: {
   },
   {
     id: 'showcase-figma',
-    title: 'Advanced Figma Systems',
+    title: 'Advanced Figma — Skills session',
     categoryId: 'skills',
     image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&q=80',
   },

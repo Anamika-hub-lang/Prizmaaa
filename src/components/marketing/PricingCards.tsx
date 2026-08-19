@@ -3,7 +3,6 @@ import {
   categoryPricing,
   pricingCategoryOrder,
   formatInr,
-  TRIAL_DAYS,
   type PricingCategoryId,
 } from '../../data/pricingPlans'
 import { CategoryPlanCards } from '../pricing/CategoryPlanCards'
@@ -26,8 +25,8 @@ export function PricingCards({ layout = 'tabs' }: Props) {
                 <p className="text-sky-600 text-[11px] font-bold uppercase tracking-[0.2em]">Pricing</p>
                 <h2 className="font-display text-2xl sm:text-3xl text-[#1a1a1a] mt-2">{config.title}</h2>
                 <p className="text-sm text-gray-600 mt-2">
-                  {TRIAL_DAYS}-day trial · {formatInr(config.monthlyInr)}/month · {formatInr(config.threeMonthInr)} for
-                  3 months
+                  {formatInr(config.monthlyInr)}/month · {formatInr(config.threeMonthInr)} for 3 months ·{' '}
+                  {formatInr(config.sixMonthInr)} for 6 months
                 </p>
               </div>
               <CategoryPlanCards categoryId={categoryId} mode="marketing" />
@@ -62,8 +61,9 @@ export function PricingCards({ layout = 'tabs' }: Props) {
         })}
       </div>
       <p className="text-center text-sm text-gray-600 mb-8">
-        {categoryPricing[activeCategory].title} — {TRIAL_DAYS}-day trial then {formatInr(categoryPricing[activeCategory].monthlyInr)}/mo
-        or {formatInr(categoryPricing[activeCategory].threeMonthInr)} / 3 mo
+        {categoryPricing[activeCategory].title} — {formatInr(categoryPricing[activeCategory].monthlyInr)}/mo
+        · {formatInr(categoryPricing[activeCategory].threeMonthInr)} / 3 mo ·{' '}
+        {formatInr(categoryPricing[activeCategory].sixMonthInr)} / 6 mo
       </p>
       <CategoryPlanCards categoryId={activeCategory} mode="marketing" />
     </>

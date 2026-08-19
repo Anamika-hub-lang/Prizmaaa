@@ -72,8 +72,8 @@ export function MentorsPage() {
     <PageShell>
       <PageHero
         badge="Mentors"
-        title="Learn from people who've done the work"
-        description="Every PRIZMA mentor is vetted for industry experience and teaching quality. Browse profiles and find your guide."
+        title="Learn with people who've been there"
+        description="PRIZMA mentors are seniors and guides who host peer sessions, share resources, and help students grow. Browse profiles and find your people."
         image="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=900&q=80"
       />
 
@@ -97,7 +97,7 @@ export function MentorsPage() {
                   <p className="text-sm text-educture-orange font-medium">{m.title}</p>
                   <p className="text-xs text-gray-400 mb-3">{m.company}</p>
                   <p className="text-xs text-gray-500 mb-3">
-                    {m.students} students · {m.courses} courses
+                    {m.students} students · {m.courses} sessions
                   </p>
                   <div className="flex flex-wrap gap-1.5">
                     {m.tags.map((t) => (
@@ -107,7 +107,7 @@ export function MentorsPage() {
                     ))}
                   </div>
                   <AppButton to="/courses" size="sm" className="w-full mt-4">
-                    View classes
+                    View sessions
                   </AppButton>
                 </div>
               </article>

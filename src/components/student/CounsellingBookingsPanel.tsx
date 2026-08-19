@@ -2,7 +2,8 @@ import { Link } from 'react-router-dom'
 import { Calendar, CheckCircle2, IndianRupee, Phone, Video } from 'lucide-react'
 import {
   counsellingGroupById,
-  counsellingTopicById,
+  counsellingOfferingTitle,
+  counsellingPriceInr,
   COUNSELLING_PRICE_INR,
 } from '../../data/counsellingServices'
 import { formatScheduleLabel } from '../../data/counsellingSchedule'
@@ -72,7 +73,7 @@ export function CounsellingBookingsPanel({ bookings, loading, error, showSuccess
       {!loading && bookings.length > 0 && (
         <div className="space-y-3">
           {bookings.map((booking, index) => {
-            const topic = counsellingTopicById(booking.categoryId)
+            const topicTitle = counsellingOfferingTitle(booking.categoryId)
             const group = booking.groupId ? counsellingGroupById(booking.groupId) : undefined
             const schedule =
               booking.scheduledDate && booking.scheduledTime
@@ -90,7 +91,7 @@ export function CounsellingBookingsPanel({ bookings, loading, error, showSuccess
                       {group?.title ?? 'Counselling'}
                     </p>
                     <h3 className="font-bold text-lg text-[#1d1d1d] mt-1 leading-snug">
-                      {topic?.title ?? booking.categoryId}
+                      {topicTitle}
                     </h3>
                     <p className="text-sm text-gray-600 mt-1">
                       For <strong className="text-gray-800">{booking.fullName}</strong>
@@ -121,7 +122,7 @@ export function CounsellingBookingsPanel({ bookings, loading, error, showSuccess
                   <span>+91 {booking.phone}</span>
                   <span className="inline-flex items-center gap-1 font-semibold text-gray-700">
                     <IndianRupee className="w-3 h-3" />
-                    {COUNSELLING_PRICE_INR} paid
+                    {counsellingPriceInr(booking.categoryId)} paid
                   </span>
                 </div>
 

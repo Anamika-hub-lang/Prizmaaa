@@ -2,12 +2,12 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useAuth } from '@clerk/nextjs'
 import { Calendar, IndianRupee, Phone, RefreshCw, Search, Video } from 'lucide-react'
-import { AdminPageHeader } from '../../components/layout/AdminLayout'
 import { dashboardCardBorder } from '../../components/ui/dashboardCardStyles'
 import {
   counsellingGroupById,
-  counsellingTopicById,
-  COUNSELLING_PRICE_INR,
+  counsellingOfferingTitle,
+  counsellingPriceInr,
+  INTERVIEW_PREP_TOPIC_ID,
 } from '../../data/counsellingServices'
 import { formatScheduleLabel } from '../../data/counsellingSchedule'
 import {
@@ -16,6 +16,7 @@ import {
 } from '../../lib/adminCounselling'
 
 type StatusFilter = 'all' | 'paid' | 'pending' | 'failed'
+type PageMode = 'guidance' | 'interview'
 
 function parseStatus(value: string | null): StatusFilter {
   if (value === 'paid' || value === 'pending' || value === 'failed') return value
@@ -52,7 +53,7 @@ function paymentLabel(status: AdminCounsellingBooking['paymentStatus']) {
   }
 }
 
-export function AdminCounsellingPage() {
+export function AdminCounsellingPage({ mode = 'guidance' }: { mode?: PageMode }) {
   const { getToken } = useAuth()
   const [searchParams, setSearchParams] = useSearchParams()
   const statusFilter = parseStatus(searchParams.get('status'))
@@ -79,21 +80,29 @@ export function AdminCounsellingPage() {
     void load()
   }, [load])
 
+  const scoped = useMemo(() => {
+    return bookings.filter((b) => {
+      const isInterview = b.categoryId === INTERVIEW_PREP_TOPIC_ID
+      if (mode === 'interview') return isInterview
+      return !isInterview
+    })
+  }, [bookings, mode])
+
   const counts = useMemo(() => {
     let paid = 0
     let pending = 0
     let failed = 0
-    for (const b of bookings) {
+    for (const b of scoped) {
       if (b.paymentStatus === 'paid') paid += 1
       else if (b.paymentStatus === 'pending') pending += 1
       else if (b.paymentStatus === 'failed') failed += 1
     }
-    return { all: bookings.length, paid, pending, failed }
-  }, [bookings])
+    return { all: scoped.length, paid, pending, failed }
+  }, [scoped])
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
-    return bookings.filter((b) => {
+    return scoped.filter((b) => {
       if (statusFilter !== 'all' && b.paymentStatus !== statusFilter) return false
       if (!q) return true
       const hay = [b.fullName, b.email, b.phone, b.categoryId, b.groupId ?? '', b.cashfreeOrderId ?? '']
@@ -101,7 +110,7 @@ export function AdminCounsellingPage() {
         .toLowerCase()
       return hay.includes(q)
     })
-  }, [bookings, query, statusFilter])
+  }, [scoped, query, statusFilter])
 
   function setStatus(next: StatusFilter) {
     const params = new URLSearchParams(searchParams)
@@ -118,13 +127,7 @@ export function AdminCounsellingPage() {
   ]
 
   return (
-    <div>
-      <AdminPageHeader
-        title="Counselling bookings"
-        subtitle="Student name, scheduled slot, and whether Cashfree payment is complete."
-      />
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-5">
+    <div className="space-y-5">
         <div className="flex flex-wrap items-center gap-2">
           {filters.map((f) => (
             <button
@@ -163,7 +166,7 @@ export function AdminCounsellingPage() {
 
         {loading && (
           <div className={`${dashboardCardBorder} border-orange-100 rounded-2xl bg-white p-6 text-sm text-gray-500`}>
-            Loading counselling bookings…
+            Loading {mode === 'interview' ? 'mock interviews' : 'counselling bookings'}…
           </div>
         )}
 
@@ -179,7 +182,9 @@ export function AdminCounsellingPage() {
 
         {!loading && !error && filtered.length === 0 && (
           <div className={`${dashboardCardBorder} border-dashed border-orange-200 rounded-2xl bg-white p-8 text-center`}>
-            <p className="text-sm text-gray-500">No counselling bookings match this filter.</p>
+            <p className="text-sm text-gray-500">
+              No {mode === 'interview' ? 'mock interviews' : 'counselling bookings'} match this filter.
+            </p>
             <Link to="/admin" className="inline-block mt-3 text-sm font-semibold text-educture-orange hover:underline">
               Back to overview
             </Link>
@@ -189,7 +194,7 @@ export function AdminCounsellingPage() {
         {!loading && !error && filtered.length > 0 && (
           <div className="space-y-3">
             {filtered.map((booking) => {
-              const topic = counsellingTopicById(booking.categoryId)
+              const topicTitle = counsellingOfferingTitle(booking.categoryId)
               const group = booking.groupId ? counsellingGroupById(booking.groupId) : undefined
               const schedule =
                 booking.scheduledDate && booking.scheduledTime
@@ -204,13 +209,13 @@ export function AdminCounsellingPage() {
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div className="min-w-0">
                       <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-educture-orange">
-                        {group?.title ?? 'Counselling'}
+                        {mode === 'interview' ? 'Mock interview' : (group?.title ?? 'Counselling')}
                       </p>
                       <h2 className="font-bold text-lg text-[#1d1d1d] mt-1 leading-snug">
                         {booking.fullName}
                       </h2>
                       <p className="text-sm text-gray-600 mt-0.5">
-                        {topic?.title ?? booking.categoryId}
+                        {topicTitle}
                       </p>
                     </div>
                     <div className="flex flex-col items-end gap-2 shrink-0">
@@ -267,7 +272,7 @@ export function AdminCounsellingPage() {
                     </a>
                     <span className="inline-flex items-center gap-1 font-semibold text-gray-700">
                       <IndianRupee className="w-3 h-3" />
-                      {booking.amountInr || COUNSELLING_PRICE_INR}
+                      {booking.amountInr || counsellingPriceInr(booking.categoryId)}
                     </span>
                     {booking.cashfreeOrderId && (
                       <span className="font-mono text-[10px] text-gray-400">{booking.cashfreeOrderId}</span>
@@ -290,7 +295,6 @@ export function AdminCounsellingPage() {
             })}
           </div>
         )}
-      </div>
     </div>
   )
 }

@@ -37,14 +37,14 @@ export function UniversityCounselingPage() {
             </Link>
             <p className="text-violet-300 font-bold text-xs uppercase tracking-[0.2em] flex items-center gap-2 mt-6">
               <GraduationCap className="w-4 h-4" />
-              University counseling
+              Campus connect
             </p>
             <h1 className="font-display text-3xl sm:text-4xl mt-2 leading-tight">
               Pick your{' '}
-              <span className="font-script text-educture-orange text-4xl sm:text-5xl">university</span>
+              <span className="font-script text-educture-orange text-4xl sm:text-5xl">campus</span>
             </h1>
             <p className="text-sm text-gray-400 mt-3 max-w-xl leading-relaxed">
-              1:1 guidance from counselors who know SGT, GD Goenka, K.R. Mangalam, Amity & more —
+              1:1 chats with seniors and mentors who know SGT, GD Goenka, K.R. Mangalam, Amity & more —
               launching soon on PRIZMA.
             </p>
           </div>
@@ -58,13 +58,13 @@ export function UniversityCounselingPage() {
                 type="search"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search university name…"
+                placeholder="Search campus name…"
                 className="w-full pl-10 pr-4 py-3 rounded-xl border-2 border-violet-100 bg-white text-sm outline-none focus:border-violet-400 shadow-sm"
               />
             </div>
 
             <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-gray-400 mb-3">
-              {filtered.length} universities
+              {filtered.length} campuses
             </p>
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
               {filtered.map((uni) => (
@@ -74,7 +74,7 @@ export function UniversityCounselingPage() {
 
             {filtered.length === 0 && (
               <p className="text-center text-sm text-gray-500 py-12">
-                No university found. Try another name.
+                No campus found. Try another name.
               </p>
             )}
           </div>

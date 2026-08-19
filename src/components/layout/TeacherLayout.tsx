@@ -11,6 +11,7 @@ import {
 import { PortalUserAvatar } from './PortalUserAvatar'
 import { BrandLogo } from '../brand/BrandLogo'
 import { PortalHeaderNav, PortalMobileBottomNav, type PortalNavItem } from './PortalNav'
+import { SyncStatusBanner } from './SyncStatusBanner'
 
 const primaryNav: PortalNavItem[] = [
   { to: '/teacher/classes', icon: BookOpen, label: 'Classes', match: '/teacher/classes' },
@@ -48,6 +49,8 @@ export function TeacherLayout({ children }: { children: ReactNode }) {
           </div>
         </div>
       </header>
+
+      <SyncStatusBanner />
 
       <div className="flex-1 min-w-0 pb-[4.75rem] md:pb-0">
         {children}

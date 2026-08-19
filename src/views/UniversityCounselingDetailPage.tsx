@@ -40,7 +40,7 @@ export function UniversityCounselingDetailPage() {
                 className="inline-flex items-center gap-1.5 text-sm font-semibold text-educture-orange hover:underline"
               >
                 <ArrowLeft className="w-4 h-4" />
-                All universities
+                All campuses
               </Link>
               <Badge variant="gray" className="mt-6 bg-white/10 border-white/20 text-orange-200">
                 Coming Soon
@@ -66,7 +66,7 @@ export function UniversityCounselingDetailPage() {
                 ))}
               </div>
               <CounselingButton onClick={showToast} className="mt-8 opacity-90">
-                Get counseling at {university.shortName}
+                Connect at {university.shortName}
               </CounselingButton>
             </div>
           </section>
@@ -96,7 +96,7 @@ export function UniversityCounselingDetailPage() {
               <div className="max-w-6xl mx-auto px-4 sm:px-6">
                 <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-gray-400 flex items-center gap-2">
                   <Sparkles className="w-3.5 h-3.5" />
-                  Counselors for {university.shortName}
+                  Mentors for {university.shortName}
                 </p>
                 <div className="grid sm:grid-cols-2 gap-4 mt-6 max-w-2xl">
                   {counselors.map((c) => (
@@ -129,11 +129,11 @@ export function UniversityCounselingDetailPage() {
             <div className="max-w-xl mx-auto px-4 text-center">
               <GraduationCap className="w-10 h-10 text-violet-600 mx-auto" />
               <h2 className="font-display text-2xl text-[#1a1a1a] mt-4">
-                Counseling for {university.shortName} launches soon
+                Campus Connect for {university.shortName} launches soon
               </h2>
               <p className="text-sm text-gray-600 mt-2 leading-relaxed">
-                We&apos;re onboarding verified counselors. You&apos;ll get help with course choice,
-                career clarity, and whether {university.shortName} is the right fit.
+                We&apos;re onboarding verified seniors and mentors. You&apos;ll get real perspectives on
+                course fit, campus life, and whether {university.shortName} is right for you.
               </p>
               <CounselingButton onClick={showToast} className="mt-6">
                 Notify me

@@ -13,7 +13,6 @@ import {
   Layers,
   Layout,
   LineChart,
-  MessageSquare,
   Monitor,
   Palette,
   Rocket,
@@ -26,10 +25,56 @@ import {
   Video,
 } from 'lucide-react'
 
-export const COUNSELLING_PRICE_INR = 200
-export const COUNSELLING_DURATION_LABEL = '1 hour'
+export const COUNSELLING_PRICE_INR = 199
+export const INTERVIEW_PREP_PRICE_INR = 99
+export const INTERVIEW_PREP_TOPIC_ID = 'interview-prep-mock'
+export const COUNSELLING_DURATION_LABEL = 'per call'
+export const INTERVIEW_PREP_DURATION_LABEL = 'per session'
 
 export type CounsellingGroupId = 'career' | 'domain' | 'future'
+
+export type CareerOffering = {
+  id: string
+  title: string
+  tagline: string
+  description: string
+  image: string
+  priceInr?: number
+  durationLabel?: string
+  comingSoon?: boolean
+  link?: string
+  highlights: string[]
+}
+
+export const careerOfferings: CareerOffering[] = [
+  {
+    id: 'internship-opportunities',
+    title: 'Internship opportunities',
+    tagline: 'Curated roles & application support',
+    description:
+      'Discover internships matched to your skills and goals — with help on applications, referrals, and what recruiters actually look for.',
+    image: 'https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=800&q=80',
+    comingSoon: true,
+    highlights: ['Role shortlists', 'Application tips', 'Referral network'],
+  },
+  {
+    id: INTERVIEW_PREP_TOPIC_ID,
+    title: 'Interview preparation',
+    tagline: 'Live mock interview on Google Meet',
+    description:
+      'Experience how real interviews are conducted — technical and HR rounds, question flow, and feedback so you know what to expect before the actual day.',
+    image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&q=80',
+    priceInr: INTERVIEW_PREP_PRICE_INR,
+    durationLabel: INTERVIEW_PREP_DURATION_LABEL,
+    link: '/counselling/interview-prep',
+    highlights: ['Mock interview format', 'Technical + HR rounds', 'Live on Google Meet'],
+  },
+]
+
+export function counsellingPriceInr(categoryId: string): number {
+  if (categoryId === INTERVIEW_PREP_TOPIC_ID) return INTERVIEW_PREP_PRICE_INR
+  return COUNSELLING_PRICE_INR
+}
 
 export type CounsellingGroup = {
   id: CounsellingGroupId
@@ -51,11 +96,11 @@ export type CounsellingTopic = {
 }
 
 export const counsellingIncludes = [
-  'Personalised roadmap for the next 3–12 months',
-  'Tools, resources & learning order that actually work',
+  'A clear plan for the next 3–12 months of your journey',
+  'Resources, tools & an order of learning that actually works',
   'Honest fit check — what to pursue and what to skip',
-  'Q&A on call or Google Meet with a mentor',
-  'Written summary points shared after the session',
+  'Q&A on call or Google Meet with a mentor or senior',
+  'Written takeaways shared after the call',
 ] as const
 
 export const counsellingGroups: CounsellingGroup[] = [
@@ -64,7 +109,7 @@ export const counsellingGroups: CounsellingGroup[] = [
     title: 'Career',
     subtitle: 'Jobs, growth & direction',
     description:
-      'Clarity on roles, switching paths, interviews, portfolios, and long-term career moves — with a practical 90-day plan.',
+      'Talk through roles, switching paths, interviews, portfolios, and long-term moves — with a practical 90-day plan from someone who has been there.',
     image: 'https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=800&q=80',
     topicCount: 0,
   },
@@ -73,16 +118,16 @@ export const counsellingGroups: CounsellingGroup[] = [
     title: 'Domain',
     subtitle: 'Skills & industry tracks',
     description:
-      'UI/UX, frontend, backend, data, marketing, and more — pick your field and get a mentor-built learning roadmap.',
+      'UI/UX, frontend, backend, data, marketing, and more — pick your field and get a peer-informed learning path.',
     image: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&q=80',
     topicCount: 0,
   },
   {
     id: 'future',
     title: 'Future',
-    subtitle: 'Education & next steps',
+    subtitle: 'Student life & next steps',
     description:
-      'After 10th, 12th, JEE, NEET, study plans, freelancing, and balancing exams with modern skills.',
+      'After 10th, 12th, exams, study plans, freelancing, and balancing academics with skills — talk it through with someone ahead of you.',
     image: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=800&q=80',
     topicCount: 0,
   },
@@ -93,8 +138,8 @@ export const counsellingTopics: CounsellingTopic[] = [
   {
     id: 'career-general',
     groupId: 'career',
-    title: 'Career counselling',
-    tagline: 'Roles, salary paths & long-term growth',
+    title: 'Career guidance',
+    tagline: 'Roles, growth paths & long-term direction',
     icon: Briefcase,
     accent: 'from-orange-500 to-amber-500',
     highlights: ['Role mapping', 'Industry fit', '5-year view'],
@@ -125,15 +170,6 @@ export const counsellingTopics: CounsellingTopic[] = [
     icon: FileText,
     accent: 'from-rose-500 to-pink-500',
     highlights: ['Portfolio structure', 'Project picks', 'ATS-friendly CV'],
-  },
-  {
-    id: 'career-interview',
-    groupId: 'career',
-    title: 'Interview preparation',
-    tagline: 'Technical + HR rounds with a clear prep plan',
-    icon: MessageSquare,
-    accent: 'from-indigo-500 to-violet-600',
-    highlights: ['Mock structure', 'Common questions', 'Confidence tips'],
   },
   {
     id: 'career-salary',
@@ -345,6 +381,13 @@ export function counsellingTopicsByGroup(groupId: CounsellingGroupId): Counselli
 
 export function counsellingTopicById(id: string): CounsellingTopic | undefined {
   return counsellingTopics.find((t) => t.id === id)
+}
+
+export function counsellingOfferingTitle(id: string): string {
+  const topic = counsellingTopicById(id)
+  if (topic) return topic.title
+  const offering = careerOfferings.find((item) => item.id === id)
+  return offering?.title ?? id
 }
 
 /** @deprecated use counsellingTopicById */

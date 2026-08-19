@@ -38,15 +38,15 @@ export function ShareReviewPage() {
         <Link to="/" className="text-sm font-semibold text-educture-orange hover:underline">
           ← Home
         </Link>
-        <h1 className="font-display text-2xl sm:text-3xl text-[#1d1d1d] mt-6">Share your review</h1>
+        <h1 className="font-display text-2xl sm:text-3xl text-[#1d1d1d] mt-6">Share your experience</h1>
         <p className="text-sm text-gray-600 mt-2 mb-8">
-          Students and mentors can post a short review. It appears on the home page testimonials carousel
+          Students and mentors can post a short note. It appears on the home page experiences carousel
           automatically.
         </p>
 
         {done && (
           <p className="mb-4 text-sm text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-xl px-4 py-3">
-            Thank you! Your review is live on the homepage.
+            Thank you! Your story is live on the homepage.
           </p>
         )}
 
@@ -83,14 +83,14 @@ export function ShareReviewPage() {
             </div>
           </div>
           <div>
-            <label className="text-xs font-bold text-gray-500 uppercase">Your review</label>
+            <label className="text-xs font-bold text-gray-500 uppercase">Your experience</label>
             <textarea
               required
               rows={4}
               maxLength={400}
               value={quote}
               onChange={(e) => setQuote(e.target.value)}
-              placeholder="What did you love about learning or teaching on PRIZMA?"
+              placeholder="What did you love about connecting, learning, or mentoring on PRIZMA?"
               className="w-full mt-1 px-4 py-3 rounded-xl border border-gray-200 bg-white text-sm outline-none resize-none focus:border-educture-orange"
             />
           </div>
@@ -100,11 +100,11 @@ export function ShareReviewPage() {
             disabled={saving}
             className="w-full py-3 rounded-full bg-educture-orange text-white font-semibold text-sm hover:bg-educture-orange-dark disabled:opacity-60"
           >
-            {saving ? 'Posting…' : 'Post review'}
+            {saving ? 'Posting…' : 'Share experience'}
           </button>
         </form>
 
-        <h2 className="text-sm font-bold text-gray-500 uppercase tracking-wide mb-4">Recent reviews</h2>
+        <h2 className="text-sm font-bold text-gray-500 uppercase tracking-wide mb-4">Recent experiences</h2>
         <ul className="space-y-3">
           {reviews.slice(0, 8).map((r) => (
             <li key={r.id} className="rounded-2xl border-2 border-orange-50 bg-white p-4 text-left">
@@ -121,7 +121,7 @@ export function ShareReviewPage() {
             </li>
           ))}
           {reviews.length === 0 && (
-            <p className="text-sm text-gray-500">No reviews yet — be the first!</p>
+            <p className="text-sm text-gray-500">No experiences yet — be the first!</p>
           )}
         </ul>
       </main>

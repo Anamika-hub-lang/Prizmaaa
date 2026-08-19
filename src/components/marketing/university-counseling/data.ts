@@ -28,7 +28,7 @@ export const featuredUniversities: FeaturedUniversity[] = [
     state: 'Maharashtra',
     image: universityImageFor('iit-bombay', 0),
     description:
-      'Get guidance on branches, JEE cutoffs, campus life, and placements at IIT Bombay — from counselors who know the system.',
+      'Hear from seniors about branches, campus life, placements, and whether IIT Bombay fits how you want to grow.',
     highlights: ['Branch fit', 'Placements', 'Campus life'],
   },
   {
@@ -39,7 +39,7 @@ export const featuredUniversities: FeaturedUniversity[] = [
     state: 'USA',
     image: universityImageFor('mit', 1),
     description:
-      'Exploring MIT? Understand admissions, majors, and whether an international path fits your goals and budget.',
+      'Curious about MIT? Talk through admissions, majors, and whether an international path fits your goals and budget.',
     highlights: ['Admissions', 'Majors', 'Global path'],
   },
   {
@@ -50,7 +50,7 @@ export const featuredUniversities: FeaturedUniversity[] = [
     state: 'Delhi',
     image: universityImageFor('iit-delhi', 2),
     description:
-      'Talk through courses, hostels, and career outcomes at IIT Delhi before you lock your preference list.',
+      'Chat with people who know courses, hostels, and day-to-day campus life at IIT Delhi before you lock preferences.',
     highlights: ['Courses', 'Hostels', 'Careers'],
   },
   {
@@ -61,7 +61,7 @@ export const featuredUniversities: FeaturedUniversity[] = [
     state: 'Rajasthan',
     image: universityImageFor('bits-pilani', 3),
     description:
-      'BITS vs IIT, dual degree, or campus choice — get clear advice on whether BITS Pilani is right for you.',
+      'BITS vs IIT, dual degree, or campus choice — get real student perspectives on whether BITS Pilani is right for you.',
     highlights: ['BITSAT', 'Dual degree', 'ROI'],
   },
 ]
@@ -77,21 +77,21 @@ export function counselorsForUniversity(universityName: string): DemoCounselor[]
 export const demoCounselors: DemoCounselor[] = [
   {
     id: 'iitb-expert',
-    name: 'Career Expert — IIT Bombay',
+    name: 'Campus mentor — IIT Bombay',
     university: 'IIT Bombay',
     experience: '8+ years',
     image: universityImageFor('iit-bombay', 18),
   },
   {
     id: 'mit-expert',
-    name: 'Admissions Advisor — MIT',
+    name: 'Senior guide — MIT',
     university: 'MIT',
     experience: '7+ years',
     image: universityImageFor('mit', 19),
   },
   {
     id: 'bits-expert',
-    name: 'Placement Mentor — BITS',
+    name: 'Peer mentor — BITS',
     university: 'BITS Pilani',
     experience: '6+ years',
     image: universityImageFor('bits-pilani', 20),
@@ -101,19 +101,19 @@ export const demoCounselors: DemoCounselor[] = [
 export const howItWorksSteps = [
   {
     step: '01',
-    title: 'Choose your university',
-    description: 'Search or pick from popular colleges you are considering.',
+    title: 'Pick a campus',
+    description: 'Search or choose from popular campuses you are curious about.',
   },
   {
     step: '02',
-    title: 'Get matched with a counselor',
-    description: 'We connect you with someone who knows that campus inside out.',
+    title: 'Connect with a mentor',
+    description: 'We match you with a senior or mentor who knows that campus inside out.',
   },
   {
     step: '03',
-    title: 'Get personalized guidance',
-    description: 'Course fit, career path, and whether the college is right for you.',
+    title: 'Get real perspectives',
+    description: 'Course fit, campus life, and whether the place is right for you — from people who lived it.',
   },
 ] as const
 
-export const COMING_SOON_TOAST = 'Counseling feature launching soon 🚀'
+export const COMING_SOON_TOAST = 'Campus Connect launching soon 🚀'

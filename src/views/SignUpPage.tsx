@@ -1,4 +1,4 @@
-import { Navigate } from 'react-router-dom'
+import { Link, Navigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { BrandLogo, BRAND_NAME } from '../components/brand/BrandLogo'
 import { SignUp, useAuth, useUser } from '@clerk/nextjs'
@@ -42,13 +42,13 @@ export function SignUpPage() {
           className="lg:w-1/2 flex flex-col justify-center text-left py-8"
         >
           <p className="text-educture-orange font-bold text-xs uppercase tracking-[0.2em] mb-3">
-            Create account
+            Join the hub
           </p>
           <h1 className="text-3xl sm:text-4xl font-bold text-[#1d1d1d] leading-tight mb-4">
             Join {BRAND_NAME}
           </h1>
           <p className="text-gray-500 text-sm max-w-md mb-6">
-            Students browse live classes; mentors publish courses and Meet links in real time.
+            Connect with peers and seniors, share experiences, discover opportunities, and learn together.
           </p>
           <img
             src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=700&q=80"
@@ -76,7 +76,11 @@ export function SignUpPage() {
       </div>
 
       <p className="text-center text-sm text-gray-500 pb-8">
-        After signing up you&apos;ll choose Student or Teacher once, then we&apos;ll take you to your dashboard.
+        After signing up you continue as a student. Want to mentor?{' '}
+        <Link to="/become-mentor" className="text-educture-orange font-semibold hover:underline">
+          Submit a mentor request
+        </Link>{' '}
+        first.
       </p>
     </div>
   )

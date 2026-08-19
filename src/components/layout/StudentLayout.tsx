@@ -72,7 +72,7 @@ export function EnrollmentSteps() {
   const planLine = formatBrowsePricingSummary()
   const steps = [
     { n: '1', title: 'Pick a class', desc: 'Browse categories and choose your online class.' },
-    { n: '2', title: 'Choose a plan', desc: `${planLine}. Starter trial, monthly, or 3-month bundle.` },
+    { n: '2', title: 'Choose a plan', desc: `${planLine}. Monthly, 3-month, or 6-month — pay upfront.` },
     { n: '3', title: 'Meet your mentor', desc: 'We connect you with your assigned mentor.' },
     { n: '4', title: 'Join Google Meet', desc: 'Live sessions happen on Google Meet — link in your dashboard.' },
   ]

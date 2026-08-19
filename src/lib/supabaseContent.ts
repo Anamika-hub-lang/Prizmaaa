@@ -66,22 +66,25 @@ export async function fetchAllContent(): Promise<{
   }
 }
 
-export async function insertClass(input: Omit<ManagedClass, 'id' | 'price'> & { price?: number }) {
-  const id = `class-${Date.now()}`
+export async function insertClass(
+  input: Omit<ManagedClass, 'id' | 'price'> & { price?: number; mentorClerkId?: string },
+  id: string,
+) {
   const row = classToRow({
     ...input,
     id,
     price: input.price ?? getDefaultPriceForCategory(input.categoryId),
     published: input.published ?? true,
+    mentorClerkId: input.mentorClerkId ?? null,
   } as ManagedClass)
-  if (!supabase) return row.id
+  if (!supabase) throw new Error('Database not connected. Add Supabase keys to .env.')
   const { error } = await supabase.from('classes').insert(row)
   if (error) throw error
   return id
 }
 
 export async function updateClassRow(id: string, patch: Partial<ManagedClass>) {
-  if (!supabase) return
+  if (!supabase) throw new Error('Database not connected. Add Supabase keys to .env.')
   const payload: Record<string, unknown> = {}
   if (patch.title !== undefined) payload.title = patch.title
   if (patch.categoryId !== undefined) payload.category_id = patch.categoryId
@@ -100,29 +103,46 @@ export async function updateClassRow(id: string, patch: Partial<ManagedClass>) {
 }
 
 export async function deleteClassRow(id: string) {
-  if (!supabase) return
+  if (!supabase) throw new Error('Database not connected. Add Supabase keys to .env.')
   const { error } = await supabase.from('classes').delete().eq('id', id)
   if (error) throw error
 }
 
-export async function insertFreeCourse(input: Omit<FreeCourse, 'id'>) {
-  const id = `free-${Date.now()}`
-  const row = freeCourseToRow({ ...input, id })
-  if (!supabase) return id
+export async function insertFreeCourse(
+  input: Omit<FreeCourse, 'id'> & { mentorClerkId?: string },
+  id: string,
+) {
+  const row = freeCourseToRow({ ...input, id, mentorClerkId: input.mentorClerkId ?? null })
+  if (!supabase) throw new Error('Database not connected. Add Supabase keys to .env.')
   const { error } = await supabase.from('free_courses').insert(row)
   if (error) throw error
   return id
 }
 
+export async function updateFreeCourseRow(id: string, patch: Partial<FreeCourse>) {
+  if (!supabase) throw new Error('Database not connected. Add Supabase keys to .env.')
+  const payload: Record<string, unknown> = {}
+  if (patch.title !== undefined) payload.title = patch.title
+  if (patch.image !== undefined) payload.image = patch.image
+  if (patch.instructor !== undefined) payload.instructor = patch.instructor
+  if (patch.lessons !== undefined) payload.lessons = patch.lessons
+  if (patch.hours !== undefined) payload.hours = patch.hours
+  if (patch.description !== undefined) payload.description = patch.description
+  const { error } = await supabase.from('free_courses').update(payload).eq('id', id)
+  if (error) throw error
+}
+
 export async function deleteFreeCourseRow(id: string) {
-  if (!supabase) return
+  if (!supabase) throw new Error('Database not connected. Add Supabase keys to .env.')
   const { error } = await supabase.from('free_courses').delete().eq('id', id)
   if (error) throw error
 }
 
-export async function insertAssignment(input: Omit<MentorAssignment, 'id' | 'status'>) {
+export async function insertAssignment(
+  input: Omit<MentorAssignment, 'id' | 'status'> & { mentorClerkId?: string },
+) {
   const id = `asg-${Date.now()}`
-  const row = assignmentToRow({ ...input, id, status: 'pending' })
+  const row = assignmentToRow({ ...input, id, status: 'pending', mentorClerkId: input.mentorClerkId ?? null })
   if (!supabase) return id
   const { error } = await supabase.from('assignments').insert(row)
   if (error) throw error

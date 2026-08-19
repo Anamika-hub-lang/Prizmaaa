@@ -7,7 +7,7 @@ import { stashCashfreeOrderId } from '../../lib/cashfreeOrderId'
 type Props = {
   classId: string
   purpose: 'paid' | 'trial'
-  planTier?: 'monthly' | 'three-month'
+  planTier?: 'monthly' | 'three-month' | 'six-month'
   label: string
   className?: string
 }

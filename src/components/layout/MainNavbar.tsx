@@ -6,10 +6,12 @@ import { NavbarAuth } from '../auth/NavbarAuth'
 
 const links = [
   { to: '/', label: 'Home' },
-  { to: '/counselling', label: 'Counselling' },
-  { to: '/universities', label: 'Reviews' },
+  { to: '/colleges', label: 'Colleges' },
+  { to: '/counselling', label: 'Guidance' },
+  { to: '/ai', label: 'AI Tools' },
+  { to: '/universities', label: 'Stories' },
   { to: '/about', label: 'About' },
-  { to: '/pricing', label: 'Pricing' },
+  { to: '/pricing', label: 'Plans' },
 ]
 
 export function MainNavbar() {

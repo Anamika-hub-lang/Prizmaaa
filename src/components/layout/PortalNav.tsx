@@ -9,9 +9,14 @@ export type PortalNavItem = {
   label: string
   match: string
   exact?: boolean
+  /** Extra paths that should highlight this nav item */
+  activePaths?: string[]
 }
 
 export function isPortalNavActive(pathname: string, item: PortalNavItem): boolean {
+  if (item.activePaths?.some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
+    return true
+  }
   if (item.exact) return pathname === item.to
   if (item.match === '/student') return pathname === '/student'
   if (item.match === '/student/browse') {
@@ -180,7 +185,9 @@ export function PortalMobileBottomNav({ primary }: { primary: PortalNavItem[] })
             ? 'grid-cols-2'
             : primary.length === 3
               ? 'grid-cols-3'
-              : 'grid-cols-4'
+              : primary.length === 5
+                ? 'grid-cols-5'
+                : 'grid-cols-4'
         }`}
       >
         {primary.map((item) => {

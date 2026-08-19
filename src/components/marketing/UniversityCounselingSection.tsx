@@ -66,27 +66,27 @@ export function UniversityCounselingSection() {
           >
             <Badge variant="sky" className="mb-4">
               <Sparkles className="w-3 h-3" />
-              Personalized guidance
+              Campus connect
             </Badge>
             <h2 className="font-display text-3xl sm:text-4xl lg:text-[2.75rem] text-[#1a1a1a] leading-tight">
-              Confused about your{' '}
-              <span className="font-script text-educture-orange text-4xl sm:text-5xl">University</span>{' '}
-              choice?
+              Curious about a{' '}
+              <span className="font-script text-educture-orange text-4xl sm:text-5xl">campus</span>
+              ?
             </h2>
             <p className="text-sm sm:text-base text-gray-600 mt-4 leading-relaxed">
-              Get 1:1 guidance from verified university counselors — is this college right for you,
-              which course to pick, and what career path makes sense.
+              Connect 1:1 with seniors and mentors who know the place — culture, courses, campus life,
+              and whether it fits your goals.
             </p>
             <div className="flex flex-wrap items-center justify-center gap-3 mt-6">
               <CounselingButton onClick={showToast} className="opacity-80">
-                Get Counseling
+                Explore Campus Connect
                 <Badge variant="gray" className="ml-1 normal-case tracking-normal font-semibold">
                   Soon
                 </Badge>
               </CounselingButton>
               <span className="inline-flex items-center gap-1.5 text-xs text-gray-500">
                 <Users className="w-3.5 h-3.5 text-educture-orange" />
-                1,000+ students helped
+                Built for students like you
               </span>
             </div>
           </motion.div>
@@ -102,10 +102,10 @@ export function UniversityCounselingSection() {
             <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-5 text-left">
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-gray-400">
-                  Popular universities
+                  Popular campuses
                 </p>
                 <h3 className="font-display text-xl sm:text-2xl text-[#1a1a1a] mt-1">
-                  Search your university
+                  Find your campus
                 </h3>
               </div>
               <div className="flex flex-col sm:flex-row gap-2 sm:items-center w-full sm:w-auto">
@@ -115,7 +115,7 @@ export function UniversityCounselingSection() {
                     type="search"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    placeholder="Search your university..."
+                    placeholder="Search campus or city..."
                     className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-orange-100 bg-white text-sm outline-none focus:border-educture-orange shadow-sm"
                   />
                 </div>
@@ -138,7 +138,7 @@ export function UniversityCounselingSection() {
               <p className="text-center text-sm text-gray-500 py-8">
                 No match found — try another name.{' '}
                 <button type="button" onClick={showToast} className="text-educture-orange font-semibold">
-                  Request your university
+                  Request your campus
                 </button>
               </p>
             )}
@@ -189,15 +189,15 @@ export function UniversityCounselingSection() {
             <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-6 text-left">
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-gray-400">
-                  Meet counselors
+                  Meet campus mentors
                 </p>
                 <h3 className="font-display text-2xl sm:text-3xl text-[#1a1a1a] mt-1">
-                  Verified experts, launching soon
+                  Seniors & mentors, launching soon
                 </h3>
               </div>
               <Badge variant="emerald">
                 <BadgeCheck className="w-3 h-3" />
-                Verified Counselor
+                Verified mentor
               </Badge>
             </div>
 
@@ -232,7 +232,7 @@ export function UniversityCounselingSection() {
                       </p>
                       <Badge variant="emerald" className="mt-2">
                         <GraduationCap className="w-3 h-3" />
-                        Verified Counselor
+                        Verified mentor
                       </Badge>
                     </div>
                   </div>
@@ -257,11 +257,11 @@ export function UniversityCounselingSection() {
               <div className="relative z-10 max-w-lg mx-auto">
                 <Bell className="w-8 h-8 text-educture-orange mx-auto mb-4" />
                 <h3 className="font-display text-2xl sm:text-3xl leading-tight">
-                  We are onboarding top counselors.
+                  We are onboarding campus mentors.
                 </h3>
                 <p className="text-orange-100/80 text-sm sm:text-base mt-3 leading-relaxed">
-                  Launching soon — get notified when personalized university counseling goes live on
-                  PRIZMA.
+                  Launching soon — get notified when Campus Connect goes live so you can talk to
+                  seniors who know the place.
                 </p>
                 <form
                   onSubmit={(e) => void handleNotify(e)}

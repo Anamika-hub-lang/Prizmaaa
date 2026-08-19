@@ -28,6 +28,7 @@ export type FreeCourse = {
   lessons: number
   hours: number
   description: string
+  mentorClerkId?: string | null
 }
 
 /** DB anchor price = category monthly plan (not “per class” one-time). */
@@ -50,20 +51,20 @@ export const classCategories: {
 }[] = [
   {
     id: 'skills',
-    title: 'Skills Based Classes',
-    description: 'UI/UX, coding, Figma, Canva, AI & more — live on Google Meet.',
+    title: 'Skills Sessions',
+    description: 'UI/UX, coding, Figma, Canva, AI & more — learn together live on Google Meet.',
     image: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&q=80',
   },
   {
     id: 'academic',
-    title: 'Academic Classes',
-    description: 'Mathematics & Accounts for 11th and 12th — mentor-led live classes.',
+    title: 'Academic Sessions',
+    description: 'Mathematics & Accounts for 11th and 12th — peer sessions with mentors.',
     image: 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=800&q=80',
   },
   {
     id: 'professional',
-    title: 'Professional Classes',
-    description: 'Career-focused tracks with live mentors on Google Meet.',
+    title: 'Professional Sessions',
+    description: 'Career-focused tracks with mentors and peers on Google Meet.',
     image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&q=80',
   },
 ]

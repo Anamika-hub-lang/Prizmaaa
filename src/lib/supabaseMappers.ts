@@ -15,6 +15,7 @@ export type ClassRow = {
   meet_link: string
   next_session_label: string
   published: boolean
+  mentor_clerk_id?: string | null
 }
 
 export type FreeCourseRow = {
@@ -25,6 +26,7 @@ export type FreeCourseRow = {
   lessons: number
   hours: number
   description: string
+  mentor_clerk_id?: string | null
 }
 
 export type AssignmentRow = {
@@ -37,6 +39,7 @@ export type AssignmentRow = {
   submitted_at: string | null
   student_note: string | null
   submitted_by: string | null
+  mentor_clerk_id?: string | null
 }
 
 export function classFromRow(row: ClassRow): ManagedClass {
@@ -54,6 +57,7 @@ export function classFromRow(row: ClassRow): ManagedClass {
     meetLink: row.meet_link,
     nextSessionLabel: row.next_session_label,
     published: row.published,
+    mentorClerkId: row.mentor_clerk_id ?? null,
   }
 }
 
@@ -72,6 +76,7 @@ export function classToRow(c: ManagedClass): ClassRow {
     meet_link: c.meetLink,
     next_session_label: c.nextSessionLabel,
     published: c.published,
+    mentor_clerk_id: c.mentorClerkId ?? null,
   }
 }
 
@@ -84,6 +89,7 @@ export function freeCourseFromRow(row: FreeCourseRow): FreeCourse {
     lessons: row.lessons,
     hours: row.hours,
     description: row.description,
+    mentorClerkId: row.mentor_clerk_id ?? null,
   }
 }
 
@@ -96,6 +102,7 @@ export function freeCourseToRow(c: FreeCourse): FreeCourseRow {
     lessons: c.lessons,
     hours: c.hours,
     description: c.description,
+    mentor_clerk_id: c.mentorClerkId ?? null,
   }
 }
 
@@ -110,6 +117,7 @@ export function assignmentFromRow(row: AssignmentRow): MentorAssignment {
     submittedAt: row.submitted_at ?? undefined,
     studentNote: row.student_note ?? undefined,
     submittedBy: row.submitted_by ?? undefined,
+    mentorClerkId: row.mentor_clerk_id ?? null,
   }
 }
 
@@ -124,5 +132,6 @@ export function assignmentToRow(a: MentorAssignment): AssignmentRow {
     submitted_at: a.submittedAt ?? null,
     student_note: a.studentNote ?? null,
     submitted_by: a.submittedBy ?? null,
+    mentor_clerk_id: a.mentorClerkId ?? null,
   }
 }

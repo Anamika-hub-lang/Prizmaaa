@@ -3,8 +3,9 @@ import { Providers } from './providers'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'PRIZMA — Education For Real-Life Success',
-  description: 'PRIZMA education platform',
+  title: 'PRIZMA — Where Students Connect, Learn & Grow Together',
+  description:
+    'A student hub to connect with peers and seniors, share campus stories, discover opportunities, and learn together.',
   icons: { icon: '/prizma-logo.png' },
 }
 
@@ -21,7 +22,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           rel="stylesheet"
         />
       </head>
-      <body>
+      <body className="overflow-x-hidden">
         <Providers>{children}</Providers>
       </body>
     </html>

@@ -1,6 +1,4 @@
-import { TRIAL_DAYS } from '../data/pricingPlans'
-
-export type PaymentFlowPath = 'trial' | 'paid-monthly' | 'paid-three-month'
+export type PaymentFlowPath = 'paid-monthly' | 'paid-three-month' | 'paid-six-month'
 
 export const checkoutSteps = {
   choose: { n: 1, label: 'Choose plan' },
@@ -8,18 +6,21 @@ export const checkoutSteps = {
   dashboard: { n: 3, label: 'Dashboard access' },
 } as const
 
-export function planCardHint(key: 'trial' | 'monthly' | 'three-month', mode: 'checkout' | 'marketing') {
-  if (key === 'trial') {
-    return mode === 'checkout'
-      ? `Opens step 2: save UPI/bank/card for auto-pay after ${TRIAL_DAYS}-day trial. No charge today.`
-      : `Sign up, pick a class, then add payment method to start ${TRIAL_DAYS}-day trial.`
-  }
+export function planCardHint(
+  key: 'monthly' | 'three-month' | 'six-month',
+  mode: 'checkout' | 'marketing',
+) {
   if (key === 'monthly') {
     return mode === 'checkout'
-      ? 'Opens step 2: pay monthly amount now → class appears on your dashboard.'
-      : 'Sign in and enroll in a class to pay for 1 month.'
+      ? 'Opens step 2: pay ₹999/month now → class appears on your dashboard.'
+      : 'Sign in, pick a session, and pay for 1 month.'
+  }
+  if (key === 'three-month') {
+    return mode === 'checkout'
+      ? 'Opens step 2: pay 3-month bundle now → class appears on your dashboard.'
+      : 'Sign in and enroll in a peer session to pay for 3 months upfront.'
   }
   return mode === 'checkout'
-    ? 'Opens step 2: pay 3-month bundle now → class appears on your dashboard.'
-    : 'Sign in and enroll in a class to pay for 3 months.'
+    ? 'Opens step 2: pay 6-month bundle now → best value on your dashboard.'
+    : 'Sign in and enroll in a peer session to pay for 6 months upfront.'
 }

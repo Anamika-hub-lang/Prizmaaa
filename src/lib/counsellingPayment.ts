@@ -25,6 +25,46 @@ export type CounsellingBooking = {
   createdAt: string
 }
 
+export async function bookCounsellingViaUpi(
+  getToken: () => Promise<string | null>,
+  payload: CounsellingBookingPayload,
+): Promise<{ redirect: string; scheduledDate: string; scheduledTime: string }> {
+  const token = await getToken()
+  if (!token) throw new Error('Sign in required to book counselling')
+
+  const res = await fetch('/api/counselling/book', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  })
+
+  const text = await res.text()
+  let data: {
+    redirect?: string
+    scheduledDate?: string
+    scheduledTime?: string
+    error?: string
+  }
+  try {
+    data = JSON.parse(text) as typeof data
+  } catch {
+    throw new Error(res.ok ? 'Invalid server response' : text.slice(0, 120) || `API error (${res.status})`)
+  }
+
+  if (!res.ok) {
+    throw new Error(data.error ?? 'Could not submit booking')
+  }
+
+  return {
+    redirect: data.redirect ?? '/student?counselling=booked',
+    scheduledDate: payload.scheduledDate,
+    scheduledTime: payload.scheduledTime,
+  }
+}
+
 export async function createCounsellingOrder(
   getToken: () => Promise<string | null>,
   payload: CounsellingBookingPayload,

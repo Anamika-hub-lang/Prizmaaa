@@ -17,8 +17,9 @@ export function getActiveEnrollmentForClass(
 
 export function planTierLabel(tier: string | null | undefined): string {
   if (tier === 'trial') return 'Starter trial'
-  if (tier === 'monthly') return 'Growth (monthly)'
-  if (tier === 'three-month') return 'Premium (3 months)'
+  if (tier === 'monthly') return 'Monthly plan'
+  if (tier === 'three-month') return '3 Months plan'
+  if (tier === 'six-month') return '6 Months plan'
   return 'your current plan'
 }
 

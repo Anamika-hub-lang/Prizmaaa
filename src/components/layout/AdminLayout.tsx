@@ -1,10 +1,13 @@
 'use client'
 
 import {
+  BookOpen,
   CalendarCheck,
   FileSpreadsheet,
+  GraduationCap,
   LayoutDashboard,
   Tags,
+  UserPlus,
   UserRound,
   Users,
 } from 'lucide-react'
@@ -38,6 +41,9 @@ const adminNav: SidebarNavItem[] = [
     label: 'Bookings',
     match: '/admin/counselling',
   },
+  { to: '/admin/enrollments', icon: GraduationCap, label: 'Courses', match: '/admin/enrollments' },
+  { to: '/admin/interviews', icon: BookOpen, label: 'Classes', match: '/admin/interviews' },
+  { to: '/admin/mentors', icon: UserPlus, label: 'Mentors', match: '/admin/mentors' },
 ]
 
 export function AdminLayout({ children }: { children: ReactNode }) {

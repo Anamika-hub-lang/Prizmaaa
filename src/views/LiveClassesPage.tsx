@@ -59,14 +59,14 @@ export function LiveClassesPage() {
               <div>
                 <p className="text-educture-orange font-bold text-xs uppercase tracking-[0.2em] flex items-center gap-2">
                   <Video className="w-4 h-4" />
-                  Live classes
+                  Learn together
                 </p>
                 <h1 className="font-display text-2xl sm:text-3xl lg:text-4xl mt-1 leading-tight">
-                  Browse all{' '}
-                  <span className="font-script text-educture-orange text-3xl sm:text-4xl">classes</span>
+                  Browse peer{' '}
+                  <span className="font-script text-educture-orange text-3xl sm:text-4xl">sessions</span>
                 </h1>
                 <p className="text-sm text-gray-400 mt-2 max-w-xl leading-relaxed">
-                  Explore every live class on PRIZMA. Sign up when you&apos;re ready to enroll —{' '}
+                  Explore every live peer session on PRIZMA. Join when you&apos;re ready to enroll —{' '}
                   {pricingLine}.
                 </p>
               </div>
@@ -75,7 +75,7 @@ export function LiveClassesPage() {
                   to="/sign-up"
                   className="inline-flex items-center gap-2 shrink-0 px-5 py-2.5 rounded-full bg-educture-orange text-white text-sm font-semibold hover:bg-educture-orange-dark transition-colors"
                 >
-                  Sign up to enroll
+                  Join to enroll
                   <ArrowRight className="w-4 h-4" />
                 </Link>
               )}
@@ -110,7 +110,7 @@ export function LiveClassesPage() {
                         : 'border-orange-100 bg-white text-gray-600 hover:border-educture-orange/40'
                     }`}
                   >
-                    {cat.title.replace(' Classes', '')} ({count})
+                    {cat.title.replace(' Sessions', '').replace(' Classes', '')} ({count})
                   </button>
                 )
               })}
@@ -118,7 +118,7 @@ export function LiveClassesPage() {
 
             {classes.length === 0 ? (
               <p className="text-center text-sm text-gray-500 py-16">
-                No live classes published in this category yet. Check back soon.
+                No peer sessions published in this category yet. Check back soon.
               </p>
             ) : (
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
@@ -153,7 +153,7 @@ export function LiveClassesPage() {
                         onClick={() => handleEnroll(item.id)}
                         className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full bg-educture-orange px-4 py-2.5 text-sm font-semibold text-white hover:bg-educture-orange-dark transition-colors"
                       >
-                        {isSignedIn ? 'View & enroll' : 'Sign up to take this class'}
+                        {isSignedIn ? 'View & enroll' : 'Join to take this session'}
                         <ArrowRight className="w-4 h-4" />
                       </button>
                     </div>
@@ -163,7 +163,7 @@ export function LiveClassesPage() {
             )}
 
             <p className="text-center text-xs text-gray-500 mt-10 leading-relaxed">
-              Browsing is free. You only need an account when you enroll in a live class.
+              Browsing is free. You only need an account when you enroll in a peer session.
             </p>
           </div>
         </section>

@@ -7,7 +7,7 @@ export type CashfreeOrderIntentRow = {
   clerk_id: string
   class_id: string
   purpose: 'paid' | 'trial'
-  plan_tier: 'monthly' | 'three-month' | null
+  plan_tier: 'monthly' | 'three-month' | 'six-month' | null
   created_at?: string
 }
 

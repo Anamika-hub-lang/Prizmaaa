@@ -7,6 +7,7 @@ import {
   useState,
   type ReactNode,
 } from 'react'
+import { useUser } from '@clerk/nextjs'
 import {
   classCategories,
   formatBrowsePricingSummary,
@@ -22,6 +23,7 @@ import {
   updateClassRow,
   deleteClassRow,
   insertFreeCourse,
+  updateFreeCourseRow,
   deleteFreeCourseRow,
   insertAssignment,
   submitAssignmentRow,
@@ -33,8 +35,11 @@ export type { ManagedClass, MentorAssignment }
 
 type MentorContentContextValue = {
   classes: ManagedClass[]
+  myClasses: ManagedClass[]
   freeCourses: FreeCourse[]
+  myFreeCourses: FreeCourse[]
   assignments: MentorAssignment[]
+  myAssignments: MentorAssignment[]
   categories: typeof classCategories
   classPrice: string
   loading: boolean
@@ -46,6 +51,7 @@ type MentorContentContextValue = {
   removeClass: (id: string) => void
   setMeetForClass: (id: string, meetLink: string, nextSessionLabel: string) => void
   addFreeCourse: (input: Omit<FreeCourse, 'id'>) => void
+  updateFreeCourse: (id: string, patch: Partial<FreeCourse>) => void
   removeFreeCourse: (id: string) => void
   addAssignment: (input: Omit<MentorAssignment, 'id' | 'status'>) => void
   updateAssignment: (id: string, patch: Partial<MentorAssignment>) => void
@@ -59,6 +65,9 @@ type MentorContentContextValue = {
 const MentorContentContext = createContext<MentorContentContextValue | null>(null)
 
 export function MentorContentProvider({ children }: { children: ReactNode }) {
+  const { user } = useUser()
+  const mentorClerkId = user?.id ?? null
+
   const [classes, setClasses] = useState<ManagedClass[]>([])
   const [freeCourses, setFreeCourses] = useState<FreeCourse[]>([])
   const [assignments, setAssignments] = useState<MentorAssignment[]>([])
@@ -103,19 +112,21 @@ export function MentorContentProvider({ children }: { children: ReactNode }) {
 
   const addClass = useCallback(
     (input: Omit<ManagedClass, 'id' | 'price'>) => {
+      const id = `class-${Date.now()}`
       const optimistic: ManagedClass = {
         ...input,
-        id: `class-${Date.now()}`,
+        id,
         price: getDefaultPriceForCategory(input.categoryId),
         published: input.published ?? true,
+        mentorClerkId: mentorClerkId ?? input.mentorClerkId ?? null,
       }
       setClasses((prev) => [...prev, optimistic])
-      insertClass(input).catch((e) => {
+      insertClass({ ...input, mentorClerkId: mentorClerkId ?? undefined }, id).catch((e) => {
         setSyncError(e instanceof Error ? e.message : 'Could not add class')
-        refresh()
+        setClasses((prev) => prev.filter((c) => c.id !== id))
       })
     },
-    [refresh],
+    [mentorClerkId],
   )
 
   const updateClass = useCallback(
@@ -149,10 +160,22 @@ export function MentorContentProvider({ children }: { children: ReactNode }) {
 
   const addFreeCourse = useCallback(
     (input: Omit<FreeCourse, 'id'>) => {
-      const optimistic = { ...input, id: `free-${Date.now()}` }
+      const id = `free-${Date.now()}`
+      const optimistic = { ...input, id, mentorClerkId: mentorClerkId ?? null }
       setFreeCourses((prev) => [...prev, optimistic])
-      insertFreeCourse(input).catch((e) => {
+      insertFreeCourse({ ...input, mentorClerkId: mentorClerkId ?? undefined }, id).catch((e) => {
         setSyncError(e instanceof Error ? e.message : 'Could not add free course')
+        setFreeCourses((prev) => prev.filter((c) => c.id !== id))
+      })
+    },
+    [mentorClerkId],
+  )
+
+  const updateFreeCourse = useCallback(
+    (id: string, patch: Partial<FreeCourse>) => {
+      setFreeCourses((prev) => prev.map((c) => (c.id === id ? { ...c, ...patch } : c)))
+      updateFreeCourseRow(id, patch).catch((e) => {
+        setSyncError(e instanceof Error ? e.message : 'Could not update course')
         refresh()
       })
     },
@@ -174,12 +197,12 @@ export function MentorContentProvider({ children }: { children: ReactNode }) {
     (input: Omit<MentorAssignment, 'id' | 'status'>) => {
       const optimistic: MentorAssignment = { ...input, id: `asg-${Date.now()}`, status: 'pending' }
       setAssignments((prev) => [...prev, optimistic])
-      insertAssignment(input).catch((e) => {
+      insertAssignment({ ...input, mentorClerkId: mentorClerkId ?? undefined }).catch((e) => {
         setSyncError(e instanceof Error ? e.message : 'Could not add assignment')
         refresh()
       })
     },
-    [refresh],
+    [mentorClerkId, refresh],
   )
 
   const updateAssignment = useCallback(
@@ -234,11 +257,29 @@ export function MentorContentProvider({ children }: { children: ReactNode }) {
 
   const publishedClasses = useMemo(() => classes.filter((c) => c.published), [classes])
 
+  const myClasses = useMemo(
+    () => (mentorClerkId ? classes.filter((c) => c.mentorClerkId === mentorClerkId) : []),
+    [classes, mentorClerkId],
+  )
+
+  const myFreeCourses = useMemo(
+    () => (mentorClerkId ? freeCourses.filter((c) => c.mentorClerkId === mentorClerkId) : []),
+    [freeCourses, mentorClerkId],
+  )
+
+  const myAssignments = useMemo(
+    () => (mentorClerkId ? assignments.filter((a) => a.mentorClerkId === mentorClerkId) : []),
+    [assignments, mentorClerkId],
+  )
+
   const value = useMemo(
     () => ({
       classes,
+      myClasses,
       freeCourses,
+      myFreeCourses,
       assignments,
+      myAssignments,
       categories: classCategories,
       classPrice: formatBrowsePricingSummary(),
       loading,
@@ -250,6 +291,7 @@ export function MentorContentProvider({ children }: { children: ReactNode }) {
       removeClass,
       setMeetForClass,
       addFreeCourse,
+      updateFreeCourse,
       removeFreeCourse,
       addAssignment,
       updateAssignment,
@@ -261,8 +303,11 @@ export function MentorContentProvider({ children }: { children: ReactNode }) {
     }),
     [
       classes,
+      myClasses,
       freeCourses,
+      myFreeCourses,
       assignments,
+      myAssignments,
       loading,
       syncError,
       usingLocalData,
@@ -271,6 +316,7 @@ export function MentorContentProvider({ children }: { children: ReactNode }) {
       removeClass,
       setMeetForClass,
       addFreeCourse,
+      updateFreeCourse,
       removeFreeCourse,
       addAssignment,
       updateAssignment,

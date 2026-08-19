@@ -45,10 +45,10 @@ export function SignInPage() {
             Welcome back
           </p>
           <h1 className="text-3xl sm:text-4xl font-bold text-[#1d1d1d] leading-tight mb-4">
-            Log in to continue your learning journey
+            Log in to continue your student journey
           </h1>
           <p className="text-gray-500 text-sm max-w-md mb-6">
-            Access your courses, live sessions, and mentor feedback from one place.
+            Pick up conversations, peer sessions, and connections from one place.
           </p>
           <img
             src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=700&q=80"

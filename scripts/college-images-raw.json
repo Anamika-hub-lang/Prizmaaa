@@ -1,0 +1,382 @@
+[
+  {
+    "title": "Indian Institute of Technology Delhi",
+    "page": "IIT Delhi",
+    "img": "https://upload.wikimedia.org/wikipedia/en/thumb/f/fd/Indian_Institute_of_Technology_Delhi_Logo.svg/330px-Indian_Institute_of_Technology_Delhi_Logo.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "type": "standard"
+  },
+  {
+    "title": "Jawaharlal Nehru University",
+    "page": "Jawaharlal Nehru University",
+    "img": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fb/Jawaharlal_Nehru_University_Logo_vectorized.svg/960px-Jawaharlal_Nehru_University_Logo_vectorized.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "type": "standard"
+  },
+  {
+    "title": "University of Delhi",
+    "page": "Delhi University",
+    "img": "https://upload.wikimedia.org/wikipedia/en/thumb/b/b6/Delhi_University.svg/330px-Delhi_University.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "type": "standard"
+  },
+  {
+    "title": "Jamia Millia Islamia",
+    "page": "Jamia Millia Islamia",
+    "img": "https://upload.wikimedia.org/wikipedia/en/thumb/d/df/Jamia_Millia_Islamia_Logo.svg/330px-Jamia_Millia_Islamia_Logo.svg.png",
+    "type": "standard"
+  },
+  {
+    "title": "Delhi Technological University",
+    "page": "Delhi Technological University",
+    "img": "https://upload.wikimedia.org/wikipedia/en/b/b5/DTU%2C_Delhi_official_logo.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail_unscaled",
+    "type": "standard"
+  },
+  {
+    "title": "Netaji Subhas University of Technology",
+    "page": "Netaji Subhas University of Technology",
+    "img": "https://upload.wikimedia.org/wikipedia/en/thumb/e/e9/Netaji_Subhas_University_of_Technology.svg/330px-Netaji_Subhas_University_of_Technology.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "type": "standard"
+  },
+  {
+    "title": "Indraprastha Institute of Information Technology Delhi",
+    "page": "Indraprastha Institute of Information Technology, Delhi",
+    "img": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/IIITD_Campus_2024.jpg/3840px-IIITD_Campus_2024.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "type": "standard"
+  },
+  {
+    "title": "National Institute of Technology Delhi",
+    "page": "National Institute of Technology Delhi",
+    "img": "https://upload.wikimedia.org/wikipedia/en/thumb/b/bb/NIT-Delhi_Logo.svg/330px-NIT-Delhi_Logo.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "type": "standard"
+  },
+  {
+    "title": "All India Institute of Medical Sciences, New Delhi",
+    "page": "All India Institute of Medical Sciences, New Delhi",
+    "img": "https://upload.wikimedia.org/wikipedia/en/thumb/8/85/All_India_Institute_of_Medical_Sciences%2C_Delhi.svg/330px-All_India_Institute_of_Medical_Sciences%2C_Delhi.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "type": "standard"
+  },
+  {
+    "title": "Hindu College, Delhi",
+    "page": "Hindu College, Delhi",
+    "img": "https://upload.wikimedia.org/wikipedia/en/thumb/2/2f/Hindu_College%2C_Delhi_shield.svg/120px-Hindu_College%2C_Delhi_shield.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "type": "standard"
+  },
+  {
+    "title": "Miranda House",
+    "img": null,
+    "status": 429
+  },
+  {
+    "title": "Hans Raj College",
+    "img": null,
+    "status": 429
+  },
+  {
+    "title": "St. Stephen's College, Delhi",
+    "img": null,
+    "status": 429
+  },
+  {
+    "title": "Lady Shri Ram College for Women",
+    "img": null,
+    "status": 429
+  },
+  {
+    "title": "Shri Ram College of Commerce",
+    "img": null,
+    "status": 429
+  },
+  {
+    "title": "Kirori Mal College",
+    "img": null,
+    "status": 429
+  },
+  {
+    "title": "Ramjas College",
+    "img": null,
+    "status": 429
+  },
+  {
+    "title": "Sri Venkateswara College, Delhi",
+    "img": null,
+    "status": 429
+  },
+  {
+    "title": "Atma Ram Sanatan Dharma College",
+    "img": null,
+    "status": 429
+  },
+  {
+    "title": "Gargi College",
+    "img": null,
+    "status": 429
+  },
+  {
+    "title": "Jesus and Mary College",
+    "img": null,
+    "status": 429
+  },
+  {
+    "title": "Guru Gobind Singh Indraprastha University",
+    "img": null,
+    "status": 429
+  },
+  {
+    "title": "Indira Gandhi Delhi Technical University for Women",
+    "img": null,
+    "status": 429
+  },
+  {
+    "title": "Lady Hardinge Medical College",
+    "img": null,
+    "status": 429
+  },
+  {
+    "title": "Maulana Azad Medical College",
+    "img": null,
+    "status": 429
+  },
+  {
+    "title": "Faculty of Management Studies – University of Delhi",
+    "img": null,
+    "status": 429
+  },
+  {
+    "title": "Shree Guru Gobind Singh Tricentenary University",
+    "img": null,
+    "status": 429
+  },
+  {
+    "title": "GD Goenka University",
+    "img": null,
+    "status": 429
+  },
+  {
+    "title": "Amity University, Haryana",
+    "img": null,
+    "status": 429
+  },
+  {
+    "title": "O. P. Jindal Global University",
+    "img": null,
+    "status": 429
+  },
+  {
+    "title": "National Institute of Technology, Kurukshetra",
+    "img": null,
+    "status": 429
+  },
+  {
+    "title": "Maharshi Dayanand University",
+    "img": null,
+    "status": 429
+  },
+  {
+    "title": "Kurukshetra University",
+    "img": null,
+    "status": 429
+  },
+  {
+    "title": "Ashoka University",
+    "img": null,
+    "status": 429
+  },
+  {
+    "title": "Management Development Institute",
+    "img": null,
+    "status": 429
+  },
+  {
+    "title": "Indian Institute of Management Rohtak",
+    "img": null,
+    "status": 429
+  },
+  {
+    "title": "Manav Rachna University",
+    "img": null,
+    "status": 429
+  },
+  {
+    "title": "The NorthCap University",
+    "img": null,
+    "status": 429
+  },
+  {
+    "title": "BML Munjal University",
+    "img": null,
+    "status": 429
+  },
+  {
+    "title": "K.R. Mangalam University",
+    "img": null,
+    "status": 429
+  },
+  {
+    "title": "Guru Jambheshwar University of Science and Technology",
+    "img": null,
+    "status": 429
+  },
+  {
+    "title": "Deenbandhu Chhotu Ram University of Science and Technology",
+    "img": null,
+    "status": 429
+  },
+  {
+    "title": "JC Bose University of Science and Technology, YMCA",
+    "img": null,
+    "status": 429
+  },
+  {
+    "title": "Maharishi Markandeshwar University, Mullana",
+    "img": null,
+    "status": 429
+  },
+  {
+    "title": "Central University of Haryana",
+    "img": null,
+    "status": 429
+  },
+  {
+    "title": "Pandit Bhagwat Dayal Sharma Post Graduate Institute of Medical Sciences",
+    "img": null,
+    "status": 429
+  },
+  {
+    "title": "Chhaju Ram Memorial Jat College",
+    "img": null,
+    "status": 429
+  },
+  {
+    "title": "All India Jat Heroes' Memorial College",
+    "img": null,
+    "status": 429
+  },
+  {
+    "title": "SRM University, Haryana",
+    "img": null,
+    "status": 429
+  },
+  {
+    "title": "Apeejay Stya University",
+    "img": null,
+    "status": 429
+  },
+  {
+    "title": "Sushant University",
+    "img": null,
+    "status": 429
+  },
+  {
+    "title": "Al-Falah University",
+    "img": null,
+    "status": 429
+  },
+  {
+    "title": "Baba Mastnath University",
+    "img": null,
+    "status": 429
+  },
+  {
+    "title": "Chaudhary Charan Singh Haryana Agricultural University",
+    "img": null,
+    "status": 429
+  },
+  {
+    "title": "Lala Lajpat Rai University of Veterinary and Animal Sciences",
+    "img": null,
+    "status": 429
+  },
+  {
+    "title": "Bhagat Phool Singh Mahila Vishwavidyalaya",
+    "img": null,
+    "status": 429
+  },
+  {
+    "title": "Chaudhary Devi Lal University",
+    "img": null,
+    "status": 429
+  },
+  {
+    "title": "Gurugram University",
+    "img": null,
+    "status": 429
+  },
+  {
+    "title": "Zakir Husain Delhi College",
+    "img": null,
+    "status": 429
+  },
+  {
+    "title": "Shaheed Sukhdev College of Business Studies",
+    "img": null,
+    "status": 429
+  },
+  {
+    "title": "College of Vocational Studies",
+    "img": null,
+    "status": 429
+  },
+  {
+    "title": "Delhi College of Arts and Commerce",
+    "img": null,
+    "status": 429
+  },
+  {
+    "title": "Deshbandhu College",
+    "img": null,
+    "status": 429
+  },
+  {
+    "title": "Motilal Nehru College",
+    "img": null,
+    "status": 429
+  },
+  {
+    "title": "Daulat Ram College",
+    "img": null,
+    "status": 429
+  },
+  {
+    "title": "Indraprastha College for Women",
+    "img": null,
+    "status": 429
+  },
+  {
+    "title": "Sri Guru Tegh Bahadur Khalsa College",
+    "img": null,
+    "status": 429
+  },
+  {
+    "title": "Kamala Nehru College",
+    "img": null,
+    "status": 429
+  },
+  {
+    "title": "Maitreyi College",
+    "img": null,
+    "status": 429
+  },
+  {
+    "title": "Lady Irwin College",
+    "img": null,
+    "status": 429
+  },
+  {
+    "title": "Maharaja Agrasen Institute of Technology",
+    "img": null,
+    "status": 429
+  },
+  {
+    "title": "Maharaja Surajmal Institute of Technology",
+    "img": null,
+    "status": 429
+  },
+  {
+    "title": "Vivekananda Institute of Professional Studies",
+    "img": null,
+    "status": 429
+  },
+  {
+    "title": "Bhagwan Parshuram Institute of Technology",
+    "img": null,
+    "status": 429
+  }
+]

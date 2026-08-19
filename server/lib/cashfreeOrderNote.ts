@@ -3,7 +3,7 @@ export type PaymentOrderNote = {
   clerkId: string
   classId: string
   purpose: 'paid' | 'trial'
-  planTier?: 'monthly' | 'three-month'
+  planTier?: 'monthly' | 'three-month' | 'six-month'
 }
 
 /** Cashfree GET order sometimes returns order_note as HTML-entity–encoded JSON. */
@@ -38,7 +38,7 @@ export function paymentNoteFromIntent(intent: {
   clerk_id: string
   class_id: string
   purpose: 'paid' | 'trial'
-  plan_tier?: 'monthly' | 'three-month' | null
+  plan_tier?: 'monthly' | 'three-month' | 'six-month' | null
 }): PaymentOrderNote {
   return {
     v: 1,

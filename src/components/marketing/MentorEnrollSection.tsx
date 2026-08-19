@@ -15,34 +15,34 @@ export function MentorEnrollSection() {
           >
             <p className="text-educture-orange font-bold text-xs uppercase tracking-[0.25em] flex items-center gap-2">
               <Sparkles className="w-4 h-4" />
-              Teach on PRIZMA
+              Guide on PRIZMA
             </p>
             <h2 className="font-display text-3xl sm:text-4xl text-[#1a1a1a] mt-3 leading-tight">
-              Enroll as a{' '}
+              Become a{' '}
               <span className="font-script text-educture-orange text-4xl sm:text-5xl">mentor</span>
             </h2>
             <p className="text-sm text-gray-600 mt-4 max-w-md leading-relaxed">
-              Publish live classes, free courses, Google Meet sessions, and assignments. Students enroll in
-              real time — you control what appears on the platform.
+              Invite-only: admin adds your email first. Then apply here — you cannot become a mentor
+              from normal sign up. Host sessions, share resources, and guide students on projects.
             </p>
             <ul className="mt-6 space-y-3 text-sm text-gray-700">
               <li className="flex items-center gap-3">
                 <span className="w-9 h-9 rounded-xl bg-educture-orange/10 flex items-center justify-center">
                   <Video className="w-4 h-4 text-educture-orange" />
                 </span>
-                Live Google Meet cohorts with your pricing track
+                Live Google Meet circles with your session track
               </li>
               <li className="flex items-center gap-3">
                 <span className="w-9 h-9 rounded-xl bg-sky-100 flex items-center justify-center">
                   <Users className="w-4 h-4 text-sky-600" />
                 </span>
-                Mentor dashboard — classes, free library, submissions
+                Mentor space — sessions, free resources, collaboration
               </li>
               <li className="flex items-center gap-3">
                 <span className="w-9 h-9 rounded-xl bg-violet-100 flex items-center justify-center">
                   <GraduationCap className="w-4 h-4 text-violet-600" />
                 </span>
-                We&apos;ll help you onboard after you apply
+                Only invited emails can apply from this form
               </li>
             </ul>
             <div className="flex flex-wrap gap-3 mt-8">
@@ -57,7 +57,7 @@ export function MentorEnrollSection() {
                 to="/sign-up"
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-full border-[3px] border-orange-100 text-sm font-semibold text-gray-800 hover:border-educture-orange hover:text-educture-orange transition-colors"
               >
-                Already have access? Sign up
+                Already have access? Join
               </Link>
             </div>
           </motion.div>
@@ -75,9 +75,9 @@ export function MentorEnrollSection() {
                 className="w-full rounded-2xl object-cover aspect-[4/3] mb-6"
               />
               <p className="text-xs font-bold uppercase tracking-widest text-educture-orange">Mentor spotlight</p>
-              <p className="font-bold text-lg text-[#1a1a1a] mt-2">Your classes. Your Meet links. Your students.</p>
+              <p className="font-bold text-lg text-[#1a1a1a] mt-2">Your sessions. Your Meet links. Your peers.</p>
               <p className="text-sm text-gray-500 mt-2">
-                Fill the mentor form — we&apos;ll email you to connect and set up your teacher portal.
+                Apply only if admin has allowed your email. We&apos;ll then set up your mentor space.
               </p>
             </div>
             <div

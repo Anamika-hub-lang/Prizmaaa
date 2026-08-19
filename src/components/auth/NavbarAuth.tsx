@@ -45,10 +45,10 @@ export function NavbarAuth({ mobile, onNavigate }: { mobile?: boolean; onNavigat
     <div className={wrap}>
       <SignedOut>
         <Link to="/sign-in" className={mobile ? `${btnOutline} w-full` : btnOutline} onClick={onNavigate}>
-          Sign In
+          Sign in
         </Link>
         <Link to="/sign-up" className={mobile ? `${btnPrimary} w-full` : btnPrimary} onClick={onNavigate}>
-          Sign Up
+          Join
         </Link>
       </SignedOut>
       <SignedIn>

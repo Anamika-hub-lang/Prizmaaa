@@ -5,6 +5,8 @@ import { LogOut, Calendar, Pencil } from 'lucide-react'
 import { getUserRole } from '../../lib/userRole'
 import type { UserRole } from '../../types/auth'
 import { fetchUserProfile, saveProfileDetails, type UserProfileRecord } from '../../lib/saveProfileDetails'
+import { fetchMentorApplicationPrefill } from '../../lib/mentorApplicationPrefill'
+import { fetchMentorEligible } from '../../lib/mentorEligible'
 import { educationLevelLabel, howDidYouFindUsLabel, type HowDidYouFindUs, type StudentEducationLevel } from '../../data/onboardingFields'
 import { buildProfileCompletion } from '../../lib/profileCompletion'
 import { ProfileCompletionCard } from '../../components/profile/ProfileCompletionCard'
@@ -87,6 +89,7 @@ export function PortalProfilePage({ portal }: { portal: 'student' | 'teacher' })
   const [qualifications, setQualifications] = useState('')
   const [bio, setBio] = useState('')
   const [portfolioUrl, setPortfolioUrl] = useState('')
+  const [mentorAllowed, setMentorAllowed] = useState(false)
 
   const role = getUserRole(user)
   const accountRole = portal === 'teacher' ? 'teacher' : 'student'
@@ -105,10 +108,39 @@ export function PortalProfilePage({ portal }: { portal: 'student' | 'teacher' })
   }, [getToken, user?.id])
 
   useEffect(() => {
+    if (portal !== 'student') return
+    void fetchMentorEligible(getToken).then((result) => setMentorAllowed(result.allowed))
+  }, [portal, getToken])
+
+  useEffect(() => {
+    if (portal !== 'teacher' || loadingProfile) return
+    if (profileRow?.mentor_expertise?.trim()) return
+    void fetchMentorApplicationPrefill(getToken).then((app) => {
+      if (app) applyApplicationPrefill(app)
+    })
+  }, [portal, loadingProfile, profileRow?.mentor_expertise, getToken])
+
+  useEffect(() => {
     if (!user) return
     setFirstName(user.firstName ?? '')
     setLastName(user.lastName ?? '')
   }, [user])
+
+  function applyApplicationPrefill(app: NonNullable<Awaited<ReturnType<typeof fetchMentorApplicationPrefill>>>) {
+    const parts = app.fullName.trim().split(/\s+/)
+    if (!firstName && parts[0]) setFirstName(parts[0])
+    if (!lastName && parts.length > 1) setLastName(parts.slice(1).join(' '))
+    if (!phone && app.phone) setPhone(app.phone)
+    if (!city && app.college) setCity(app.college)
+    if (!expertise && app.expertise) setExpertise(app.expertise)
+    if (!experienceYears && app.experience) {
+      const years = app.experience.match(/\d+/)
+      if (years) setExperienceYears(years[0])
+      else if (!qualifications) setQualifications(app.experience)
+    }
+    if (!bio && app.message) setBio(app.message)
+    if (!portfolioUrl && app.portfolioUrl) setPortfolioUrl(app.portfolioUrl)
+  }
 
   function loadFormFromRow(row: UserProfileRecord | null) {
     if (!row) return
@@ -135,6 +167,11 @@ export function PortalProfilePage({ portal }: { portal: 'student' | 'teacher' })
     loadFormFromRow(profileRow)
     setFirstName(user?.firstName ?? firstName)
     setLastName(user?.lastName ?? lastName)
+    if (portal === 'teacher' && !profileRow?.mentor_expertise) {
+      void fetchMentorApplicationPrefill(getToken).then((app) => {
+        if (app) applyApplicationPrefill(app)
+      })
+    }
     setEditing(true)
     setError(null)
   }
@@ -266,6 +303,15 @@ export function PortalProfilePage({ portal }: { portal: 'student' | 'teacher' })
 
       <main className="max-w-3xl mx-auto px-4 sm:px-6 py-8 space-y-6">
         <ProfileCompletionCard percent={completion.percent} items={completion.items} />
+
+        {portal === 'student' && mentorAllowed && (
+          <div className="rounded-2xl border-2 border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
+            Your mentor application is approved.{' '}
+            <Link to="/onboarding/role" className="font-semibold text-educture-orange hover:underline">
+              Switch to mentor dashboard →
+            </Link>
+          </div>
+        )}
 
         {loadingProfile && (
           <p className="text-sm text-gray-500 text-center">Loading your saved details…</p>

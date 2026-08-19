@@ -13,9 +13,11 @@ export function activeEnrollmentBlockedMessage(planTier: string | null | undefin
     planTier === 'trial'
       ? 'Starter trial'
       : planTier === 'monthly'
-        ? 'Growth (monthly)'
+        ? 'Monthly plan'
         : planTier === 'three-month'
-          ? 'Premium (3 months)'
-          : 'your current plan'
+          ? '3 Months plan'
+          : planTier === 'six-month'
+            ? '6 Months plan'
+            : 'your current plan'
   return `Already enrolled on ${label} for this class. Cancel from dashboard first, then choose a new plan.`
 }

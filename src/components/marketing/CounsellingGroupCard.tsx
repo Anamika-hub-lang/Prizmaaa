@@ -38,7 +38,7 @@ export function CounsellingGroupCard({ group, variant = 'plain', size = 'default
           } ${minHeight}`}
         >
           <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.18em] text-educture-orange">
-            {group.topicCount} sessions
+            {group.topicCount} topics
           </p>
           <h3
             className={`font-display text-white leading-tight ${
@@ -85,7 +85,7 @@ export function CounsellingGroupCard({ group, variant = 'plain', size = 'default
       className="group flex h-full flex-col rounded-2xl border-2 border-white/10 bg-white/[0.06] p-5 sm:p-6 text-left hover:border-educture-orange/50 hover:bg-white/[0.09] transition-all"
     >
       <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-educture-orange">
-        {group.topicCount} sessions
+        {group.topicCount} topics
       </p>
       <h3 className="font-display text-2xl sm:text-[1.65rem] text-white mt-2 leading-tight">{group.title}</h3>
       <p className="text-sm text-gray-200 mt-1">{group.subtitle}</p>

@@ -46,12 +46,12 @@ export function PrizmaEcosystemSection({ variant = 'home' }: Props) {
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         <div className={`text-left ${isAbout ? 'max-w-2xl mb-10' : 'text-center max-w-2xl mx-auto mb-8'}`}>
           <p className="text-educture-orange text-[10px] font-bold uppercase tracking-[0.22em]">
-            One connected platform
+            One student hub
           </p>
           <h2 className={`font-display text-[#1a1a1a] mt-2 leading-tight ${isAbout ? 'text-2xl sm:text-3xl' : 'text-xl sm:text-2xl'}`}>
             {isAbout ? (
               <>
-                Reviews, counselling, classes —{' '}
+                Stories, guidance, learning —{' '}
                 <span className="font-script text-educture-orange text-3xl sm:text-4xl">one journey</span>
               </>
             ) : (
@@ -64,7 +64,7 @@ export function PrizmaEcosystemSection({ variant = 'home' }: Props) {
           <p className="text-sm text-gray-600 mt-3 leading-relaxed">{prizmaMissionLine}</p>
         </div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8 lg:mb-10">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4 mb-8 lg:mb-10">
           {prizmaPillars.map((pillar) => {
             const accent = pillarAccent[pillar.accent]
             return (
@@ -118,9 +118,9 @@ export function PrizmaEcosystemSection({ variant = 'home' }: Props) {
                 className="w-20 h-20 sm:w-24 sm:h-24 shrink-0 rounded-2xl object-cover border-[3px] border-orange-50"
               />
               <div className="min-w-0">
-                <p className="text-sky-600 text-[10px] font-bold uppercase tracking-[0.2em]">What PRIZMA offers</p>
+                <p className="text-sky-600 text-[10px] font-bold uppercase tracking-[0.2em]">What students find here</p>
                 <h3 className="font-display text-lg sm:text-xl text-[#1a1a1a] mt-1 leading-snug">
-                  Learn, decide & grow in one place
+                  Connect, discover & grow in one place
                 </h3>
               </div>
             </div>
@@ -171,19 +171,19 @@ export function PrizmaEcosystemSection({ variant = 'home' }: Props) {
                   to="/counselling"
                   className="inline-flex items-center gap-1 rounded-full border border-orange-200 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 hover:border-educture-orange"
                 >
-                  Counselling
+                  Guidance calls
                 </Link>
                 <Link
                   to="/universities"
                   className="inline-flex items-center gap-1 rounded-full border border-sky-200 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 hover:border-sky-400"
                 >
-                  Reviews
+                  Campus stories
                 </Link>
                 <Link
                   to="/pricing"
                   className="inline-flex items-center gap-1 rounded-full border border-orange-200 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 hover:border-educture-orange"
                 >
-                  Class pricing
+                  Session plans
                 </Link>
               </div>
             )}
@@ -211,9 +211,9 @@ export function PrizmaValuesSection() {
     <section className="py-16 lg:py-20 max-w-6xl mx-auto px-4 sm:px-6">
       <div className="text-center max-w-xl mx-auto mb-10">
         <p className="text-sky-600 text-[11px] font-bold uppercase tracking-[0.2em]">How we think</p>
-        <h2 className="font-display text-2xl sm:text-3xl text-[#1a1a1a] mt-2">Built for real decisions</h2>
+        <h2 className="font-display text-2xl sm:text-3xl text-[#1a1a1a] mt-2">Built for real student life</h2>
         <p className="text-sm text-gray-500 mt-3 leading-relaxed">
-          Reviews, counselling, and classes are not separate products — they are steps in the same student journey.
+          Campus stories, guidance calls, and peer sessions are not separate products — they are steps in the same student journey.
         </p>
       </div>
       <div className="grid md:grid-cols-3 gap-6">

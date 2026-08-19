@@ -7,7 +7,7 @@ import { useStudentEnrollments } from '../../hooks/useStudentEnrollments'
 import { getActiveEnrollmentForClass } from '../../lib/classEnrollmentPolicy'
 import { ActiveEnrollmentBlock } from '../../components/checkout/ActiveEnrollmentBlock'
 import { tintedSurface, tintedSurfaceKey } from '../../components/ui/dashboardCardStyles'
-import { categoryPricing, formatInr, TRIAL_DAYS } from '../../data/pricingPlans'
+import { categoryPricing, formatInr } from '../../data/pricingPlans'
 
 export function StudentClassDetailPage() {
   const { classId } = useParams()
@@ -58,12 +58,12 @@ export function StudentClassDetailPage() {
             <p className="text-lg font-bold text-[#1d1d1d]">Official plans</p>
             <p className="text-2xl font-bold text-educture-orange mt-2">
               {formatInr(plans.monthlyInr)}
-              <span className="text-sm font-semibold text-gray-600"> / month (Growth)</span>
+              <span className="text-sm font-semibold text-gray-600"> / month</span>
             </p>
             <p className="text-sm text-gray-600 mt-1">
-              Premium {formatInr(plans.threeMonthInr)} / 3 months · Starter {TRIAL_DAYS}-day trial at checkout
+              {formatInr(plans.threeMonthInr)} / 3 months · {formatInr(plans.sixMonthInr)} / 6 months
             </p>
-            <p className="text-xs text-educture-orange font-semibold mt-2">No per-class one-time fee</p>
+            <p className="text-xs text-gray-500 mt-1">Pay upfront</p>
 
             <div className="flex items-center gap-3 mt-6 pb-6 border-b border-gray-100">
               <img src={item.mentorImage} alt="" className="w-12 h-12 rounded-full object-cover" />
@@ -79,7 +79,7 @@ export function StudentClassDetailPage() {
             <ul className="space-y-3 text-sm text-gray-600 my-6">
               <li className="flex gap-2"><Users className="w-4 h-4 text-educture-orange shrink-0" /> {item.sessions}</li>
               <li className="flex gap-2"><Video className="w-4 h-4 text-educture-orange shrink-0" /> Google Meet live</li>
-              <li className="flex gap-2"><CreditCard className="w-4 h-4 text-educture-orange shrink-0" /> Starter · Growth · Premium at checkout</li>
+              <li className="flex gap-2"><CreditCard className="w-4 h-4 text-educture-orange shrink-0" /> Monthly · 3 months · 6 months at checkout</li>
             </ul>
 
             {activeEnrollment ? (

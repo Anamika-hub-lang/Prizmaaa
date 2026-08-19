@@ -1,7 +1,6 @@
 'use client'
 
-import { RequireAuth } from '@/components/auth/RequireAuth'
-
 export default function Layout({ children }: { children: React.ReactNode }) {
-  return <RequireAuth>{children}</RequireAuth>
+  // Do not wrap with RequireAuth — Clerk handshake lands here before session exists.
+  return <>{children}</>
 }

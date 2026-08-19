@@ -1,12 +1,69 @@
 import { Link } from 'react-router-dom'
 import { useCommunityReviews } from '../../hooks/useCommunityReviews'
 
-const fallback = [
+type TestimonialSlide = {
+  id: string
+  quote: string
+  authorName: string
+  roleType: 'student' | 'mentor'
+  avatarUrl: string | null
+}
+
+const dummyTestimonials: TestimonialSlide[] = [
   {
-    id: 'f1',
-    quote: 'Join PRIZMA — share your learning story on the reviews page!',
-    authorName: 'Community',
-    roleType: 'student' as const,
+    id: 'd1',
+    quote: 'Mentors here actually listen. I finally have a clear college plan.',
+    authorName: 'Rohan Sharma',
+    roleType: 'student',
+    avatarUrl: null,
+  },
+  {
+    id: 'd2',
+    quote: 'Honest campus stories saved me from picking the wrong college.',
+    authorName: 'Priya Mehta',
+    roleType: 'student',
+    avatarUrl: null,
+  },
+  {
+    id: 'd3',
+    quote: 'Mock interviews here made my real interview feel easy.',
+    authorName: 'Arjun Patel',
+    roleType: 'mentor',
+    avatarUrl: null,
+  },
+  {
+    id: 'd4',
+    quote: 'Found my first internship through a PRIZMA mentor. Grateful!',
+    authorName: 'Kavya Iyer',
+    roleType: 'student',
+    avatarUrl: null,
+  },
+  {
+    id: 'd5',
+    quote: 'Helped me choose the right course instead of following the crowd.',
+    authorName: 'Aditya Singh',
+    roleType: 'student',
+    avatarUrl: null,
+  },
+  {
+    id: 'd6',
+    quote: 'Guiding students is easier when the path is this clear.',
+    authorName: 'Ananya Reddy',
+    roleType: 'mentor',
+    avatarUrl: null,
+  },
+  {
+    id: 'd7',
+    quote: 'Best place to talk to seniors who have already walked this path.',
+    authorName: 'Vikram Joshi',
+    roleType: 'student',
+    avatarUrl: null,
+  },
+  {
+    id: 'd8',
+    quote: 'Love to learn from here — the guidance sessions really helped.',
+    authorName: 'Sneha Kapoor',
+    roleType: 'student',
     avatarUrl: null,
   },
 ]
@@ -52,46 +109,49 @@ function ReviewCard({
 
 export function TestimonialsMarquee() {
   const { reviews, loading } = useCommunityReviews()
-  const items =
-    reviews.length > 0
-      ? reviews.map((r) => ({
-          id: r.id,
-          quote: r.quote,
-          authorName: r.authorName,
-          roleType: r.roleType,
-          avatarUrl: r.avatarUrl,
-        }))
-      : fallback
+  const liveItems: TestimonialSlide[] = reviews.map((r) => ({
+    id: r.id,
+    quote: r.quote,
+    authorName: r.authorName,
+    roleType: r.roleType,
+    avatarUrl: r.avatarUrl,
+  }))
 
   const minSlides = 8
-  let expanded = [...items]
-  while (expanded.length < minSlides) {
-    expanded = [...expanded, ...items]
+  const items: TestimonialSlide[] = liveItems.length > 0 ? [...liveItems] : [...dummyTestimonials]
+  if (items.length < minSlides) {
+    for (const dummy of dummyTestimonials) {
+      if (items.length >= minSlides) break
+      const alreadyShown = items.some(
+        (item) => item.authorName.trim().toLowerCase() === dummy.authorName.trim().toLowerCase(),
+      )
+      if (!alreadyShown) items.push(dummy)
+    }
   }
-  const track = [...expanded, ...expanded]
+  const track = [...items, ...items]
 
   return (
     <section className="py-16 lg:py-20 bg-[#fdf8f0] gsap-reveal">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 mb-10 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
           <h2 className="font-display text-2xl sm:text-3xl text-[#1a1a1a]">
-            Happy students & mentors
+            Students & mentors sharing experiences
           </h2>
           <p className="text-sm text-gray-500 mt-2">
-            Real reviews from students and mentors — auto-updating live.
+            Real voices from peers and mentors — updating live as people share.
           </p>
         </div>
         <Link
           to="/reviews"
           className="text-sm font-semibold text-educture-orange hover:underline shrink-0"
         >
-          Share your review →
+          Share your experience →
         </Link>
       </div>
 
       <div className="relative overflow-hidden mask-testimonial-fade">
         {loading && reviews.length === 0 ? (
-          <p className="text-center text-sm text-gray-500 py-8">Loading reviews…</p>
+          <p className="text-center text-sm text-gray-500 py-8">Loading experiences…</p>
         ) : (
           <div className="flex gap-6 animate-testimonial-marquee hover:[animation-play-state:paused] py-2 will-change-transform">
             {track.map((t, i) => (

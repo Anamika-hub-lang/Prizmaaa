@@ -1,9 +1,12 @@
 import { Link } from 'react-router-dom'
 import {
+  BookOpen,
   CalendarCheck,
   CreditCard,
   FileSpreadsheet,
+  Mic,
   Tags,
+  UserPlus,
   UserRound,
   Users,
 } from 'lucide-react'
@@ -52,6 +55,27 @@ const tiles = [
     desc: 'Confirmed Cashfree payments ready for Meet or call.',
     icon: CreditCard,
     tint: 5,
+  },
+  {
+    to: '/admin/interviews',
+    title: 'Mock interviews',
+    desc: 'See who booked a ₹99 mock interview and whether they paid.',
+    icon: Mic,
+    tint: 0,
+  },
+  {
+    to: '/admin/enrollments',
+    title: 'Class enrollments',
+    desc: 'Students who enrolled in live classes — name, email, plan.',
+    icon: BookOpen,
+    tint: 1,
+  },
+  {
+    to: '/admin/mentors',
+    title: 'Mentor requests',
+    desc: 'Review applications, approve mentors, and manage allowed emails.',
+    icon: UserPlus,
+    tint: 2,
   },
 ] as const
 

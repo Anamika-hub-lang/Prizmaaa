@@ -55,27 +55,26 @@ export function UniversityReviewsSection() {
           >
             <span className="inline-flex items-center gap-2 rounded-full border border-educture-orange/30 bg-educture-orange/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-educture-orange">
               <Building2 className="w-3.5 h-3.5" />
-              University reviews
+              Campus stories
             </span>
             <h2 className="font-display text-3xl sm:text-4xl text-[#1a1a1a] leading-[1.1] mt-4">
-              Honest reviews —{' '}
+              Real experiences —{' '}
               <span className="font-script text-educture-orange text-4xl sm:text-5xl">by students</span>
             </h2>
             <p className="text-sm text-gray-600 mt-3 leading-relaxed max-w-md">
-              Like Glassdoor, but for colleges. Read real experiences on campus life, academics, and
-              placements — or share your own.
+              Read what campus life, academics, and placements actually feel like — or share your own story for the next batch.
             </p>
 
             <div className="flex flex-wrap gap-3 mt-6">
               <div className="rounded-2xl border-2 border-orange-100 bg-white px-4 py-3 shadow-sm">
                 <p className="text-2xl font-bold text-[#1a1a1a]">{universities.length}+</p>
-                <p className="text-[11px] text-gray-500 font-medium">Universities listed</p>
+                <p className="text-[11px] text-gray-500 font-medium">Campuses listed</p>
               </div>
               <div className="rounded-2xl border-2 border-orange-100 bg-white px-4 py-3 shadow-sm">
                 <p className="text-2xl font-bold text-[#1a1a1a]">
                   {loading ? '—' : stats.totalReviews}
                 </p>
-                <p className="text-[11px] text-gray-500 font-medium">Student reviews</p>
+                <p className="text-[11px] text-gray-500 font-medium">Student stories</p>
               </div>
               {overallAvg !== null && (
                 <div className="rounded-2xl border-2 border-orange-100 bg-white px-4 py-3 shadow-sm">
@@ -93,7 +92,7 @@ export function UniversityReviewsSection() {
                 to="/universities"
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-educture-orange text-white font-semibold text-sm shadow-[0_12px_32px_rgba(243,112,33,0.4)] hover:bg-educture-orange-dark transition-colors"
               >
-                Explore universities
+                Explore campuses
                 <ArrowRight className="w-4 h-4" />
               </Link>
               <Link
@@ -101,7 +100,7 @@ export function UniversityReviewsSection() {
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-full border-2 border-orange-200 bg-white text-sm font-semibold text-gray-800 hover:border-educture-orange hover:text-educture-orange transition-colors"
               >
                 <MessageSquareQuote className="w-4 h-4" />
-                Write a review
+                Share your story
               </Link>
             </div>
           </motion.div>
@@ -114,7 +113,7 @@ export function UniversityReviewsSection() {
             className="lg:col-span-7"
           >
             <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-gray-400 mb-3">
-              Popular universities
+              Popular campuses
             </p>
             <div className="grid sm:grid-cols-2 gap-3 sm:gap-4">
               {featuredUniversities.map((uni) => {

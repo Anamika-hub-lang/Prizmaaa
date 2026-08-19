@@ -67,19 +67,19 @@ export function UniversitiesPage() {
           <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 sm:py-12 text-left">
             <p className="text-educture-orange font-bold text-xs uppercase tracking-[0.2em] flex items-center gap-2">
               <Building2 className="w-4 h-4" />
-              Reviews
+              Campus stories
             </p>
             <h1 className="font-display text-3xl sm:text-4xl mt-2 leading-tight">
-              Find your{' '}
-              <span className="font-script text-educture-orange text-4xl sm:text-5xl">college</span>
+              Discover{' '}
+              <span className="font-script text-educture-orange text-4xl sm:text-5xl">campuses</span>
             </h1>
             <p className="text-sm text-gray-400 mt-3 max-w-xl leading-relaxed">
-              Real student reviews on academics, campus, and placements — like Glassdoor, but for
-              universities across India.
+              Real student experiences on academics, campus life, and placements — honest takes from
+              peers across India.
             </p>
             {highlightWrite && (
               <p className="mt-4 text-sm text-orange-200 bg-educture-orange/15 border border-educture-orange/30 rounded-xl px-4 py-3 max-w-lg">
-                Pick a university below to read reviews and share your experience.
+                Pick a campus below to read stories and share your experience.
               </p>
             )}
           </div>
@@ -94,7 +94,7 @@ export function UniversitiesPage() {
                   type="search"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search university, city, state…"
+                  placeholder="Search campus, city, state…"
                   className="w-full pl-10 pr-4 py-3 rounded-xl border-2 border-orange-100 bg-white text-sm outline-none focus:border-educture-orange"
                 />
               </div>
@@ -169,7 +169,7 @@ export function UniversitiesPage() {
             )}
 
             <p className="text-center mt-10 text-sm text-gray-500">
-              Know a college we missed? Share a review after searching — more campuses are added regularly.
+              Know a campus we missed? Share your experience after searching — more campuses are added regularly.
             </p>
           </div>
         </section>

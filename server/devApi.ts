@@ -1,4 +1,5 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
+import { after } from 'next/server'
 import { createClerkClient, verifyToken } from '@clerk/backend'
 import { verifyWebhook } from '@clerk/backend/webhooks'
 import { profileRowFromClerkUser, profileRowFromClerkWebhook } from './lib/profileRow'
@@ -30,9 +31,21 @@ import {
 import { validateIndianPhoneServer, validateScheduledDateTime } from './lib/phoneValidation'
 import { resolveBookingAssignment } from './lib/counsellorAssign'
 import { tryHandleRoleDashboardApi } from './roleDashboardApi'
+import { counsellingPriceInr } from './lib/counsellingPricing'
+import { isMentorEmailAllowed, isMissingTableError, normalizeMentorEmail } from './lib/mentorAllowlist'
+import {
+  generateGeminiParts,
+  generateGeminiText,
+  parseOpportunityMatchPayload,
+  parseVoiceProfilePayload,
+  truncateForAi,
+  type GeminiPart,
+  OPPORTUNITY_MATCH_SYSTEM,
+  RESUME_REVIEW_SYSTEM,
+  VOICE_PROFILE_SYSTEM,
+} from './lib/geminiClient'
 
 const TRIAL_VERIFY_INR = 1
-const COUNSELLING_PRICE_INR = 200
 
 export type DevApiEnv = {
   clerkSecretKey?: string
@@ -47,6 +60,7 @@ export type DevApiEnv = {
   publicAppUrl?: string
   /** Comma-separated Clerk user ids allowed to use /admin APIs */
   adminClerkUserIds?: string
+  geminiApiKey?: string
 }
 
 function cashfreeCfg(env: DevApiEnv): CashfreeServerConfig {
@@ -152,6 +166,40 @@ async function isAdminClerkUser(clerkId: string, env: DevApiEnv): Promise<boolea
   } catch {
     return false
   }
+}
+
+function clerkPrimaryEmail(user: {
+  emailAddresses: Array<{ id: string; emailAddress: string }>
+  primaryEmailAddressId: string | null
+}): string {
+  const primary = user.emailAddresses.find((item) => item.id === user.primaryEmailAddressId)
+  return (primary?.emailAddress ?? user.emailAddresses[0]?.emailAddress ?? '').trim()
+}
+
+async function requireAdminApi(
+  req: IncomingMessage,
+  res: ServerResponse,
+  env: DevApiEnv,
+): Promise<{ clerkId: string; supabase: NonNullable<ReturnType<typeof requireSupabaseAdmin>> } | null> {
+  if (!env.clerkSecretKey) {
+    json(res, 503, { error: 'Server missing CLERK_SECRET_KEY.' })
+    return null
+  }
+  const supabase = requireSupabaseAdmin(env)
+  if (!supabase) {
+    json(res, 503, { error: 'Server missing Supabase service configuration.' })
+    return null
+  }
+  const clerkId = await verifyClerkSession(req, env.clerkSecretKey)
+  if (!clerkId) {
+    json(res, 401, { error: 'Sign in required' })
+    return null
+  }
+  if (!(await isAdminClerkUser(clerkId, env))) {
+    json(res, 403, { error: 'Admin access required' })
+    return null
+  }
+  return { clerkId, supabase }
 }
 
 async function syncClerkUserIdToSupabase(clerkUserId: string, env: DevApiEnv): Promise<void> {
@@ -287,8 +335,34 @@ async function handleSetRole(
   }
 
   if (complete && existingRole && existingRole !== role) {
-    json(res, 403, { error: 'Account role is already set' })
-    return
+    const upgradingToMentor = role === 'teacher' && existingRole === 'student'
+    if (!upgradingToMentor) {
+      json(res, 403, { error: 'Account role is already set' })
+      return
+    }
+  }
+
+  if (role === 'teacher' && existingRole !== 'teacher') {
+    const supabase = requireSupabaseAdmin(env)
+    if (!supabase) {
+      json(res, 503, { error: 'Server missing Supabase service configuration.' })
+      return
+    }
+    const email = clerkPrimaryEmail(user)
+    let allowed = false
+    try {
+      allowed = await isMentorEmailAllowed(supabase, email)
+    } catch (err) {
+      console.error('[dev-api] mentor allowlist check', err)
+      json(res, 500, { error: 'Could not verify mentor access' })
+      return
+    }
+    if (!allowed) {
+      json(res, 403, {
+        error: 'Mentor access requires admin approval. Submit a request at /become-mentor first, then sign up with the same email.',
+      })
+      return
+    }
   }
 
   await clerk.users.updateUser(userId, {
@@ -626,15 +700,127 @@ async function handleClerkWebhook(
 async function handleCounsellingBook(
   req: IncomingMessage,
   res: ServerResponse,
-  _env: DevApiEnv,
+  env: DevApiEnv,
 ): Promise<void> {
   if (req.method !== 'POST') {
     res.statusCode = 405
     res.end()
     return
   }
-  json(res, 400, {
-    error: 'Direct booking is disabled. Pay ₹200 via Cashfree to confirm your session.',
+
+  if (!env.clerkSecretKey) {
+    json(res, 503, { error: 'Server missing CLERK_SECRET_KEY.' })
+    return
+  }
+
+  const supabase = requireSupabaseAdmin(env)
+  if (!supabase) {
+    json(res, 503, { error: 'Server missing Supabase service configuration.' })
+    return
+  }
+
+  const clerkId = await verifyClerkSession(req, env.clerkSecretKey)
+  if (!clerkId) {
+    json(res, 401, { error: 'Sign in required to book counselling' })
+    return
+  }
+
+  let body: {
+    fullName?: string
+    email?: string
+    phone?: string
+    categoryId?: string
+    groupId?: string
+    preferredMode?: string
+    note?: string
+    scheduledDate?: string
+    scheduledTime?: string
+  }
+  try {
+    body = (await readBodyJson(req)) as typeof body
+  } catch {
+    json(res, 400, { error: 'Invalid JSON' })
+    return
+  }
+
+  const fullName = body.fullName?.trim()
+  const email = body.email?.trim()
+  const categoryId = body.categoryId?.trim()
+  const groupId = body.groupId?.trim() || null
+  const preferredMode = body.preferredMode === 'call' ? 'call' : body.preferredMode === 'meet' ? 'meet' : null
+  const note = body.note?.trim() || null
+  const scheduledDate = body.scheduledDate?.trim()
+  const scheduledTime = body.scheduledTime?.trim()
+
+  if (!fullName || !email || !categoryId || !preferredMode || !scheduledDate || !scheduledTime) {
+    json(res, 400, { error: 'Name, email, session type, format, date, and time slot are required' })
+    return
+  }
+
+  const phoneResult = validateIndianPhoneServer(body.phone ?? '')
+  if (phoneResult.ok === false) {
+    json(res, 400, { error: phoneResult.error })
+    return
+  }
+
+  const scheduleError = validateScheduledDateTime(scheduledDate, scheduledTime)
+  if (scheduleError) {
+    json(res, 400, { error: scheduleError })
+    return
+  }
+
+  const amountInr = counsellingPriceInr(categoryId)
+
+  const { error: insertErr } = await supabase.from('counselling_requests').insert({
+    full_name: fullName,
+    email,
+    phone: phoneResult.digits,
+    category_id: categoryId,
+    preferred_mode: preferredMode,
+    note,
+    payment_status: 'pending',
+    cashfree_order_id: null,
+    scheduled_date: scheduledDate,
+    scheduled_time: scheduledTime,
+    clerk_id: clerkId,
+    group_id: groupId,
+  })
+
+  if (insertErr) {
+    console.error('[dev-api] counselling book upi', insertErr)
+    json(res, 500, { error: 'Could not save booking. Please try again.' })
+    return
+  }
+
+  const modeLabel = preferredMode === 'meet' ? 'Google Meet' : 'Phone call'
+  const scheduleLabel = `${scheduledDate} ${scheduledTime} IST`
+  const html = `
+    <h2>Counselling booking — UPI payment pending</h2>
+    <p><strong>Name:</strong> ${fullName}</p>
+    <p><strong>Email:</strong> ${email}</p>
+    <p><strong>Phone:</strong> ${phoneResult.digits}</p>
+    <p><strong>Session:</strong> ${categoryId}</p>
+    <p><strong>Format:</strong> ${modeLabel}</p>
+    <p><strong>Scheduled:</strong> ${scheduleLabel}</p>
+    <p><strong>Amount:</strong> ₹${amountInr} (verify UPI payment)</p>
+    <p><strong>Note:</strong></p>
+    <p>${note ?? '—'}</p>
+  `
+
+  after(async () => {
+    try {
+      await sendNotifyEmail(env, `Counselling UPI pending: ${fullName}`, html)
+    } catch (err) {
+      console.error('[dev-api] counselling book notify', err)
+    }
+  })
+
+  json(res, 200, {
+    ok: true,
+    redirect: '/student?counselling=booked',
+    scheduledDate,
+    scheduledTime,
+    groupId: groupId ?? 'career',
   })
 }
 
@@ -716,6 +902,8 @@ async function handleCounsellingCreateOrder(
     return
   }
 
+  const amountInr = counsellingPriceInr(categoryId)
+
   let orderId: string
   let returnUrl: string
   try {
@@ -740,7 +928,7 @@ async function handleCounsellingCreateOrder(
   try {
     const created = await cashfreeCreateOrder(cfg, {
       orderId,
-      amount: COUNSELLING_PRICE_INR,
+      amount: amountInr,
       customerId: clerkId,
       customerName: fullName,
       customerEmail: email,
@@ -761,7 +949,7 @@ async function handleCounsellingCreateOrder(
       note,
       scheduled_date: scheduledDate,
       scheduled_time: scheduledTime,
-      amount_inr: COUNSELLING_PRICE_INR,
+      amount_inr: amountInr,
     })
 
     json(res, 200, {
@@ -1133,7 +1321,7 @@ async function handleAdminCounsellingBookings(
         assignmentStatus:
           assignmentRaw === 'assigned' || assignmentRaw === 'unassigned' ? assignmentRaw : null,
         sessionStatus: sessionRaw === 'upcoming' || sessionRaw === 'completed' ? sessionRaw : null,
-        amountInr: COUNSELLING_PRICE_INR,
+        amountInr: counsellingPriceInr(row.category_id as string),
         createdAt: row.created_at as string,
       }
     })
@@ -1156,7 +1344,7 @@ async function handleAdminCounsellingBookings(
       counsellorClerkId: null,
       assignmentStatus: null,
       sessionStatus: null,
-      amountInr: Number(row.amount_inr ?? COUNSELLING_PRICE_INR),
+      amountInr: Number(row.amount_inr ?? counsellingPriceInr(row.category_id as string)),
       createdAt: (row.created_at as string | null) ?? new Date().toISOString(),
     }))
 
@@ -1171,6 +1359,417 @@ async function handleAdminCounsellingBookings(
     console.error('[dev-api] admin counselling-bookings', err)
     json(res, 500, { error: 'Could not load admin counselling bookings' })
   }
+}
+
+async function handleMentorEligible(
+  req: IncomingMessage,
+  res: ServerResponse,
+  env: DevApiEnv,
+): Promise<void> {
+  if (req.method !== 'GET') {
+    res.statusCode = 405
+    res.end()
+    return
+  }
+  if (!env.clerkSecretKey) {
+    json(res, 503, { error: 'Server missing CLERK_SECRET_KEY.' })
+    return
+  }
+  const userId = await verifyClerkSession(req, env.clerkSecretKey)
+  if (!userId) {
+    json(res, 401, { error: 'Sign in required' })
+    return
+  }
+  const clerk = createClerkClient({ secretKey: env.clerkSecretKey })
+  const user = await clerk.users.getUser(userId)
+  const email = clerkPrimaryEmail(user)
+  const existingRole = user.publicMetadata?.role
+  const supabase = requireSupabaseAdmin(env)
+  let allowed = existingRole === 'teacher'
+  if (!allowed && supabase) {
+    try {
+      allowed = await isMentorEmailAllowed(supabase, email)
+    } catch (err) {
+      console.error('[dev-api] mentor-eligible', err)
+      json(res, 500, { error: 'Could not verify mentor access' })
+      return
+    }
+  }
+  json(res, 200, { allowed, email })
+}
+
+async function handleMentorApplicationPrefill(
+  req: IncomingMessage,
+  res: ServerResponse,
+  env: DevApiEnv,
+): Promise<void> {
+  if (req.method !== 'GET') {
+    res.statusCode = 405
+    res.end()
+    return
+  }
+  if (!env.clerkSecretKey) {
+    json(res, 503, { error: 'Server missing CLERK_SECRET_KEY.' })
+    return
+  }
+  const userId = await verifyClerkSession(req, env.clerkSecretKey)
+  if (!userId) {
+    json(res, 401, { error: 'Sign in required' })
+    return
+  }
+
+  const supabase = requireSupabaseAdmin(env)
+  if (!supabase) {
+    json(res, 503, { error: 'Server missing Supabase service configuration.' })
+    return
+  }
+
+  const clerk = createClerkClient({ secretKey: env.clerkSecretKey })
+  const user = await clerk.users.getUser(userId)
+  const email = normalizeMentorEmail(clerkPrimaryEmail(user))
+  if (!email) {
+    json(res, 200, { application: null })
+    return
+  }
+
+  const { data, error } = await supabase
+    .from('mentor_applications')
+    .select('full_name, email, phone, college, expertise, experience, message, portfolio_url, status')
+    .ilike('email', email)
+    .eq('status', 'approved')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (error && !isMissingTableError(error)) {
+    console.error('[dev-api] mentor application prefill', error)
+    json(res, 500, { error: 'Could not load mentor application' })
+    return
+  }
+
+  if (!data) {
+    json(res, 200, { application: null })
+    return
+  }
+
+  json(res, 200, {
+    application: {
+      fullName: String(data.full_name ?? ''),
+      email: String(data.email ?? email),
+      phone: data.phone ? String(data.phone) : null,
+      college: data.college ? String(data.college) : null,
+      expertise: String(data.expertise ?? ''),
+      experience: data.experience ? String(data.experience) : null,
+      message: data.message ? String(data.message) : null,
+      portfolioUrl: data.portfolio_url ? String(data.portfolio_url) : null,
+    },
+  })
+}
+
+async function handleAdminEnrollments(
+  req: IncomingMessage,
+  res: ServerResponse,
+  env: DevApiEnv,
+): Promise<void> {
+  if (req.method !== 'GET') {
+    res.statusCode = 405
+    res.end()
+    return
+  }
+  const ctx = await requireAdminApi(req, res, env)
+  if (!ctx) return
+  const { supabase } = ctx
+
+  const { data: rows, error } = await supabase
+    .from('student_enrollments')
+    .select(
+      'id, clerk_id, class_id, free_course_id, kind, progress, status, plan_tier, billing_status, enrolled_at',
+    )
+    .order('enrolled_at', { ascending: false })
+    .limit(500)
+
+  if (error) {
+    console.error('[dev-api] admin enrollments', error)
+    json(res, 500, { error: 'Could not load class enrollments' })
+    return
+  }
+
+  const clerkIds = [...new Set((rows ?? []).map((row) => String(row.clerk_id ?? '')).filter(Boolean))]
+  const classIds = [...new Set((rows ?? []).map((row) => String(row.class_id ?? '')).filter(Boolean))]
+  const freeIds = [...new Set((rows ?? []).map((row) => String(row.free_course_id ?? '')).filter(Boolean))]
+
+  const profilesByClerk = new Map<string, { fullName: string; email: string; phone: string }>()
+  if (clerkIds.length > 0) {
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('clerk_id, full_name, email, phone')
+      .in('clerk_id', clerkIds)
+    for (const profile of profiles ?? []) {
+      profilesByClerk.set(String(profile.clerk_id), {
+        fullName: String(profile.full_name ?? '').trim() || 'Student',
+        email: String(profile.email ?? ''),
+        phone: String(profile.phone ?? ''),
+      })
+    }
+  }
+
+  const classTitleById = new Map<string, string>()
+  if (classIds.length > 0) {
+    const { data: classes } = await supabase.from('classes').select('id, title').in('id', classIds)
+    for (const item of classes ?? []) {
+      classTitleById.set(String(item.id), String(item.title ?? item.id))
+    }
+  }
+
+  const freeTitleById = new Map<string, string>()
+  if (freeIds.length > 0) {
+    const { data: freeCourses } = await supabase.from('free_courses').select('id, title').in('id', freeIds)
+    for (const item of freeCourses ?? []) {
+      freeTitleById.set(String(item.id), String(item.title ?? item.id))
+    }
+  }
+
+  const enrollments = (rows ?? []).map((row) => {
+    const clerkId = String(row.clerk_id ?? '')
+    const profile = profilesByClerk.get(clerkId)
+    const classId = String(row.class_id ?? '')
+    const freeCourseId = String(row.free_course_id ?? '')
+    return {
+      id: String(row.id),
+      clerkId,
+      fullName: profile?.fullName ?? 'Student',
+      email: profile?.email ?? '',
+      phone: profile?.phone ?? '',
+      classId: classId || freeCourseId,
+      classTitle:
+        classTitleById.get(classId) ||
+        freeTitleById.get(freeCourseId) ||
+        classId ||
+        freeCourseId ||
+        'Class',
+      kind: String(row.kind ?? 'online'),
+      status: String(row.status ?? 'ongoing'),
+      planTier: row.plan_tier ? String(row.plan_tier) : null,
+      billingStatus: row.billing_status ? String(row.billing_status) : null,
+      progress: Number(row.progress ?? 0),
+      enrolledAt: String(row.enrolled_at ?? ''),
+    }
+  })
+
+  json(res, 200, { enrollments })
+}
+
+async function handleAdminMentorAllowlist(
+  req: IncomingMessage,
+  res: ServerResponse,
+  env: DevApiEnv,
+): Promise<void> {
+  const ctx = await requireAdminApi(req, res, env)
+  if (!ctx) return
+  const { supabase } = ctx
+
+  if (req.method === 'GET') {
+    const { data, error } = await supabase
+      .from('mentor_allowlist')
+      .select('id, email, note, created_at')
+      .order('created_at', { ascending: false })
+    if (error) {
+      if (isMissingTableError(error)) {
+        json(res, 200, {
+          emails: [],
+          setupRequired: true,
+          error: 'Run supabase/mentor-allowlist.sql in the Supabase SQL editor first.',
+        })
+        return
+      }
+      console.error('[dev-api] mentor allowlist list', error)
+      json(res, 500, { error: 'Could not load mentor emails' })
+      return
+    }
+    json(res, 200, {
+      emails: (data ?? []).map((row) => ({
+        id: String(row.id),
+        email: String(row.email),
+        note: row.note ? String(row.note) : '',
+        createdAt: String(row.created_at),
+      })),
+    })
+    return
+  }
+
+  if (req.method === 'POST') {
+    let body: { email?: string; note?: string }
+    try {
+      body = (await readBodyJson(req)) as typeof body
+    } catch {
+      json(res, 400, { error: 'Invalid JSON' })
+      return
+    }
+    const email = normalizeMentorEmail(body.email ?? '')
+    if (!email || !email.includes('@')) {
+      json(res, 400, { error: 'A valid email is required' })
+      return
+    }
+    const { error } = await supabase.from('mentor_allowlist').upsert(
+      { email, note: body.note?.trim() || null },
+      { onConflict: 'email' },
+    )
+    if (error) {
+      if (isMissingTableError(error)) {
+        json(res, 503, { error: 'Run supabase/mentor-allowlist.sql in the Supabase SQL editor first.' })
+        return
+      }
+      console.error('[dev-api] mentor allowlist add', error)
+      json(res, 500, { error: 'Could not add mentor email' })
+      return
+    }
+    json(res, 200, { ok: true, email })
+    return
+  }
+
+  if (req.method === 'DELETE') {
+    const url = new URL(req.url ?? '', 'http://localhost')
+    const email = normalizeMentorEmail(url.searchParams.get('email') ?? '')
+    if (!email) {
+      json(res, 400, { error: 'Email is required' })
+      return
+    }
+    const { error } = await supabase.from('mentor_allowlist').delete().eq('email', email)
+    if (error) {
+      console.error('[dev-api] mentor allowlist delete', error)
+      json(res, 500, { error: 'Could not remove mentor email' })
+      return
+    }
+    json(res, 200, { ok: true })
+    return
+  }
+
+  res.statusCode = 405
+  res.end()
+}
+
+async function handleAdminMentorApplications(
+  req: IncomingMessage,
+  res: ServerResponse,
+  env: DevApiEnv,
+): Promise<void> {
+  const ctx = await requireAdminApi(req, res, env)
+  if (!ctx) return
+
+  if (req.method === 'GET') {
+    const { data, error } = await ctx.supabase
+      .from('mentor_applications')
+      .select(
+        'id, full_name, email, phone, expertise, experience, message, college, portfolio_url, status, admin_note, reviewed_at, created_at',
+      )
+      .order('created_at', { ascending: false })
+      .limit(200)
+    if (error) {
+      if (isMissingTableError(error)) {
+        json(res, 200, { applications: [] })
+        return
+      }
+      console.error('[dev-api] mentor applications', error)
+      json(res, 500, { error: 'Could not load mentor applications' })
+      return
+    }
+    json(res, 200, {
+      applications: (data ?? []).map((row) => ({
+        id: String(row.id),
+        fullName: String(row.full_name ?? ''),
+        email: String(row.email ?? ''),
+        phone: String(row.phone ?? ''),
+        expertise: String(row.expertise ?? ''),
+        experience: String(row.experience ?? ''),
+        message: String(row.message ?? ''),
+        college: String(row.college ?? ''),
+        portfolioUrl: String(row.portfolio_url ?? ''),
+        status: String(row.status ?? 'pending'),
+        adminNote: String(row.admin_note ?? ''),
+        reviewedAt: row.reviewed_at ? String(row.reviewed_at) : null,
+        createdAt: String(row.created_at ?? ''),
+      })),
+    })
+    return
+  }
+
+  if (req.method === 'POST') {
+    let body: { applicationId?: string; action?: string; adminNote?: string }
+    try {
+      body = (await readBodyJson(req)) as typeof body
+    } catch {
+      json(res, 400, { error: 'Invalid JSON' })
+      return
+    }
+
+    const applicationId = body.applicationId?.trim()
+    const action = body.action?.trim()
+    if (!applicationId || (action !== 'approve' && action !== 'reject')) {
+      json(res, 400, { error: 'applicationId and action (approve|reject) are required' })
+      return
+    }
+
+    const { data: appRow, error: fetchError } = await ctx.supabase
+      .from('mentor_applications')
+      .select('id, full_name, email, expertise, status')
+      .eq('id', applicationId)
+      .maybeSingle()
+
+    if (fetchError || !appRow) {
+      json(res, 404, { error: 'Application not found' })
+      return
+    }
+
+    const currentStatus = String(appRow.status ?? 'pending')
+    if (currentStatus !== 'pending') {
+      json(res, 409, { error: `Application is already ${currentStatus}` })
+      return
+    }
+
+    const adminNote = body.adminNote?.trim() || null
+    const reviewedAt = new Date().toISOString()
+    const email = normalizeMentorEmail(String(appRow.email ?? ''))
+
+    if (action === 'approve') {
+      const { error: allowError } = await ctx.supabase.from('mentor_allowlist').upsert(
+        {
+          email,
+          note: String(appRow.expertise ?? '').trim() || String(appRow.full_name ?? 'Approved mentor'),
+        },
+        { onConflict: 'email' },
+      )
+      if (allowError) {
+        if (isMissingTableError(allowError)) {
+          json(res, 503, { error: 'Run supabase/mentor-allowlist.sql in the Supabase SQL editor first.' })
+          return
+        }
+        console.error('[dev-api] mentor approve allowlist', allowError)
+        json(res, 500, { error: 'Could not add mentor to allowlist' })
+        return
+      }
+    }
+
+    const { error: updateError } = await ctx.supabase
+      .from('mentor_applications')
+      .update({
+        status: action === 'approve' ? 'approved' : 'rejected',
+        reviewed_at: reviewedAt,
+        admin_note: adminNote,
+      })
+      .eq('id', applicationId)
+
+    if (updateError) {
+      console.error('[dev-api] mentor application review', updateError)
+      json(res, 500, { error: 'Could not update application' })
+      return
+    }
+
+    json(res, 200, { ok: true, status: action === 'approve' ? 'approved' : 'rejected' })
+    return
+  }
+
+  res.statusCode = 405
+  res.end()
 }
 
 async function handleMentorApply(
@@ -1191,6 +1790,8 @@ async function handleMentorApply(
     expertise?: string
     experience?: string
     message?: string
+    college?: string
+    portfolioUrl?: string
   }
   try {
     body = (await readBodyJson(req)) as typeof body
@@ -1210,22 +1811,73 @@ async function handleMentorApply(
   const phone = body.phone?.trim() || null
   const experience = body.experience?.trim() || null
   const message = body.message?.trim() || null
+  const college = body.college?.trim() || null
+  const portfolioUrl = body.portfolioUrl?.trim() || null
+  const normalizedEmail = normalizeMentorEmail(email)
 
   const supabase = requireSupabaseAdmin(env)
-  if (supabase) {
-    const { error } = await supabase.from('mentor_applications').insert({
-      full_name: fullName,
-      email,
-      phone,
-      expertise,
-      experience,
-      message,
+  if (!supabase) {
+    json(res, 503, { error: 'Could not save application — configure Supabase.' })
+    return
+  }
+
+  const { data: existingPending, error: pendingError } = await supabase
+    .from('mentor_applications')
+    .select('id')
+    .eq('email', normalizedEmail)
+    .eq('status', 'pending')
+    .maybeSingle()
+
+  if (pendingError && !isMissingTableError(pendingError)) {
+    console.error('[dev-api] mentor apply pending check', pendingError)
+    json(res, 500, { error: 'Could not verify application status' })
+    return
+  }
+  if (existingPending?.id) {
+    json(res, 409, {
+      error: 'You already have a pending mentor request. We will email you once admin reviews it.',
     })
-    if (error) {
-      console.error('[dev-api] mentor apply db', error)
-      json(res, 500, { error: 'Could not save application' })
+    return
+  }
+
+  let alreadyApproved = false
+  try {
+    alreadyApproved = await isMentorEmailAllowed(supabase, normalizedEmail)
+  } catch (err) {
+    console.error('[dev-api] mentor apply allowlist', err)
+    json(res, 500, { error: 'Could not verify mentor access' })
+    return
+  }
+  if (alreadyApproved) {
+    json(res, 409, {
+      error: 'This email is already approved. Sign up and choose Mentor during onboarding.',
+    })
+    return
+  }
+
+  const { error } = await supabase.from('mentor_applications').insert({
+    full_name: fullName,
+    email: normalizedEmail,
+    phone,
+    expertise,
+    experience,
+    message,
+    college,
+    portfolio_url: portfolioUrl,
+    status: 'pending',
+  })
+  if (error) {
+    console.error('[dev-api] mentor apply db', error)
+    const msg = error.message ?? ''
+    if (/status|portfolio_url|college/i.test(msg) && /does not exist|could not find/i.test(msg)) {
+      json(res, 503, {
+        error:
+          'Database needs an update — run supabase/mentor-applications-v2.sql in the Supabase SQL editor, then try again.',
+      })
       return
     }
+    json(res, 500, { error: 'Could not save application. Please try again in a moment.' })
+    return
   }
 
   const html = `
@@ -1234,19 +1886,20 @@ async function handleMentorApply(
     <p><strong>Email:</strong> ${email}</p>
     <p><strong>Phone:</strong> ${phone ?? '—'}</p>
     <p><strong>Teaches:</strong> ${expertise}</p>
+    <p><strong>College:</strong> ${college ?? '—'}</p>
     <p><strong>Experience:</strong> ${experience ?? '—'}</p>
+    <p><strong>Portfolio:</strong> ${portfolioUrl ?? '—'}</p>
     <p><strong>Message:</strong></p>
     <p>${message ?? '—'}</p>
   `
 
-  try {
-    await sendNotifyEmail(env, `Mentor application: ${fullName}`, html)
-  } catch {
-    if (!supabase) {
-      json(res, 503, { error: 'Could not send application — configure Supabase or RESEND_API_KEY' })
-      return
+  after(async () => {
+    try {
+      await sendNotifyEmail(env, `Mentor application: ${fullName}`, html)
+    } catch (err) {
+      console.error('[dev-api] mentor apply notify', err)
     }
-  }
+  })
 
   json(res, 200, { ok: true })
 }
@@ -1306,10 +1959,14 @@ async function handleCashfreeCreateOrder(
     return
   }
 
-  let planTier: 'monthly' | 'three-month' | undefined
+  let planTier: 'monthly' | 'three-month' | 'six-month' | undefined
   if (purpose === 'paid') {
-    if (body.planTier !== 'monthly' && body.planTier !== 'three-month') {
-      json(res, 400, { error: 'planTier must be monthly or three-month for paid checkout' })
+    if (
+      body.planTier !== 'monthly' &&
+      body.planTier !== 'three-month' &&
+      body.planTier !== 'six-month'
+    ) {
+      json(res, 400, { error: 'planTier must be monthly, three-month, or six-month for paid checkout' })
       return
     }
     planTier = body.planTier
@@ -1558,6 +2215,199 @@ async function fetchPaidCashfreeOrder(cfg: CashfreeServerConfig, orderId: string
   )
 }
 
+async function handleAiResumeReview(
+  req: IncomingMessage,
+  res: ServerResponse,
+  env: DevApiEnv,
+): Promise<void> {
+  if (req.method !== 'POST') {
+    res.statusCode = 405
+    res.end()
+    return
+  }
+
+  if (!env.geminiApiKey) {
+    json(res, 503, {
+      error: 'AI is not configured. Add GEMINI_API_KEY in server environment (free at Google AI Studio).',
+    })
+    return
+  }
+
+  let body: { resumeText?: string }
+  try {
+    body = (await readBodyJson(req)) as typeof body
+  } catch {
+    json(res, 400, { error: 'Invalid JSON' })
+    return
+  }
+
+  const resumeText = body.resumeText?.trim()
+  if (!resumeText || resumeText.length < 80) {
+    json(res, 400, { error: 'Paste at least 80 characters of resume text to analyze.' })
+    return
+  }
+
+  try {
+    const result = await generateGeminiText(
+      env.geminiApiKey,
+      `Review this student resume:\n\n${truncateForAi(resumeText)}`,
+      RESUME_REVIEW_SYSTEM,
+    )
+    json(res, 200, { result })
+  } catch (err) {
+    console.error('[dev-api] ai resume-review', err)
+    json(res, 500, {
+      error: err instanceof Error ? err.message : 'AI analysis failed',
+    })
+  }
+}
+
+async function handleAiOpportunityMatch(
+  req: IncomingMessage,
+  res: ServerResponse,
+  env: DevApiEnv,
+): Promise<void> {
+  if (req.method !== 'POST') {
+    res.statusCode = 405
+    res.end()
+    return
+  }
+
+  if (!env.geminiApiKey) {
+    json(res, 503, {
+      error: 'AI is not configured. Add GEMINI_API_KEY in server environment (free at Google AI Studio).',
+    })
+    return
+  }
+
+  let body: { stream?: string; year?: string; skills?: string; goals?: string }
+  try {
+    body = (await readBodyJson(req)) as typeof body
+  } catch {
+    json(res, 400, { error: 'Invalid JSON' })
+    return
+  }
+
+  const stream = body.stream?.trim()
+  const year = body.year?.trim()
+  const skills = body.skills?.trim()
+  const goals = body.goals?.trim() ?? ''
+
+  if (!stream || !year || !skills) {
+    json(res, 400, { error: 'Stream, year, and skills are required.' })
+    return
+  }
+
+  const prompt = `Today's date: ${new Date().toISOString().slice(0, 10)}
+Student profile:
+- Stream/degree: ${stream}
+- Year: ${year}
+- Skills & interests: ${truncateForAi(skills, 2000)}
+- Goals: ${goals ? truncateForAi(goals, 1000) : 'Not specified'}
+
+Search official careers pages for 8 DIFFERENT companies (not only Google). Mix Microsoft, Amazon, Adobe, Zoho, Freshworks, Flipkart, Swiggy, Razorpay, PhonePe, Uber. Each applyUrl must be that company's own careers/jobs page — never Unstop, Internshala, LinkedIn, or Naukri. Return one JSON object only.`
+
+  try {
+    let raw: string
+    try {
+      raw = await generateGeminiText(env.geminiApiKey, prompt, OPPORTUNITY_MATCH_SYSTEM, {
+        search: true,
+        maxOutputTokens: 4096,
+        temperature: 0.45,
+      })
+    } catch (searchErr) {
+      console.error('[dev-api] ai opportunity-match search fallback', searchErr)
+      raw = await generateGeminiText(env.geminiApiKey, prompt, OPPORTUNITY_MATCH_SYSTEM, {
+        maxOutputTokens: 4096,
+        temperature: 0.45,
+      })
+    }
+    const payload = parseOpportunityMatchPayload(raw)
+    json(res, 200, {
+      snapshot: payload.snapshot,
+      matches: payload.matches,
+      next: payload.next,
+    })
+  } catch (err) {
+    console.error('[dev-api] ai opportunity-match', err)
+    json(res, 500, {
+      error: err instanceof Error ? err.message : 'AI matching failed',
+    })
+  }
+}
+
+async function handleAiOpportunityVoice(
+  req: IncomingMessage,
+  res: ServerResponse,
+  env: DevApiEnv,
+): Promise<void> {
+  if (req.method !== 'POST') {
+    res.statusCode = 405
+    res.end()
+    return
+  }
+
+  if (!env.geminiApiKey) {
+    json(res, 503, {
+      error: 'AI is not configured. Add GEMINI_API_KEY in server environment (free at Google AI Studio).',
+    })
+    return
+  }
+
+  let body: { transcript?: string; audioBase64?: string; mimeType?: string }
+  try {
+    body = (await readBodyJson(req)) as typeof body
+  } catch {
+    json(res, 400, { error: 'Invalid JSON' })
+    return
+  }
+
+  const transcript = body.transcript?.trim() ?? ''
+  const audioBase64 = body.audioBase64?.trim() ?? ''
+  const mimeType = body.mimeType?.trim() || 'audio/webm'
+
+  if (!transcript && !audioBase64) {
+    json(res, 400, { error: 'Speak something, or type a short note about yourself.' })
+    return
+  }
+
+  if (audioBase64.length > 6_000_000) {
+    json(res, 400, { error: 'Voice clip is too long. Keep it under 40 seconds.' })
+    return
+  }
+
+  const parts: GeminiPart[] = []
+  if (audioBase64) {
+    parts.push({ inlineData: { mimeType, data: audioBase64 } })
+  }
+  parts.push({
+    text: transcript
+      ? `Extract the student profile from this spoken note:\n\n${truncateForAi(transcript, 4000)}`
+      : 'Extract the student profile from this voice recording. The student may speak Hindi, English, or Hinglish.',
+  })
+
+  try {
+    const raw = await generateGeminiParts(env.geminiApiKey, parts, VOICE_PROFILE_SYSTEM, {
+      json: true,
+      maxOutputTokens: 512,
+      temperature: 0.2,
+    })
+    const profile = parseVoiceProfilePayload(raw)
+    if (!profile.stream && !profile.year && !profile.skills && !profile.goals) {
+      json(res, 422, {
+        error: 'Could not catch your details. Try again, a bit slower.',
+      })
+      return
+    }
+    json(res, 200, profile)
+  } catch (err) {
+    console.error('[dev-api] ai opportunity-voice', err)
+    json(res, 500, {
+      error: err instanceof Error ? err.message : 'Could not read your voice note',
+    })
+  }
+}
+
 /** Shared API router for Next.js Route Handlers. Returns true if route matched. */
 export function handleDevApiRequest(
   req: IncomingMessage,
@@ -1678,9 +2528,49 @@ export function handleDevApiRequest(
     return true
   }
 
+  if (path === '/api/user/mentor-eligible') {
+    void handleMentorEligible(req, res, env).catch((err) => {
+      console.error('[dev-api] mentor-eligible', err)
+      json(res, 500, { error: 'Internal server error' })
+    })
+    return true
+  }
+
+  if (path === '/api/user/mentor-application') {
+    void handleMentorApplicationPrefill(req, res, env).catch((err) => {
+      console.error('[dev-api] mentor-application', err)
+      json(res, 500, { error: 'Internal server error' })
+    })
+    return true
+  }
+
   if (path === '/api/admin/counselling-bookings') {
     void handleAdminCounsellingBookings(req, res, env).catch((err) => {
       console.error('[dev-api] admin counselling-bookings', err)
+      json(res, 500, { error: 'Internal server error' })
+    })
+    return true
+  }
+
+  if (path === '/api/admin/enrollments') {
+    void handleAdminEnrollments(req, res, env).catch((err) => {
+      console.error('[dev-api] admin enrollments', err)
+      json(res, 500, { error: 'Internal server error' })
+    })
+    return true
+  }
+
+  if (path === '/api/admin/mentor-allowlist') {
+    void handleAdminMentorAllowlist(req, res, env).catch((err) => {
+      console.error('[dev-api] admin mentor-allowlist', err)
+      json(res, 500, { error: 'Internal server error' })
+    })
+    return true
+  }
+
+  if (path === '/api/admin/mentor-applications') {
+    void handleAdminMentorApplications(req, res, env).catch((err) => {
+      console.error('[dev-api] admin mentor-applications', err)
       json(res, 500, { error: 'Internal server error' })
     })
     return true
@@ -1697,6 +2587,30 @@ export function handleDevApiRequest(
   if (path === '/api/cashfree/confirm') {
     void handleCashfreeConfirm(req, res, env).catch((err) => {
       console.error('[dev-api] cashfree confirm', err)
+      json(res, 500, { error: 'Internal server error' })
+    })
+    return true
+  }
+
+  if (path === '/api/ai/resume-review') {
+    void handleAiResumeReview(req, res, env).catch((err) => {
+      console.error('[dev-api] ai resume-review', err)
+      json(res, 500, { error: 'Internal server error' })
+    })
+    return true
+  }
+
+  if (path === '/api/ai/opportunity-match') {
+    void handleAiOpportunityMatch(req, res, env).catch((err) => {
+      console.error('[dev-api] ai opportunity-match', err)
+      json(res, 500, { error: 'Internal server error' })
+    })
+    return true
+  }
+
+  if (path === '/api/ai/opportunity-voice') {
+    void handleAiOpportunityVoice(req, res, env).catch((err) => {
+      console.error('[dev-api] ai opportunity-voice', err)
       json(res, 500, { error: 'Internal server error' })
     })
     return true
@@ -1726,5 +2640,6 @@ export function devApiEnvFromProcess(): DevApiEnv {
     cashfreeMode: process.env.CASHFREE_MODE === 'production' ? 'production' : 'sandbox',
     publicAppUrl,
     adminClerkUserIds: process.env.ADMIN_CLERK_USER_IDS,
+    geminiApiKey: process.env.GEMINI_API_KEY?.trim() || undefined,
   }
 }

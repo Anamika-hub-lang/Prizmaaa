@@ -1,7 +1,7 @@
 export type CreateCashfreeOrderBody = {
   classId: string
   purpose: 'paid' | 'trial'
-  planTier?: 'monthly' | 'three-month'
+  planTier?: 'monthly' | 'three-month' | 'six-month'
 }
 
 export async function createCashfreeOrder(

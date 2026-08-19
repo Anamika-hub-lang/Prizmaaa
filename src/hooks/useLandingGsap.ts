@@ -9,7 +9,7 @@ export function useLandingGsap() {
     const ctx = gsap.context(() => {
       gsap.from('.gsap-hero-in', {
         opacity: 0,
-        y: 48,
+        y: 24,
         duration: 0.9,
         ease: 'power3.out',
         stagger: 0.12,

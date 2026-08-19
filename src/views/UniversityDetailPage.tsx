@@ -41,9 +41,9 @@ export function UniversityDetailPage() {
       <div className="min-h-screen flex flex-col bg-white">
         <MainNavbar />
         <main className="flex-1 max-w-3xl mx-auto px-4 py-16 text-center">
-          <p className="text-gray-600">University not found.</p>
+          <p className="text-gray-600">Campus not found.</p>
           <Link to="/universities" className="text-educture-orange font-semibold mt-4 inline-block">
-            ← Back to universities
+            ← Back to campus stories
           </Link>
         </main>
         <MarketingFooter />
@@ -109,7 +109,7 @@ export function UniversityDetailPage() {
               className="inline-flex items-center gap-1.5 text-sm font-semibold text-educture-orange hover:underline"
             >
               <ArrowLeft className="w-4 h-4" />
-              All universities
+              All campuses
             </Link>
 
             <div className="mt-6 flex flex-col md:flex-row gap-6 md:items-end md:justify-between">
@@ -147,7 +147,7 @@ export function UniversityDetailPage() {
                     </div>
                   </>
                 ) : (
-                  <p className="text-sm text-gray-400">No reviews yet — be the first!</p>
+                  <p className="text-sm text-gray-400">No stories yet — be the first!</p>
                 )}
               </div>
             </div>
@@ -187,14 +187,14 @@ export function UniversityDetailPage() {
                 onSubmit={(e) => void handleSubmit(e)}
                 className="rounded-3xl border-[3px] border-orange-100 bg-white p-5 sm:p-6 space-y-4 shadow-sm text-left sticky top-24"
               >
-                <h2 className="font-display text-lg text-[#1a1a1a]">Write a review</h2>
+                <h2 className="font-display text-lg text-[#1a1a1a]">Share your campus story</h2>
                 <p className="text-xs text-gray-500 -mt-2">
-                  Share your honest experience — it helps the next student decide.
+                  Honest experiences help the next student decide with confidence.
                 </p>
 
                 {done && (
                   <p className="text-sm text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-xl px-3 py-2">
-                    Thank you! Your review is live.
+                    Thank you! Your story is live.
                   </p>
                 )}
 
@@ -237,11 +237,11 @@ export function UniversityDetailPage() {
                 <StarRatingInput label="Placements" value={placementRating} onChange={setPlacementRating} />
 
                 <div>
-                  <label className="text-xs font-bold text-gray-500 uppercase">Review title</label>
+                  <label className="text-xs font-bold text-gray-500 uppercase">Story title</label>
                   <input
                     value={reviewTitle}
                     onChange={(e) => setReviewTitle(e.target.value)}
-                    placeholder="Great academics, busy campus"
+                    placeholder="Great academics, lively campus"
                     className="w-full mt-1 px-3 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-educture-orange"
                   />
                 </div>
@@ -279,14 +279,14 @@ export function UniversityDetailPage() {
                   disabled={saving}
                   className="w-full py-3 rounded-full bg-educture-orange text-white font-semibold text-sm hover:bg-educture-orange-dark disabled:opacity-60"
                 >
-                  {saving ? 'Posting…' : 'Post review'}
+                  {saving ? 'Posting…' : 'Share story'}
                 </button>
               </form>
             </div>
 
             <div className="lg:col-span-8">
               <h2 className="text-sm font-bold text-gray-500 uppercase tracking-wide mb-4 text-left">
-                Student reviews ({reviews.length})
+                Student experiences ({reviews.length})
               </h2>
               <ul className="space-y-4">
                 {reviews.map((review) => (
@@ -296,7 +296,7 @@ export function UniversityDetailPage() {
                 ))}
                 {reviews.length === 0 && (
                   <li className="rounded-2xl border-2 border-dashed border-orange-200 bg-white/60 p-8 text-center text-sm text-gray-500">
-                    No reviews yet for {university.shortName}. Be the first to share your experience!
+                    No stories yet for {university.shortName}. Be the first to share your experience!
                   </li>
                 )}
               </ul>

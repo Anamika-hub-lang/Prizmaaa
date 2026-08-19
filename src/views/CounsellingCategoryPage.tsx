@@ -28,8 +28,10 @@ import {
   minBookingDateString,
   type CounsellingTimeSlot,
 } from '../data/counsellingSchedule'
-import { createCounsellingOrder } from '../lib/counsellingPayment'
+import { createCounsellingOrder, bookCounsellingViaUpi } from '../lib/counsellingPayment'
 import { openCashfreeCheckout, isCashfreeClientEnabled } from '../lib/cashfreeCheckout'
+import { isUpiQrCheckoutEnabled, shouldUseCashfreeCheckout } from '../lib/upiCheckout'
+import { UpiQrPaymentPanel } from '../components/checkout/UpiQrPaymentPanel'
 import { stashCashfreeOrderId } from '../lib/cashfreeOrderId'
 import { sanitizeIndianPhoneInput, validateIndianPhone } from '../lib/phoneValidation'
 
@@ -62,8 +64,10 @@ export function CounsellingCategoryPage() {
   const [note, setNote] = useState('')
   const [paying, setPaying] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [showQrPayment, setShowQrPayment] = useState(false)
 
-  const cashfreeOn = isCashfreeClientEnabled()
+  const upiQrOn = isUpiQrCheckoutEnabled()
+  const useCashfree = shouldUseCashfreeCheckout()
   const timeSlots = useMemo(() => availableSlotsForDate(scheduledDate), [scheduledDate])
 
   useEffect(() => {
@@ -89,26 +93,29 @@ export function CounsellingCategoryPage() {
 
   const selected = counsellingTopicById(topicId)
   const groupIdSafe = group.id
+  const bookingAmount = COUNSELLING_PRICE_INR
+
+  function buildBookingPayload() {
+    const phoneCheck = validateIndianPhone(phone)
+    if (!phoneCheck.ok) throw new Error(phoneCheck.error)
+    if (!topicId) throw new Error('Please choose a call type.')
+    if (!scheduledDate || !scheduledTime) throw new Error('Please pick a date and time slot for your guidance call.')
+    return {
+      fullName: fullName.trim(),
+      email: email.trim(),
+      phone: phoneCheck.digits,
+      categoryId: topicId,
+      groupId: groupIdSafe,
+      preferredMode,
+      scheduledDate,
+      scheduledTime,
+      note: note.trim() || undefined,
+    }
+  }
 
   async function handlePay(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
-
-    if (!topicId) {
-      setError('Please choose a session type.')
-      return
-    }
-
-    const phoneCheck = validateIndianPhone(phone)
-    if (!phoneCheck.ok) {
-      setError(phoneCheck.error)
-      return
-    }
-
-    if (!scheduledDate || !scheduledTime) {
-      setError('Please pick a date and time slot for your session.')
-      return
-    }
 
     if (!isSignedIn) {
       const returnTo = `${window.location.pathname}${window.location.search}#book`
@@ -121,28 +128,45 @@ export function CounsellingCategoryPage() {
       return
     }
 
-    if (!cashfreeOn) {
+    try {
+      buildBookingPayload()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Please complete the form')
+      return
+    }
+
+    if (upiQrOn) {
+      setShowQrPayment(true)
+      document.getElementById('book')?.scrollIntoView({ behavior: 'smooth' })
+      return
+    }
+
+    if (!useCashfree) {
       setError('Online payment is not available right now. Please try again later.')
       return
     }
 
     setPaying(true)
     try {
-      const { paymentSessionId, orderId, mode } = await createCounsellingOrder(getToken, {
-        fullName: fullName.trim(),
-        email: email.trim(),
-        phone: phoneCheck.digits,
-        categoryId: topicId,
-        groupId: groupIdSafe,
-        preferredMode,
-        scheduledDate,
-        scheduledTime,
-        note: note.trim() || undefined,
-      })
+      const payload = buildBookingPayload()
+      const { paymentSessionId, orderId, mode } = await createCounsellingOrder(getToken, payload)
       stashCashfreeOrderId(orderId)
       await openCashfreeCheckout(paymentSessionId, mode)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Payment could not start')
+      setPaying(false)
+    }
+  }
+
+  async function handleUpiBookingConfirm() {
+    setError(null)
+    setPaying(true)
+    try {
+      const payload = buildBookingPayload()
+      await bookCounsellingViaUpi(getToken, payload)
+      navigate(`/counselling/${groupIdSafe}?booked=1&topic=${encodeURIComponent(topicId)}`)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not submit booking')
       setPaying(false)
     }
   }
@@ -165,10 +189,10 @@ export function CounsellingCategoryPage() {
               className="inline-flex items-center gap-1.5 text-sm font-semibold text-educture-orange hover:underline"
             >
               <ArrowLeft className="w-4 h-4" />
-              All categories
+              All topics
             </Link>
             <p className="text-educture-orange font-bold text-xs uppercase tracking-[0.2em] mt-6">
-              {group.title} counselling
+              {group.title} guidance
             </p>
             <h1 className="font-display text-3xl sm:text-4xl lg:text-5xl mt-2 leading-tight max-w-2xl">
               {group.subtitle}
@@ -184,7 +208,7 @@ export function CounsellingCategoryPage() {
 
         <section className="py-12 lg:py-16 bg-sky-50/50 border-b border-orange-50">
           <div className="max-w-6xl mx-auto px-4 sm:px-6">
-            <h2 className="font-display text-2xl text-[#1a1a1a] mb-2">Pick your session</h2>
+            <h2 className="font-display text-2xl text-[#1a1a1a] mb-2">Pick your call type</h2>
             <p className="text-sm text-gray-500 mb-8">
               {topics.length} types under <strong className="text-gray-700">{group.title}</strong> — select one to
               book below.
@@ -222,13 +246,13 @@ export function CounsellingCategoryPage() {
 
         <section className="py-12 lg:py-16 bg-white" id="book">
           <div className="max-w-xl mx-auto px-4 sm:px-6">
-            <h2 className="font-display text-2xl text-[#1a1a1a] text-center">Book your session</h2>
+            <h2 className="font-display text-2xl text-[#1a1a1a] text-center">Book a guidance call</h2>
             <p className="text-sm text-gray-500 text-center mt-2 mb-2">
-              Pay ₹{COUNSELLING_PRICE_INR} to confirm · {COUNSELLING_DURATION_LABEL} on Meet or call
+              Pay ₹{COUNSELLING_PRICE_INR} to confirm · one session on Meet or call
             </p>
             <p className="text-xs text-center text-gray-400 mb-8 flex items-center justify-center gap-1">
               <Lock className="w-3 h-3" />
-              Secured by Cashfree · Booking confirmed only after payment
+              {upiQrOn ? 'Scan UPI QR to pay · booking confirmed after verification' : 'Secured by Cashfree · Booking confirmed only after payment'}
             </p>
 
             {booked ? (
@@ -236,15 +260,42 @@ export function CounsellingCategoryPage() {
                 <CheckCircle2 className="w-12 h-12 text-emerald-600 mx-auto" />
                 <p className="font-bold text-lg text-[#1a1a1a] mt-4">Booking confirmed!</p>
                 <p className="text-sm text-gray-600 mt-2 leading-relaxed">
-                  Payment received for <strong>{selected?.title ?? 'your counselling session'}</strong>. We&apos;ll
+                  Payment received for <strong>{selected?.title ?? 'your guidance call'}</strong>. We&apos;ll
                   send Meet/call details to your email before the scheduled slot.
                 </p>
                 <Link
                   to="/counselling"
                   className="inline-block mt-6 text-sm font-semibold text-educture-orange hover:underline"
                 >
-                  Back to categories
+                  Back to topics
                 </Link>
+              </div>
+            ) : showQrPayment ? (
+              <div className="rounded-3xl border-[3px] border-orange-100 bg-[#fff9f3] p-6 sm:p-8 shadow-sm">
+                <UpiQrPaymentPanel
+                  amountInr={bookingAmount}
+                  title={selected?.title ?? 'Guidance call'}
+                  subtitle={`${formatScheduleLabel(scheduledDate, scheduledTime)} · ${preferredMode === 'meet' ? 'Google Meet' : 'Phone call'}`}
+                  confirmLabel={`I've paid ₹${bookingAmount} — submit booking`}
+                  saving={paying}
+                  onConfirmPaid={handleUpiBookingConfirm}
+                />
+                {error && (
+                  <p className="text-sm text-red-600 mt-4" role="alert">
+                    {error}
+                  </p>
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowQrPayment(false)
+                    setPaying(false)
+                    setError(null)
+                  }}
+                  className="block w-full text-center text-sm text-gray-500 hover:text-educture-orange mt-4"
+                >
+                  ← Edit booking details
+                </button>
               </div>
             ) : (
               <form
@@ -261,7 +312,7 @@ export function CounsellingCategoryPage() {
                 ) : null}
 
                 <div>
-                  <label className="text-xs font-semibold text-gray-600">Session type</label>
+                  <label className="text-xs font-semibold text-gray-600">Call type</label>
                   <select
                     required
                     value={topicId}
@@ -269,7 +320,7 @@ export function CounsellingCategoryPage() {
                     className="w-full mt-1 px-4 py-3 rounded-xl border border-gray-200 bg-white text-sm outline-none focus:border-educture-orange"
                   >
                     <option value="" disabled>
-                      Select session
+                      Select topic
                     </option>
                     {topics.map((t) => (
                       <option key={t.id} value={t.id}>
@@ -413,12 +464,16 @@ export function CounsellingCategoryPage() {
                   disabled={paying || timeSlots.length === 0}
                   className="w-full flex items-center justify-center gap-2 py-3.5 rounded-full bg-educture-orange text-white font-semibold text-sm hover:bg-educture-orange-dark disabled:opacity-60 transition-colors shadow-[0_8px_24px_rgba(243,112,33,0.35)]"
                 >
-                  {paying ? 'Opening Cashfree…' : `Pay ₹${COUNSELLING_PRICE_INR} & confirm booking`}
+                  {paying
+                    ? 'Please wait…'
+                    : upiQrOn
+                      ? `Continue to pay ₹${COUNSELLING_PRICE_INR} via UPI`
+                      : `Pay ₹${COUNSELLING_PRICE_INR} & confirm booking`}
                 </button>
 
-                {!cashfreeOn && (
+                {!upiQrOn && !useCashfree && (
                   <p className="text-xs text-amber-700 text-center">
-                    Cashfree payments are not enabled in this environment.
+                    Online payments are not enabled in this environment.
                   </p>
                 )}
               </form>
@@ -430,7 +485,7 @@ export function CounsellingCategoryPage() {
                 className="inline-flex items-center gap-1 text-sm font-semibold text-gray-500 hover:text-educture-orange"
               >
                 <ArrowLeft className="w-4 h-4" />
-                Other categories
+                Other topics
                 <ArrowRight className="w-4 h-4" />
               </Link>
             </p>

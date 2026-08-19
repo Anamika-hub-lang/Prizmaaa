@@ -6,15 +6,15 @@ import { AppButton } from '../../components/ui/AppButton'
 import { tintedSurface, tintedSurfaceKey } from '../../components/ui/dashboardCardStyles'
 
 export function MentorMeetPage() {
-  const { classes, setMeetForClass } = useMentorContent()
-  const [selectedId, setSelectedId] = useState(classes[0]?.id ?? '')
-  const selected = classes.find((c) => c.id === selectedId)
+  const { myClasses, setMeetForClass } = useMentorContent()
+  const [selectedId, setSelectedId] = useState(myClasses[0]?.id ?? '')
+  const selected = myClasses.find((c) => c.id === selectedId)
   const [meetLink, setMeetLink] = useState(selected?.meetLink ?? 'https://meet.google.com/')
   const [nextSession, setNextSession] = useState(selected?.nextSessionLabel ?? '')
 
   const onSelect = (id: string) => {
     setSelectedId(id)
-    const c = classes.find((x) => x.id === id)
+    const c = myClasses.find((x) => x.id === id)
     if (c) {
       setMeetLink(c.meetLink)
       setNextSession(c.nextSessionLabel)
@@ -47,7 +47,7 @@ export function MentorMeetPage() {
               onChange={(e) => onSelect(e.target.value)}
               className="w-full mt-1 px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none"
             >
-              {classes.map((c) => (
+              {myClasses.map((c) => (
                 <option key={c.id} value={c.id}>{c.title}</option>
               ))}
             </select>
@@ -80,7 +80,7 @@ export function MentorMeetPage() {
 
         <div className="space-y-3">
           <h2 className="text-sm font-bold text-gray-500 uppercase">All classes</h2>
-          {classes.map((c) => (
+          {myClasses.map((c) => (
             <div key={c.id} className={`flex gap-3 items-center p-3 rounded-xl ${tintedSurfaceKey(c.id)}`}>
               <img src={c.image} alt="" className="w-14 h-14 rounded-lg object-cover shrink-0" />
               <div className="min-w-0 flex-1">

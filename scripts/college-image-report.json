@@ -1,0 +1,642 @@
+[
+  {
+    "id": "iit-bombay",
+    "ok": true,
+    "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6a/Python%2C_IIT_Bombay.JPG/1280px-Python%2C_IIT_Bombay.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "local": "/university-images/iit-bombay.jpg"
+  },
+  {
+    "id": "iit-delhi",
+    "ok": true,
+    "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/IIT_Delhi_Main_Building_Wide.jpg/1280px-IIT_Delhi_Main_Building_Wide.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "local": "/university-images/iit-delhi.jpg"
+  },
+  {
+    "id": "iit-madras",
+    "ok": false
+  },
+  {
+    "id": "iit-kanpur",
+    "ok": true,
+    "source": "https://upload.wikimedia.org/wikipedia/commons/f/fd/IIT_Kanpur_4.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+    "local": "/university-images/iit-kanpur.jpg"
+  },
+  {
+    "id": "iit-kharagpur",
+    "ok": false
+  },
+  {
+    "id": "iit-roorkee",
+    "ok": true,
+    "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f6/Eastern_cattle_egret_at_IIT-Roorkee.jpg/1280px-Eastern_cattle_egret_at_IIT-Roorkee.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "local": "/university-images/iit-roorkee.jpg"
+  },
+  {
+    "id": "bits-pilani",
+    "ok": true,
+    "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/BITS_Pilani%2C_Dubai_Campus_.jpg/1280px-BITS_Pilani%2C_Dubai_Campus_.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "local": "/university-images/bits-pilani.jpg"
+  },
+  {
+    "id": "nit-trichy",
+    "ok": false
+  },
+  {
+    "id": "nit-warangal",
+    "ok": false
+  },
+  {
+    "id": "iisc-bangalore",
+    "ok": true,
+    "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/52/IISC_Bangalore_Campus.jpg/1280px-IISC_Bangalore_Campus.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "local": "/university-images/iisc-bangalore.jpg"
+  },
+  {
+    "id": "vit-vellore",
+    "ok": true,
+    "source": "https://vit.ac.in/wp-content/uploads/2024/01/programmes-offered-header-scaled.webp",
+    "local": "/university-images/vit-vellore.webp"
+  },
+  {
+    "id": "manipal",
+    "ok": true,
+    "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f4/Manipal_Institute_of_Technology_Academic_Building%2C_Manipal_University%2C_Manipal_Campus%2C_India_%28Ank_Kumar%2C_Infosys_Limited_%29_01.jpg/1280px-Manipal_Institute_of_Technology_Academic_Building%2C_Manipal_University%2C_Manipal_Campus%2C_India_%28Ank_Kumar%2C_Infosys_Limited_%29_01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "local": "/university-images/manipal.jpg"
+  },
+  {
+    "id": "srm",
+    "ok": true,
+    "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/SRM_University_Campus_Chennai_Tamil_Nadu_India.jpg/1280px-SRM_University_Campus_Chennai_Tamil_Nadu_India.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "local": "/university-images/srm.jpg"
+  },
+  {
+    "id": "anna-university",
+    "ok": true,
+    "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/Anna_university_regional_campus%2CMadurai.jpg/1280px-Anna_university_regional_campus%2CMadurai.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "local": "/university-images/anna-university.jpg"
+  },
+  {
+    "id": "jadavpur",
+    "ok": false
+  },
+  {
+    "id": "iim-ahmedabad",
+    "ok": true,
+    "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/IIM_Ahmedabad_New_Campus.JPG/1280px-IIM_Ahmedabad_New_Campus.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "local": "/university-images/iim-ahmedabad.jpg"
+  },
+  {
+    "id": "iim-bangalore",
+    "ok": false
+  },
+  {
+    "id": "amity",
+    "ok": true,
+    "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/69/Amity_University%2C_Campus_Noida.jpg/1280px-Amity_University%2C_Campus_Noida.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "local": "/university-images/amity.jpg"
+  },
+  {
+    "id": "lpu",
+    "ok": true,
+    "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/LPU_punjab.jpg/1280px-LPU_punjab.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "local": "/university-images/lpu.jpg"
+  },
+  {
+    "id": "pune-university",
+    "ok": true,
+    "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/42/Savitribai_Phule_Pune_University%2C_Pune_%283%29_40.jpg/1280px-Savitribai_Phule_Pune_University%2C_Pune_%283%29_40.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "local": "/university-images/pune-university.jpg"
+  },
+  {
+    "id": "bhu",
+    "ok": false
+  },
+  {
+    "id": "thapar",
+    "ok": true,
+    "source": "https://upload.wikimedia.org/wikipedia/commons/2/29/Thapar_Campus_Aerial_View.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+    "local": "/university-images/thapar.jpg"
+  },
+  {
+    "id": "du",
+    "ok": false
+  },
+  {
+    "id": "jnu",
+    "ok": true,
+    "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b9/Jitendra_Singh_visiting_the_site_for_Hostel_building_for_North_Eastern_students_in_Jawaharlal_Nehru_University_%28JNU%29_campus%2C_in_New_Delhi.JPG/1280px-Jitendra_Singh_visiting_the_site_for_Hostel_building_for_North_Eastern_students_in_Jawaharlal_Nehru_University_%28JNU%29_campus%2C_in_New_Delhi.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "local": "/university-images/jnu.jpg"
+  },
+  {
+    "id": "jmi",
+    "ok": true,
+    "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ed/Jamia_Millia_Islamia_Campus%2C_a_night_view.jpg/1280px-Jamia_Millia_Islamia_Campus%2C_a_night_view.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "local": "/university-images/jmi.jpg"
+  },
+  {
+    "id": "dtu",
+    "ok": true,
+    "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/DELHI_TECHNOLOGICAL_UNIVERSITY%2C_%28East_Delhi_Campus%29.jpg/1280px-DELHI_TECHNOLOGICAL_UNIVERSITY%2C_%28East_Delhi_Campus%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "local": "/university-images/dtu.jpg"
+  },
+  {
+    "id": "nsut",
+    "ok": false
+  },
+  {
+    "id": "iiit-delhi",
+    "ok": true,
+    "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/IIITD_Campus_2024.jpg/1280px-IIITD_Campus_2024.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "local": "/university-images/iiit-delhi.jpg"
+  },
+  {
+    "id": "nit-delhi",
+    "ok": true,
+    "source": "https://upload.wikimedia.org/wikipedia/commons/8/8f/NIT_Delhi_Areal_View.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+    "local": "/university-images/nit-delhi.jpg"
+  },
+  {
+    "id": "igdtuw",
+    "ok": false
+  },
+  {
+    "id": "ggsipu",
+    "ok": true,
+    "source": "https://upload.wikimedia.org/wikipedia/commons/3/33/Guru_Gobind_Singh_Indraprastha_University.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+    "local": "/university-images/ggsipu.png"
+  },
+  {
+    "id": "jamia-hamdard",
+    "ok": false
+  },
+  {
+    "id": "spa-delhi",
+    "ok": true,
+    "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/School_of_Planning_and_Architecture%2C_New_Delhi_-_panoramio.jpg/1280px-School_of_Planning_and_Architecture%2C_New_Delhi_-_panoramio.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "local": "/university-images/spa-delhi.jpg"
+  },
+  {
+    "id": "aiims-delhi",
+    "ok": false,
+    "err": "Error: download 429"
+  },
+  {
+    "id": "mamc",
+    "ok": true,
+    "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d7/Maulana_Azad_Medical_College_entry%2C_New_Delhi.jpg/1280px-Maulana_Azad_Medical_College_entry%2C_New_Delhi.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "local": "/university-images/mamc.jpg"
+  },
+  {
+    "id": "lhmc",
+    "ok": false
+  },
+  {
+    "id": "ucms",
+    "ok": true,
+    "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/University_College_of_Medical_Sciences%2C_Delhi.png/1280px-University_College_of_Medical_Sciences%2C_Delhi.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "local": "/university-images/ucms.png"
+  },
+  {
+    "id": "vmmc",
+    "ok": true,
+    "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/The_Vice_President%2C_Mohammad_Hamid_Ansari_unveiling_the_statue_of_the_Lord_Mahavir_at_the_Dedication_Ceremony_of_the_Vardhman_Mahavir_Medical_College_Building_to_the_Nation%2C_in_New_Delhi_on_November_20%2C_2007.jpg/1280px-thumbnail.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "local": "/university-images/vmmc.jpg"
+  },
+  {
+    "id": "fms-delhi",
+    "ok": true,
+    "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/20/FMS-_The_Red_Building_of_Dreams.JPG/1280px-FMS-_The_Red_Building_of_Dreams.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "local": "/university-images/fms-delhi.jpg"
+  },
+  {
+    "id": "nift-delhi",
+    "ok": true,
+    "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/51/Kavuru_Sambasiva_Rao_unveiling_the_plaque_to_lay_the_foundation_stone_of_New_Block_of_NIFT_New_Delhi_Campus%2C_in_New_Delhi._The_Minister_of_State_for_Petroleum_%26_Natural_Gas_and_Textiles.jpg/1280px-thumbnail.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "local": "/university-images/nift-delhi.jpg"
+  },
+  {
+    "id": "ignou",
+    "ok": false
+  },
+  {
+    "id": "hindu-college",
+    "ok": true,
+    "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/58/Map_of_Hindu_College%2C_Delhi_University.jpg/1280px-Map_of_Hindu_College%2C_Delhi_University.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "local": "/university-images/hindu-college.jpg"
+  },
+  {
+    "id": "hansraj-college",
+    "ok": true,
+    "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/08/Hansraj_College.jpg/1280px-Hansraj_College.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "local": "/university-images/hansraj-college.jpg"
+  },
+  {
+    "id": "kmc",
+    "ok": false
+  },
+  {
+    "id": "ramjas",
+    "ok": false
+  },
+  {
+    "id": "st-stephens",
+    "ok": true,
+    "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/ca/Old_St._Stephen%27s_College%2C_Delhi.jpg/1280px-Old_St._Stephen%27s_College%2C_Delhi.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "local": "/university-images/st-stephens.jpg"
+  },
+  {
+    "id": "miranda-house",
+    "ok": false
+  },
+  {
+    "id": "srcc",
+    "ok": true,
+    "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/Krishna_Tirath_releasing_a_short_film_on_domestic_violence%2C_produced_by_Dr._Vartika_Nanda%2C_Department_of_Journalism%2C_Lady_Shri_Ram_College%2C_Delhi_University%2C_in_New_Delhi_on_September_12%2C_2012.jpg/1280px-thumbnail.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "local": "/university-images/srcc.jpg"
+  },
+  {
+    "id": "lsr",
+    "ok": true,
+    "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/Krishna_Tirath_releasing_a_short_film_on_domestic_violence%2C_produced_by_Dr._Vartika_Nanda%2C_Department_of_Journalism%2C_Lady_Shri_Ram_College%2C_Delhi_University%2C_in_New_Delhi_on_September_12%2C_2012.jpg/1280px-thumbnail.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "local": "/university-images/lsr.jpg"
+  },
+  {
+    "id": "daulat-ram",
+    "ok": true,
+    "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Daulat_Ram_College_Gate_Number_1.jpg/1280px-Daulat_Ram_College_Gate_Number_1.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "local": "/university-images/daulat-ram.jpg"
+  },
+  {
+    "id": "ip-college",
+    "ok": false
+  },
+  {
+    "id": "sgtb-khalsa",
+    "ok": true,
+    "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/Sri_Guru_Tegh_Bahadur_Khalsa_College_Gate_Number_1.jpg/1280px-Sri_Guru_Tegh_Bahadur_Khalsa_College_Gate_Number_1.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "local": "/university-images/sgtb-khalsa.jpg"
+  },
+  {
+    "id": "sscbs",
+    "ok": false,
+    "err": "Error: download 429"
+  },
+  {
+    "id": "venky",
+    "ok": true,
+    "source": "https://upload.wikimedia.org/wikipedia/commons/8/82/Sri_Venkateswara_College_Main_Building%2C_Jun_2011.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+    "local": "/university-images/venky.jpg"
+  },
+  {
+    "id": "arsd",
+    "ok": true,
+    "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/03/DUSU_Elections_Pamphlets_ARSD_College.jpg/1280px-DUSU_Elections_Pamphlets_ARSD_College.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "local": "/university-images/arsd.jpg"
+  },
+  {
+    "id": "jmc",
+    "ok": true,
+    "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/06/Jesus_and_Mary_College%2C_New_Delhi.jpg/1280px-Jesus_and_Mary_College%2C_New_Delhi.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "local": "/university-images/jmc.jpg"
+  },
+  {
+    "id": "gargi",
+    "ok": false
+  },
+  {
+    "id": "maitreyi",
+    "ok": true,
+    "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/39/Maitreyi_College_building%2C_Delhi.jpg/1280px-Maitreyi_College_building%2C_Delhi.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "local": "/university-images/maitreyi.jpg"
+  },
+  {
+    "id": "kamala-nehru",
+    "ok": false
+  },
+  {
+    "id": "deshbandhu",
+    "ok": true,
+    "source": "https://upload.wikimedia.org/wikipedia/commons/0/0d/Shakti_Bansal_at_annual_prize_distributions_for_College_toppers_at_North_Campus_%2C_University_of_Delhi.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+    "local": "/university-images/deshbandhu.jpg"
+  },
+  {
+    "id": "motilal-nehru",
+    "ok": false
+  },
+  {
+    "id": "dcac",
+    "ok": false
+  },
+  {
+    "id": "cvs",
+    "ok": true,
+    "source": "https://upload.wikimedia.org/wikipedia/commons/6/60/College_of_Vocational_Studies_Main_Building.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+    "local": "/university-images/cvs.jpg"
+  },
+  {
+    "id": "lady-irwin",
+    "ok": true,
+    "source": "https://ladyirwin.edu.in/favicon/LadyIrwin-Logo.png",
+    "local": "/university-images/lady-irwin.png"
+  },
+  {
+    "id": "zakir-husain",
+    "ok": true,
+    "source": "https://upload.wikimedia.org/wikipedia/commons/3/36/Zakir_Husain_College%2C_Delhi.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+    "local": "/university-images/zakir-husain.jpg"
+  },
+  {
+    "id": "dyal-singh",
+    "ok": true,
+    "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1c/Dyal_Singh_College%2CNew_Delhi_-_Lawns.jpg/1280px-Dyal_Singh_College%2CNew_Delhi_-_Lawns.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "local": "/university-images/dyal-singh.jpg"
+  },
+  {
+    "id": "shivaji-college",
+    "ok": true,
+    "source": "https://upload.wikimedia.org/wikipedia/commons/e/e6/Shivaji_College.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+    "local": "/university-images/shivaji-college.jpg"
+  },
+  {
+    "id": "mait",
+    "ok": true,
+    "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/MAIT_brahmgupt_block.jpg/1280px-MAIT_brahmgupt_block.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "local": "/university-images/mait.jpg"
+  },
+  {
+    "id": "msit",
+    "ok": false,
+    "err": "Error: download 429"
+  },
+  {
+    "id": "bpit",
+    "ok": false
+  },
+  {
+    "id": "bvcoe",
+    "ok": true,
+    "source": "https://upload.wikimedia.org/wikipedia/commons/c/c0/Recreation_center%2C_Bharati_Vidyapeeth%27s_College_of_Engineering%2C_New_Delhi.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+    "local": "/university-images/bvcoe.jpg"
+  },
+  {
+    "id": "gtbit",
+    "ok": false
+  },
+  {
+    "id": "vips",
+    "ok": true,
+    "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/66/VIPS-TC_Campus.jpg/1280px-VIPS-TC_Campus.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "local": "/university-images/vips.jpg"
+  },
+  {
+    "id": "adgitm",
+    "ok": false
+  },
+  {
+    "id": "maims",
+    "ok": false
+  },
+  {
+    "id": "jims-rohini",
+    "ok": true,
+    "source": "https://upload.wikimedia.org/wikipedia/commons/c/c5/Jagan_institute_of_management_studies_rohini.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+    "local": "/university-images/jims-rohini.jpg"
+  },
+  {
+    "id": "nit-kurukshetra",
+    "ok": false
+  },
+  {
+    "id": "iim-rohtak",
+    "ok": false
+  },
+  {
+    "id": "mdi-gurgaon",
+    "ok": true,
+    "source": "https://mdi.ac.in/resources/assets/images/mdi-og-tag-img1.png",
+    "local": "/university-images/mdi-gurgaon.png"
+  },
+  {
+    "id": "mdu-rohtak",
+    "ok": false,
+    "err": "Error: download 429"
+  },
+  {
+    "id": "ku-kurukshetra",
+    "ok": true,
+    "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7c/Prince-saini-oi8H5grSHzg-unsplash.jpg/1280px-Prince-saini-oi8H5grSHzg-unsplash.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "local": "/university-images/ku-kurukshetra.jpg"
+  },
+  {
+    "id": "gjust-hisar",
+    "ok": true,
+    "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Gju1.jpg/1280px-Gju1.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "local": "/university-images/gjust-hisar.jpg"
+  },
+  {
+    "id": "cuh",
+    "ok": true,
+    "source": "https://www.cuh.ac.in/logo.png",
+    "local": "/university-images/cuh.png"
+  },
+  {
+    "id": "ymca-faridabad",
+    "ok": true,
+    "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/WV_banner_Gurgaon_division_YMCA_university_campus_in_Faridabad.jpg/1280px-WV_banner_Gurgaon_division_YMCA_university_campus_in_Faridabad.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "local": "/university-images/ymca-faridabad.jpg"
+  },
+  {
+    "id": "dcrust",
+    "ok": false
+  },
+  {
+    "id": "pgims-rohtak",
+    "ok": true,
+    "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Behind_Triveni_Hostel%2C_PGIMS_Rohtak.jpg/1280px-Behind_Triveni_Hostel%2C_PGIMS_Rohtak.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "local": "/university-images/pgims-rohtak.jpg"
+  },
+  {
+    "id": "bpsmv",
+    "ok": false
+  },
+  {
+    "id": "cdlu-sirsa",
+    "ok": false
+  },
+  {
+    "id": "hau-hisar",
+    "ok": false,
+    "err": "Error: download 429"
+  },
+  {
+    "id": "luvas",
+    "ok": false
+  },
+  {
+    "id": "igu-meerpur",
+    "ok": true,
+    "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e2/As_a_Reader_%26_Head%2C_Department_of_Commerce_Maharshi_Dayanand_University%2C_Rohtak_%281988%E2%80%9396%29_at_Regional_Center_Rewari_now_Indira_Gandhi_University%2C_Meerpur%2C_Rewari.jpg/1280px-thumbnail.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "local": "/university-images/igu-meerpur.jpg"
+  },
+  {
+    "id": "gurugram-university",
+    "ok": true,
+    "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Amity_University_campus_gurugram%2C_Hariyana.jpg/1280px-Amity_University_campus_gurugram%2C_Hariyana.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "local": "/university-images/gurugram-university.jpg"
+  },
+  {
+    "id": "dbranlu",
+    "ok": true,
+    "source": "https://www.dbranlu.ac.in/images/newlogosmall.png",
+    "local": "/university-images/dbranlu.png"
+  },
+  {
+    "id": "sgt",
+    "ok": true,
+    "source": "https://sgtuniversity.ac.in/assets/images/life-at-sgt/blogs/sgt-university-latest-blogs.webp",
+    "local": "/university-images/sgt.webp"
+  },
+  {
+    "id": "gd-goenka",
+    "ok": false,
+    "err": "Error: download 429"
+  },
+  {
+    "id": "kr-mangalam",
+    "ok": true,
+    "source": "https://truthful-cabbage-82fd27e8f6.media.strapiapp.com/fav_457c1acb7e.png",
+    "local": "/university-images/kr-mangalam.png"
+  },
+  {
+    "id": "amity-haryana",
+    "ok": true,
+    "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Amity_University_campus_gurugram%2C_Hariyana.jpg/1280px-Amity_University_campus_gurugram%2C_Hariyana.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "local": "/university-images/amity-haryana.jpg"
+  },
+  {
+    "id": "northcap",
+    "ok": true,
+    "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5d/The_NorthCap_University_Building.jpg/1280px-The_NorthCap_University_Building.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "local": "/university-images/northcap.jpg"
+  },
+  {
+    "id": "bml-munjal",
+    "ok": true,
+    "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1e/Bml_munjal_university.jpg/1280px-Bml_munjal_university.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "local": "/university-images/bml-munjal.jpg"
+  },
+  {
+    "id": "apeejay-stya",
+    "ok": false
+  },
+  {
+    "id": "iilm-gurgaon",
+    "ok": true,
+    "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/36/The_Vice_President%2C_Shri_M._Venkaiah_Naidu_unveiling_the_plaque_to_inaugurate_the_IILM_University_Gurugram_Campus_from_IILM_Lodhi_Road_Campus%2C_in_New_Delhi_on_April_20%2C_2018.JPG/1280px-thumbnail.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "local": "/university-images/iilm-gurgaon.jpg"
+  },
+  {
+    "id": "starex",
+    "ok": true,
+    "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/Hyundai_Grand_Starex_TCI_GL_2014.jpg/1280px-Hyundai_Grand_Starex_TCI_GL_2014.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "local": "/university-images/starex.jpg"
+  },
+  {
+    "id": "sushant",
+    "ok": true,
+    "source": "https://upload.wikimedia.org/wikipedia/commons/e/e4/Ansal_Institute_of_Technology_campus.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+    "local": "/university-images/sushant.jpg"
+  },
+  {
+    "id": "jgu",
+    "ok": false
+  },
+  {
+    "id": "ashoka",
+    "ok": true,
+    "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bc/Ashoka_University_Campus.jpg/1280px-Ashoka_University_Campus.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "local": "/university-images/ashoka.jpg"
+  },
+  {
+    "id": "srm-sonipat",
+    "ok": true,
+    "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/SRM_Jinhaishi_004.jpg/1280px-SRM_Jinhaishi_004.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "local": "/university-images/srm-sonipat.jpg"
+  },
+  {
+    "id": "rishihood",
+    "ok": false,
+    "err": "Error: download 429"
+  },
+  {
+    "id": "wud",
+    "ok": true,
+    "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/Landscape_Design_for_University_of_Michigan_Met_CT_3409.jpg/1280px-Landscape_Design_for_University_of_Michigan_Met_CT_3409.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "local": "/university-images/wud.jpg"
+  },
+  {
+    "id": "manav-rachna",
+    "ok": false,
+    "err": "Error: download 429"
+  },
+  {
+    "id": "mriirs",
+    "ok": false
+  },
+  {
+    "id": "al-falah",
+    "ok": false
+  },
+  {
+    "id": "mvn",
+    "ok": false
+  },
+  {
+    "id": "pdm",
+    "ok": false,
+    "err": "Error: download 429"
+  },
+  {
+    "id": "jagannath-jhajjar",
+    "ok": true,
+    "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/95/Deputy_Commissioner_Ramesh_Chander_Bidhan%2C_IAS_with_Prof._H.L._Verma_at_Jagan_Nath_University_Jhajjar.jpg/1280px-Deputy_Commissioner_Ramesh_Chander_Bidhan%2C_IAS_with_Prof._H.L._Verma_at_Jagan_Nath_University_Jhajjar.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "local": "/university-images/jagannath-jhajjar.jpg"
+  },
+  {
+    "id": "geeta-panipat",
+    "ok": true,
+    "source": "https://geetauniversity.edu.in/",
+    "local": "/university-images/geeta-panipat.jpg"
+  },
+  {
+    "id": "mm-mullana",
+    "ok": true,
+    "source": "https://upload.wikimedia.org/wikipedia/commons/6/63/Maharishi_Markandeshwar_University%2C_Mullana.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+    "local": "/university-images/mm-mullana.jpg"
+  },
+  {
+    "id": "baba-mastnath",
+    "ok": false
+  },
+  {
+    "id": "om-sterling",
+    "ok": true,
+    "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/35/Om_Sterling_Global_University.png/1280px-Om_Sterling_Global_University.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "local": "/university-images/om-sterling.png"
+  },
+  {
+    "id": "niilm-kaithal",
+    "ok": false,
+    "err": "Error: download 429"
+  },
+  {
+    "id": "jat-college-rohtak",
+    "ok": true,
+    "source": "https://jatcollegerohtak.ac.in/wp-content/uploads/2024/08/gulab-singh-214x300.png",
+    "local": "/university-images/jat-college-rohtak.png"
+  },
+  {
+    "id": "crm-jat-hisar",
+    "ok": false
+  }
+]

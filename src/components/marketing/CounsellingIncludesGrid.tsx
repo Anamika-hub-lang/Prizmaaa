@@ -16,10 +16,10 @@ export function CounsellingIncludesGrid({ variant = 'light', boxed = false }: Pr
       <h3
         className={`font-display text-2xl sm:text-3xl mb-1 ${isDark ? 'text-white' : 'text-[#1a1a1a]'}`}
       >
-        Every session includes
+        Every guidance call includes
       </h3>
       <p className={`text-sm sm:text-base mb-5 sm:mb-6 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-        Structured advice — roadmap, tools, and clear next steps in one hour.
+        Clear next steps — roadmap, resources, and honest advice in one hour.
       </p>
       <ul className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
         {counsellingIncludes.map((item) => (

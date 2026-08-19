@@ -18,18 +18,20 @@ export function MarketingFooter() {
           <ul className="space-y-2 text-sm">
             <li><Link to="/" className="hover:text-white">Home</Link></li>
             <li><Link to="/about" className="hover:text-white">About</Link></li>
-            <li><Link to="/pricing" className="hover:text-white">Pricing</Link></li>
+            <li><Link to="/pricing" className="hover:text-white">Plans</Link></li>
           </ul>
         </div>
         <div>
           <p className="font-bold text-educture-orange text-xs uppercase tracking-widest mb-4">Resources</p>
           <ul className="space-y-2 text-sm">
-            <li><Link to="/sign-up" className="hover:text-white">Free trial</Link></li>
-            <li><Link to="/counselling" className="hover:text-white">Counselling — ₹200/hr</Link></li>
-            <li><Link to="/universities" className="hover:text-white">University reviews</Link></li>
-            <li><Link to="/university-counseling" className="hover:text-white">University counseling</Link></li>
+            <li><Link to="/sign-up" className="hover:text-white">Join free</Link></li>
+            <li><Link to="/ai" className="hover:text-white">AI resume & matcher</Link></li>
+            <li><Link to="/counselling" className="hover:text-white">Guidance — ₹199/call</Link></li>
+            <li><Link to="/counselling/interview-prep" className="hover:text-white">Mock interview — ₹99</Link></li>
+            <li><Link to="/universities" className="hover:text-white">Campus stories</Link></li>
+            <li><Link to="/university-counseling" className="hover:text-white">Campus connect</Link></li>
             <li><Link to="/become-mentor" className="hover:text-white">Become a mentor</Link></li>
-            <li><Link to="/reviews" className="hover:text-white">Share a review</Link></li>
+            <li><Link to="/reviews" className="hover:text-white">Share your story</Link></li>
             <li><Link to="/sign-in" className="hover:text-white">Student login</Link></li>
           </ul>
         </div>
@@ -93,7 +95,7 @@ export function ContactSection({ id = 'contact' }: { id?: string }) {
             />
             <div className="absolute -bottom-4 -right-2 bg-educture-orange rounded-2xl p-4 border-[3px] border-white shadow-xl max-w-[200px]">
               <p className="font-script text-xl text-white leading-snug text-center">
-                Let&apos;s create something amazing!
+                Your journey. Your people.
               </p>
             </div>
           </div>

@@ -2,9 +2,10 @@ import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { BrandLogo, BRAND_NAME } from '../../components/brand/BrandLogo'
 import { useAuth, useUser } from '@clerk/nextjs'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { getUserRole, getRoleHomePath } from '../../lib/userRole'
 import { saveProfileDetails } from '../../lib/saveProfileDetails'
+import { fetchMentorApplicationPrefill } from '../../lib/mentorApplicationPrefill'
 import type { HowDidYouFindUs, StudentEducationLevel } from '../../data/onboardingFields'
 import {
   HowDidYouFindUsFields,
@@ -38,6 +39,31 @@ export function ProfileDetailsPage() {
 
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [prefillLoaded, setPrefillLoaded] = useState(false)
+
+  useEffect(() => {
+    if (role !== 'teacher' || prefillLoaded) return
+    void fetchMentorApplicationPrefill(getToken).then((app) => {
+      if (!app) {
+        setPrefillLoaded(true)
+        return
+      }
+      const parts = app.fullName.trim().split(/\s+/)
+      if (!user?.firstName && parts[0]) setFirstName(parts[0])
+      if (!user?.lastName && parts.length > 1) setLastName(parts.slice(1).join(' '))
+      if (app.phone) setPhone(app.phone)
+      if (app.college) setCity(app.college)
+      if (app.expertise) setExpertise(app.expertise)
+      if (app.experience) {
+        const years = app.experience.match(/\d+/)
+        if (years) setExperienceYears(years[0])
+        else setQualifications(app.experience)
+      }
+      if (app.message) setBio(app.message)
+      if (app.portfolioUrl) setPortfolioUrl(app.portfolioUrl)
+      setPrefillLoaded(true)
+    })
+  }, [role, getToken, prefillLoaded, user?.firstName, user?.lastName])
 
   if (!role) {
     return null

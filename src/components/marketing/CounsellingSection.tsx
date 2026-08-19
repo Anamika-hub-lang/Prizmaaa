@@ -39,14 +39,14 @@ export function CounsellingSection({ id = 'counselling' }: CounsellingSectionPro
             <div>
               <span className="inline-flex items-center gap-2 rounded-full border border-educture-orange/40 bg-educture-orange/10 px-3 py-1 text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.2em] text-orange-200">
                 <span className="h-1.5 w-1.5 rounded-full bg-educture-orange animate-pulse" />
-                1-on-1 expert counselling
+                1-on-1 peer & mentor guidance
               </span>
               <h2 className="font-display text-3xl sm:text-4xl leading-[1.1] mt-4">
                 Not sure what&apos;s{' '}
                 <span className="font-script text-educture-orange text-4xl sm:text-5xl">next?</span>
               </h2>
               <p className="text-sm text-gray-300 mt-3 leading-relaxed">
-                Pick a category, book your session on the next page. Live on Google Meet or phone.
+                Pick a topic, book a call on the next page. Talk live on Google Meet or phone with people who get it.
               </p>
             </div>
 
@@ -57,7 +57,7 @@ export function CounsellingSection({ id = 'counselling' }: CounsellingSectionPro
                   <p className="text-xl sm:text-2xl font-bold text-white leading-none">
                     ₹{COUNSELLING_PRICE_INR}
                   </p>
-                  <p className="text-[11px] text-orange-200/90 mt-0.5">per {COUNSELLING_DURATION_LABEL}</p>
+                  <p className="text-[11px] text-orange-200/90 mt-0.5">{COUNSELLING_DURATION_LABEL}</p>
                 </div>
               </div>
               <span className="inline-flex items-center gap-1 rounded-full bg-white/5 px-3 py-1.5 border border-white/10 text-xs text-gray-400">
@@ -69,7 +69,7 @@ export function CounsellingSection({ id = 'counselling' }: CounsellingSectionPro
             </div>
 
             <div>
-              <h3 className="font-display text-lg sm:text-xl text-white">Every session includes</h3>
+              <h3 className="font-display text-lg sm:text-xl text-white">Every call includes</h3>
               <ul className="mt-3 space-y-2.5">
                 {counsellingIncludes.map((item) => (
                   <li key={item} className="flex items-start gap-2.5 text-sm text-gray-300 leading-snug">
@@ -84,7 +84,7 @@ export function CounsellingSection({ id = 'counselling' }: CounsellingSectionPro
               to="/counselling"
               className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-educture-orange text-white font-semibold text-sm shadow-[0_12px_40px_rgba(243,112,33,0.45)] hover:bg-educture-orange-dark transition-colors"
             >
-              Book counselling
+              Book a guidance call
               <ArrowRight className="w-4 h-4" />
             </Link>
           </motion.div>
@@ -97,7 +97,7 @@ export function CounsellingSection({ id = 'counselling' }: CounsellingSectionPro
             className="lg:col-span-7 flex flex-col"
           >
             <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-gray-500 mb-3">
-              Choose a category
+              Choose a topic
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-1 gap-3 flex-1">
               {counsellingGroups.map((group) => (

@@ -2,7 +2,6 @@ import { Link } from 'react-router-dom'
 import { Gem, Paperclip, Building2, ArrowUpRight } from 'lucide-react'
 import {
   categoryPricing,
-  TRIAL_DAYS,
   formatInr,
   type PricingCategoryId,
   type PricingPaymentTier,
@@ -44,68 +43,72 @@ export function CategoryPlanCards({
 }: Props) {
   const config = categoryPricing[categoryId]
   const images = categoryImages[categoryId]
-  const monthly = config.monthlyInr
-  const threeMonth = config.threeMonthInr
 
   const tiers = [
     {
-      key: 'trial',
-      name: 'Starter',
-      imageTag: `${TRIAL_DAYS}-day trial`,
+      key: 'monthly' as const,
+      name: 'Monthly',
+      imageTag: '1 month',
       imageTagClass: 'bg-sky-600',
-      price: formatInr(monthly),
-      priceNote: `after ${TRIAL_DAYS} days`,
-      desc: `${TRIAL_DAYS} days of ${config.title.toLowerCase()} on Google Meet — then pay ${formatInr(monthly)} to continue.`,
+      price: formatInr(config.monthlyInr),
+      priceNote: 'per month',
+      desc: `Pay ${formatInr(config.monthlyInr)} upfront for one month of ${config.title.toLowerCase()} — live Google Meet with peers & mentor.`,
       features: [
-        `${TRIAL_DAYS} days free on Google Meet`,
-        'Add UPI / bank / card to start (no charge today)',
-        `Then ${formatInr(monthly)}/month unless you cancel`,
-        'Free self-paced library included',
+        'Full month of live sessions',
+        'Pay now to start',
+        'Projects & mentor feedback',
+        'Renew monthly when you continue',
       ],
-      cta: 'Start free trial',
+      cta: mode === 'checkout' ? 'Choose 1 month' : 'Browse sessions',
+      tier: 'monthly' as const,
       icon: Paperclip,
       iconBg: 'bg-sky-100 border-sky-200',
       iconColor: 'text-sky-600',
       image: images[0],
     },
     {
-      key: 'monthly',
-      name: 'Growth',
-      imageTag: 'Most popular',
+      key: 'three-month' as const,
+      name: '3 Months',
+      imageTag: 'Popular',
       imageTagClass: 'bg-educture-orange',
-      price: formatInr(monthly),
-      priceNote: 'per month',
-      desc: `Full ${config.title.toLowerCase()} — live mentor sessions every month.`,
-      features: ['Live Google Meet classes', 'Assignments & mentor feedback', 'Pay when you pick a class', 'Choose Growth at checkout'],
-      cta: mode === 'checkout' ? 'Choose 1 month' : 'Browse classes',
-      tier: 'monthly' as const,
+      price: formatInr(config.threeMonthInr),
+      priceNote: '3 months',
+      desc: `One payment for three months of ${config.title.toLowerCase()} with your peer group.`,
+      features: [
+        '3 months bundled access',
+        'Same live Meet collaboration',
+        'Better than paying month-by-month',
+        'Choose 3 months at checkout',
+      ],
+      cta: mode === 'checkout' ? 'Choose 3 months' : 'Browse sessions',
+      tier: 'three-month' as const,
       icon: Gem,
       iconBg: 'bg-[#fff4eb] border-orange-200',
       iconColor: 'text-educture-orange',
       image: images[1],
     },
     {
-      key: 'three-month',
-      name: 'Premium',
+      key: 'six-month' as const,
+      name: '6 Months',
       imageTag: 'Best value',
       imageTagClass: 'bg-violet-600',
-      price: formatInr(threeMonth),
-      priceNote: '3 months',
-      desc: `One payment for three months of ${config.title.toLowerCase()}.`,
-      features: ['3 months bundled access', 'Same live Meet experience', 'Best for steady learners', 'Choose Premium at checkout'],
-      cta: mode === 'checkout' ? 'Choose 3 months' : 'Browse classes',
-      tier: 'three-month' as const,
+      price: formatInr(config.sixMonthInr),
+      priceNote: '6 months',
+      desc: `Six months of ${config.title.toLowerCase()} — the best value for steady learners.`,
+      features: [
+        '6 months bundled access',
+        'Lowest effective monthly cost',
+        'Same live Meet collaboration',
+        'Choose 6 months at checkout',
+      ],
+      cta: mode === 'checkout' ? 'Choose 6 months' : 'Browse sessions',
+      tier: 'six-month' as const,
       icon: Building2,
-      iconBg: 'bg-sky-100 border-sky-200',
-      iconColor: 'text-sky-700',
+      iconBg: 'bg-violet-50 border-violet-200',
+      iconColor: 'text-violet-700',
       image: images[2],
     },
   ]
-
-  const trialHref =
-    mode === 'checkout' && classId
-      ? `/student/checkout/${classId}/trial`
-      : '/sign-up'
 
   const handlePayTier = (tier: PricingPaymentTier) => {
     if (mode === 'checkout' && onSelectPay) {
@@ -117,10 +120,10 @@ export function CategoryPlanCards({
     <div className="grid md:grid-cols-3 gap-6 lg:gap-8 items-stretch pricing-card-grid">
       {tiers.map((plan) => {
         const Icon = plan.icon
-        const isCheckoutPayCard = mode === 'checkout' && plan.tier !== undefined
+        const isCheckoutPayCard = mode === 'checkout'
 
         const openCheckoutTier = () => {
-          if (plan.tier) handlePayTier(plan.tier)
+          handlePayTier(plan.tier)
         }
 
         return (
@@ -181,22 +184,9 @@ export function CategoryPlanCards({
                   </li>
                 ))}
               </ul>
-              {mode === 'checkout' && (
-                <p className="text-xs text-gray-500 mb-4 leading-relaxed border-t border-orange-50 pt-3">
-                  {planCardHint(
-                    plan.key as 'trial' | 'monthly' | 'three-month',
-                    'checkout',
-                  )}
-                </p>
-              )}
-              {mode === 'marketing' && (
-                <p className="text-xs text-gray-500 mb-4 leading-relaxed border-t border-orange-50 pt-3">
-                  {planCardHint(
-                    plan.key as 'trial' | 'monthly' | 'three-month',
-                    'marketing',
-                  )}
-                </p>
-              )}
+              <p className="text-xs text-gray-500 mb-4 leading-relaxed border-t border-orange-50 pt-3">
+                {planCardHint(plan.key, mode)}
+              </p>
               {isCheckoutPayCard ? (
                 <button
                   type="button"
@@ -209,14 +199,6 @@ export function CategoryPlanCards({
                   {plan.cta}
                   <ArrowUpRight className="w-4 h-4" />
                 </button>
-              ) : plan.key === 'trial' ? (
-                <Link
-                  to={trialHref}
-                  className="inline-flex items-center justify-center gap-2 py-3.5 rounded-full text-sm font-semibold transition-all border-[3px] border-sky-200 text-[#1a1a1a] bg-white group-hover:bg-educture-orange group-hover:text-white group-hover:border-educture-orange w-full"
-                >
-                  {plan.cta}
-                  <ArrowUpRight className="w-4 h-4" />
-                </Link>
               ) : (
                 <Link
                   to="/sign-in"

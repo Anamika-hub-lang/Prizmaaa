@@ -5,7 +5,9 @@ import { AppButton } from '../../components/ui/AppButton'
 import { CheckoutStepper } from '../../components/checkout/CheckoutStepper'
 import { PaymentMethodForm } from '../../components/checkout/PaymentMethodForm'
 import { CashfreePayButton } from '../../components/checkout/CashfreePayButton'
-import { isCashfreeClientEnabled } from '../../lib/cashfreeCheckout'
+import { UpiQrPaymentPanel } from '../../components/checkout/UpiQrPaymentPanel'
+import { isUpiQrCheckoutEnabled, shouldUseCashfreeCheckout } from '../../lib/upiCheckout'
+import { UPI_ID } from '../../data/upiPayment'
 import { tintedSurface, tintedSurfaceKey } from '../../components/ui/dashboardCardStyles'
 import { useMentorContent } from '../../context/MentorContentContext'
 import { useStudentEnrollments } from '../../hooks/useStudentEnrollments'
@@ -16,12 +18,11 @@ import {
   categoryPricing,
   getPaymentAmount,
   getPaymentLabel,
-  TRIAL_DAYS,
   type PricingPaymentTier,
 } from '../../data/pricingPlans'
 
 function isPaymentTier(value: string | null): value is PricingPaymentTier {
-  return value === 'monthly' || value === 'three-month'
+  return value === 'monthly' || value === 'three-month' || value === 'six-month'
 }
 
 export function StudentCheckoutPage() {
@@ -29,7 +30,8 @@ export function StudentCheckoutPage() {
   const [searchParams] = useSearchParams()
   const { getClassById } = useMentorContent()
   const { enrollWithPaidPlan, enrollments } = useStudentEnrollments()
-  const cashfreeOn = isCashfreeClientEnabled()
+  const upiQrOn = isUpiQrCheckoutEnabled()
+  const useCashfree = shouldUseCashfreeCheckout()
   const item = classId ? getClassById(classId) : undefined
   const activeEnrollment = classId ? getActiveEnrollmentForClass(enrollments, classId) : undefined
 
@@ -61,7 +63,7 @@ export function StudentCheckoutPage() {
       <>
         <StudentPageHeader
           title="Choose your plan"
-          subtitle={`${item.title} · ${categoryTitle} — Starter trial or pay now (Growth / Premium).`}
+          subtitle={`${item.title} · ${categoryTitle} — pay monthly, 3 months, or 6 months.`}
         />
         <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
           <CheckoutStepper current={1} path="paid" />
@@ -90,8 +92,7 @@ export function StudentCheckoutPage() {
           )}
 
           <p className="text-center mt-8 text-sm text-gray-500">
-            Starter trial? Use the blue <strong>Start free trial</strong> card — payment method only, no charge for{' '}
-            {TRIAL_DAYS} days.
+            All plans require payment upfront.
           </p>
           <p className="text-center mt-4">
             <Link to={`/student/class/${item.id}`} className="text-sm text-gray-500 hover:text-educture-orange">
@@ -116,7 +117,21 @@ export function StudentCheckoutPage() {
 
   const amount = paymentSelection ? getPaymentAmount(paymentSelection) : 0
   const planLabel = paymentSelection ? getPaymentLabel(paymentSelection) : ''
-  const tier = selectedTier as 'monthly' | 'three-month'
+  const tier = selectedTier as PricingPaymentTier
+
+  async function handleUpiPaid() {
+    if (!classId || !selectedTier) return
+    setPayError(null)
+    setSaving(true)
+    try {
+      await enrollWithPaidPlan(classId, tier, 'upi', UPI_ID)
+      window.location.assign(`/student/enrolled/${classId}?plan=${selectedTier}`)
+    } catch (err) {
+      setPayError(err instanceof Error ? err.message : 'Payment could not be completed')
+    } finally {
+      setSaving(false)
+    }
+  }
 
   async function handlePaidSubmit(type: import('../../types/enrollment').PaymentMethodType, raw: string) {
     if (!classId || !selectedTier) return
@@ -148,19 +163,38 @@ export function StudentCheckoutPage() {
             <p className="text-sm text-gray-500 mt-1">{planLabel}</p>
             <p className="text-2xl font-bold text-educture-orange mt-4">₹{amount.toLocaleString('en-IN')}</p>
             {tier === 'monthly' && (
-              <p className="text-xs text-gray-500 mt-1">1 month access · renews monthly</p>
+              <p className="text-xs text-gray-500 mt-1">1 month access · pay upfront</p>
             )}
             {tier === 'three-month' && (
               <p className="text-xs text-gray-500 mt-1">One payment · 3 months of live classes</p>
             )}
-            {cashfreeOn && (
+            {tier === 'six-month' && (
+              <p className="text-xs text-gray-500 mt-1">One payment · 6 months of live classes</p>
+            )}
+            {useCashfree && (
               <p className="text-xs text-sky-700 font-semibold mt-2">Secured by Cashfree Payments</p>
             )}
           </div>
         </div>
 
         <div className={`${tintedSurface(2)} p-6`}>
-          {cashfreeOn ? (
+          {upiQrOn ? (
+            <>
+              <UpiQrPaymentPanel
+                amountInr={amount}
+                title={planLabel}
+                subtitle={item.title}
+                confirmLabel={`I've paid ₹${amount.toLocaleString('en-IN')} — activate my class`}
+                saving={saving}
+                onConfirmPaid={handleUpiPaid}
+              />
+              {payError && (
+                <p className="text-sm text-red-600 mt-3" role="alert">
+                  {payError}
+                </p>
+              )}
+            </>
+          ) : useCashfree ? (
             <>
               <CashfreePayButton
                 classId={item.id}
