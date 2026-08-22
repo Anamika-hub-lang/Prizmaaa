@@ -41,15 +41,6 @@ function writeLocalForClerk(clerkId: string, rows: StudentEnrollment[]) {
   }
 }
 
-async function patchEnrollmentDb(
-  id: string,
-  patch: Record<string, unknown>
-): Promise<void> {
-  if (!supabase) return
-  const { error } = await supabase.from('student_enrollments').update(patch).eq('id', id)
-  if (error) throw enrollmentDbError(error)
-}
-
 type PostgrestErr = { message?: string; code?: string }
 
 function enrollmentDbError(error: PostgrestErr): Error {
@@ -381,35 +372,6 @@ export function useStudentEnrollments() {
     [clerkId, refresh, enrollments],
   )
 
-  const cancelEnrollment = useCallback(
-    async (enrollmentId: string) => {
-      if (supabase) {
-        const { error } = await supabase.from('student_enrollments').delete().eq('id', enrollmentId)
-        if (error) throw enrollmentDbError(error)
-      } else if (clerkId) {
-        const local = readLocal(clerkId).filter((e) => e.id !== enrollmentId)
-        writeLocalForClerk(clerkId, local)
-      }
-      await refresh()
-    },
-    [clerkId, refresh],
-  )
-
-  const updateEnrollmentProgress = useCallback(
-    async (enrollmentId: string, progress: number) => {
-      const p = Math.min(100, Math.max(0, progress))
-      if (supabase) await patchEnrollmentDb(enrollmentId, { progress: p })
-      else if (clerkId) {
-        const local = readLocal(clerkId).map((e) =>
-          e.id === enrollmentId ? { ...e, progress: p } : e,
-        )
-        writeLocalForClerk(clerkId, local)
-      }
-      await refresh()
-    },
-    [clerkId, refresh],
-  )
-
   const enrollInFreeCourse = useCallback(
     async (freeCourseId: string) => {
       if (!clerkId) return
@@ -458,8 +420,6 @@ export function useStudentEnrollments() {
     enrollWithPaidPlan,
     enrollInFreeCourse,
     startTrialWithPayment,
-    cancelEnrollment,
-    updateEnrollmentProgress,
     trialDays: TRIAL_DAYS,
   }
 }

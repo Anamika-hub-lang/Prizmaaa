@@ -1,20 +1,14 @@
 import { useState } from 'react'
+import { useUser } from '@clerk/nextjs'
 import { useMentorContent } from '../../context/MentorContentContext'
 import type { ClassCategoryId } from '../../data/classCatalog'
-import {
-  formatBrowsePricingSummary,
-  getCategoryPlanPriceLabel,
-  getDefaultPriceForCategory,
-} from '../../data/classCatalog'
+import { getCategoryById, getDefaultPriceForCategory } from '../../data/classCatalog'
 import type { ManagedClass } from '../../types/mentorContent'
 import { MentorPageHeader } from '../../components/layout/TeacherLayout'
 import { AppButton } from '../../components/ui/AppButton'
 import { tintedSurface, tintedSurfaceKey } from '../../components/ui/dashboardCardStyles'
-
-const defaultImage =
-  'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=600&q=80'
-const defaultMentorImage =
-  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&q=80'
+import { pickClassCoverImage, isGenericClassCover } from '../../lib/classCoverImages'
+import { resolveMentorImage } from '../../lib/mentorAvatar'
 
 type ClassFormState = {
   title: string
@@ -30,7 +24,7 @@ type ClassFormState = {
 const emptyForm = (): ClassFormState => ({
   title: '',
   categoryId: 'skills',
-  image: defaultImage,
+  image: '',
   duration: '6 weeks',
   sessions: '12 live sessions',
   description: '',
@@ -52,6 +46,7 @@ function classToForm(c: ManagedClass): ClassFormState {
 }
 
 export function MentorClassesPage() {
+  const { user } = useUser()
   const { myClasses, addClass, updateClass, removeClass, categories } = useMentorContent()
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -77,12 +72,22 @@ export function MentorClassesPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    const seed = editingId ?? `new-${form.title.trim().toLowerCase()}`
+    const coverImage = isGenericClassCover(form.image)
+      ? pickClassCoverImage({
+          id: seed,
+          categoryId: form.categoryId,
+          title: form.title.trim(),
+          image: form.image,
+        })
+      : form.image.trim()
+
     const payload = {
       title: form.title.trim(),
       categoryId: form.categoryId,
-      image: form.image.trim(),
+      image: coverImage,
       mentor: form.mentor.trim(),
-      mentorImage: defaultMentorImage,
+      mentorImage: resolveMentorImage(undefined, user?.hasImage ? user.imageUrl : null),
       duration: form.duration.trim(),
       sessions: form.sessions.trim(),
       description: form.description.trim(),
@@ -119,8 +124,9 @@ export function MentorClassesPage() {
   return (
     <>
       <MentorPageHeader
+        backTo="/teacher"
         title="Online classes"
-        subtitle={`Students pay official category plans at checkout — ${formatBrowsePricingSummary()}.`}
+        subtitle="Upload, publish, and manage the live classes students can join."
       />
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 text-left">
         <AppButton type="button" onClick={() => (showForm && !editingId ? resetForm() : openCreate())} className="mb-6">
@@ -173,9 +179,19 @@ export function MentorClassesPage() {
               <input
                 value={form.image}
                 onChange={(e) => setForm((f) => ({ ...f, image: e.target.value }))}
+                placeholder="Leave blank for auto cover image"
                 className="w-full mt-1 px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none"
               />
-              <img src={form.image} alt="" className="mt-2 w-full max-h-40 object-cover rounded-xl" />
+              <img
+                src={pickClassCoverImage({
+                  id: editingId ?? 'preview',
+                  categoryId: form.categoryId,
+                  title: form.title.trim() || 'preview',
+                  image: form.image,
+                })}
+                alt=""
+                className="mt-2 w-full max-h-40 object-cover rounded-xl"
+              />
             </div>
             <div>
               <label className="text-xs font-semibold text-gray-600">Duration</label>
@@ -224,9 +240,6 @@ export function MentorClassesPage() {
                   Cancel edit
                 </button>
               )}
-              <p className="w-full text-xs text-gray-500">
-                Checkout pricing for this category: {getCategoryPlanPriceLabel(form.categoryId)}
-              </p>
             </div>
           </form>
         )}
@@ -244,7 +257,7 @@ export function MentorClassesPage() {
                 <div className="p-4">
                   <p className="font-bold">{c.title}</p>
                   <p className="text-xs text-gray-500 mt-1">
-                    {c.categoryId} · {getCategoryPlanPriceLabel(c.categoryId)}
+                    {getCategoryById(c.categoryId)?.title ?? c.categoryId} · {c.sessions}
                   </p>
                   <p className="text-xs mt-1">
                     <span

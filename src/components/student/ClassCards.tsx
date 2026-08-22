@@ -3,6 +3,7 @@ import type { OnlineClass } from '../../data/classCatalog'
 import type { ClassCategoryId } from '../../data/classCatalog'
 import { ArrowRight } from 'lucide-react'
 import { tintedSurfaceKey } from '../ui/dashboardCardStyles'
+import { MentorAvatar } from '../ui/MentorAvatar'
 
 type CardSize = 'compact' | 'medium' | 'large'
 
@@ -77,7 +78,8 @@ export function PaidClassCard({
         <p className="text-[11px] sm:text-xs md:text-sm text-gray-600 mt-1.5 sm:mt-2 break-words">
           {item.duration} · {item.sessions}
         </p>
-        <p className="text-xs sm:text-sm text-educture-orange font-semibold mt-1.5 sm:mt-2 truncate">
+        <p className="text-xs sm:text-sm text-educture-orange font-semibold mt-1.5 sm:mt-2 truncate flex items-center gap-2">
+          <MentorAvatar src={item.mentorImage} name={item.mentor} size="sm" />
           {item.mentor}
         </p>
       </div>

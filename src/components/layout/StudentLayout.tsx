@@ -1,92 +1,82 @@
 import type { ReactNode } from 'react'
-import { Bell, BookOpen, Calendar, ClipboardList, LayoutDashboard, User, Video } from 'lucide-react'
-import { tintedSurface } from '../ui/dashboardCardStyles'
-import { PortalUserAvatar } from './PortalUserAvatar'
+import { useState } from 'react'
+import { Link } from '../../compat/react-router-dom'
+import { Menu, X } from 'lucide-react'
 import { CashfreePendingConfirm } from '../checkout/CashfreePendingConfirm'
-import { formatBrowsePricingSummary } from '../../data/classCatalog'
-import { BrandLogo } from '../brand/BrandLogo'
-import { PortalHeaderNav, PortalMobileBottomNav, type PortalNavItem } from './PortalNav'
+import { PortalUserAvatar } from './PortalUserAvatar'
+import { StudentMobileNav, StudentSidebar, studentSidebarNav } from './StudentSidebar'
 
-const primaryNav: PortalNavItem[] = [
-  { to: '/student/browse', icon: Video, label: 'Classes', match: '/student/browse' },
-  { to: '/student/free', icon: BookOpen, label: 'Courses', match: '/student/free' },
-  { to: '/student/calendar', icon: Calendar, label: 'Calendar', match: '/student/calendar' },
-]
-
-const menuNav: PortalNavItem[] = [
-  { to: '/student', icon: LayoutDashboard, label: 'Dashboard', match: '/student', exact: true },
-  { to: '/student/assignments', icon: ClipboardList, label: 'Assignments', match: '/student/assignments' },
-  { to: '/student/profile', icon: User, label: 'Profile', match: '/student/profile' },
-]
+const mobileNav = studentSidebarNav.slice(0, 4)
 
 export function StudentLayout({ children }: { children: ReactNode }) {
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+
   return (
-    <div className="min-h-screen bg-[#f8f9fb] flex flex-col">
-      <header className="bg-white border-b border-gray-100 sticky top-0 z-50 shadow-sm">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 py-2 sm:py-2.5 md:py-3 flex items-center gap-2 min-w-0">
-          <BrandLogo to="/" size="sm" showWordmark={false} className="md:hidden shrink-0" />
-          <BrandLogo to="/" size="md" className="hidden md:flex shrink-0" />
+    <div className="min-h-screen bg-[#f4f5f7]">
+      <StudentSidebar className="hidden md:flex w-60 fixed inset-y-0 left-0 z-20" />
 
-          <div className="flex items-center gap-1 sm:gap-2 ml-auto shrink-0">
-            <PortalHeaderNav primary={primaryNav} menu={menuNav} menuLabel="Student menu" />
-            <button
-              type="button"
-              className="hidden sm:inline-flex p-2 text-gray-500 hover:text-educture-orange shrink-0"
-              aria-label="Notifications"
-            >
-              <Bell className="w-5 h-5" />
-            </button>
-            <PortalUserAvatar profilePath="/student/profile" />
-          </div>
+      {sidebarOpen && (
+        <>
+          <button
+            type="button"
+            className="fixed inset-0 z-40 bg-black/40 md:hidden"
+            aria-label="Close menu"
+            onClick={() => setSidebarOpen(false)}
+          />
+          <StudentSidebar
+            className="fixed inset-y-0 left-0 z-50 w-64 shadow-xl md:hidden"
+            onNavigate={() => setSidebarOpen(false)}
+          />
+        </>
+      )}
+
+      <div className="flex flex-col min-w-0 min-h-screen md:ml-60">
+        <header className="md:hidden sticky top-0 z-30 bg-white border-b border-gray-100 px-4 py-3 flex items-center justify-between">
+          <button
+            type="button"
+            onClick={() => setSidebarOpen(true)}
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 text-gray-600"
+            aria-label="Open menu"
+          >
+            {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
+          <PortalUserAvatar profilePath="/student/profile" />
+        </header>
+
+        <div className="hidden md:flex items-center justify-end px-6 py-3 bg-white/80 border-b border-gray-100">
+          <PortalUserAvatar profilePath="/student/profile" />
         </div>
-      </header>
 
-      <CashfreePendingConfirm />
-      <div className="flex-1 min-w-0 pb-[4.75rem] md:pb-0">
-        {children}
+        <CashfreePendingConfirm />
+
+        <main className="flex-1 px-4 sm:px-6 py-6 pb-24 md:pb-8 max-w-5xl w-full mx-auto">{children}</main>
+
+        <StudentMobileNav items={mobileNav} />
       </div>
-
-      <PortalMobileBottomNav primary={primaryNav} />
     </div>
   )
 }
 
-export function StudentPageHeader({ title, subtitle }: { title: string; subtitle?: string }) {
+export function StudentPageHeader({
+  title,
+  subtitle,
+  backTo,
+  backLabel = 'Back',
+}: {
+  title: string
+  subtitle?: string
+  backTo?: string
+  backLabel?: string
+}) {
   return (
-    <div className="bg-[#fff9f3] border-b border-orange-100/60">
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 py-5 sm:py-7 md:py-8 text-left min-w-0">
-        <h1 className="font-display text-xl sm:text-2xl md:text-3xl text-[#1d1d1d] leading-tight break-words">
-          {title}
-        </h1>
-        {subtitle && (
-          <p className="text-xs sm:text-sm text-gray-500 mt-2 max-w-full leading-relaxed break-words">
-            {subtitle}
-          </p>
-        )}
-      </div>
-    </div>
-  )
-}
-
-export function EnrollmentSteps() {
-  const planLine = formatBrowsePricingSummary()
-  const steps = [
-    { n: '1', title: 'Pick a class', desc: 'Browse categories and choose your online class.' },
-    { n: '2', title: 'Choose a plan', desc: `${planLine}. Monthly, 3-month, or 6-month — pay upfront.` },
-    { n: '3', title: 'Meet your mentor', desc: 'We connect you with your assigned mentor.' },
-    { n: '4', title: 'Join Google Meet', desc: 'Live sessions happen on Google Meet — link in your dashboard.' },
-  ]
-  return (
-    <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-6">
-      {steps.map((s, i) => (
-        <div key={s.n} className={`${tintedSurface(i)} p-4 text-left`}>
-          <span className="w-8 h-8 rounded-full bg-educture-orange text-white text-sm font-bold flex items-center justify-center">
-            {s.n}
-          </span>
-          <p className="font-bold text-sm mt-3 text-[#1d1d1d]">{s.title}</p>
-          <p className="text-xs text-gray-500 mt-1 leading-relaxed">{s.desc}</p>
-        </div>
-      ))}
+    <div className="mb-6 text-left">
+      {backTo && (
+        <Link to={backTo} className="text-sm font-medium text-educture-orange hover:underline mb-2 inline-block">
+          ← {backLabel}
+        </Link>
+      )}
+      <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">{title}</h1>
+      {subtitle && <p className="text-sm text-gray-500 mt-1 max-w-2xl">{subtitle}</p>}
     </div>
   )
 }

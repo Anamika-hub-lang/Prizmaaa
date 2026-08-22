@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import { tintedSurfaceKey } from '../ui/dashboardCardStyles'
 import { Calendar, Video, ExternalLink, PlayCircle } from 'lucide-react'
 import { planTierLabel } from '../../lib/classEnrollmentPolicy'
-import { CourseCardActions } from './CourseCardActions'
+import { MentorAvatar } from '../ui/MentorAvatar'
 
 export type EnrolledCourse = {
   id: string
@@ -26,13 +26,9 @@ export type EnrolledCourse = {
 export function MyCourseCard({
   course,
   meetLink,
-  onEdit,
-  onCancelClass,
 }: {
   course: EnrolledCourse
   meetLink?: string
-  onEdit?: () => void
-  onCancelClass?: () => void
 }) {
   const statusLabel = {
     ongoing: 'In progress',
@@ -80,7 +76,7 @@ export function MyCourseCard({
         )}
         <h3 className="font-bold text-[#1d1d1d] text-base sm:text-lg leading-snug mt-1">{course.title}</h3>
         <div className="flex items-center gap-2 mt-3">
-          <img src={course.mentorImage} alt="" className="w-8 h-8 rounded-full object-cover" />
+          <MentorAvatar src={course.mentorImage} name={course.mentor} size="sm" />
           <span className="text-sm text-gray-600">{course.mentor}</span>
         </div>
 
@@ -104,10 +100,6 @@ export function MyCourseCard({
             <Calendar className="w-3.5 h-3.5 text-educture-orange" />
             Next: {course.nextSession}
           </p>
-        )}
-
-        {onEdit && (
-          <CourseCardActions course={course} onEdit={onEdit} onCancelClass={onCancelClass} />
         )}
 
         <div className="flex flex-wrap gap-2 mt-3 sm:mt-auto pt-2">

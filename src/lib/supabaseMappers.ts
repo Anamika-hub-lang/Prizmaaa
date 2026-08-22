@@ -1,6 +1,6 @@
 import type { FreeCourse } from '../data/classCatalog'
 import type { ManagedClass, MentorAssignment } from '../types/mentorContent'
-
+import { pickClassCoverImage } from './classCoverImages'
 export type ClassRow = {
   id: string
   title: string
@@ -47,7 +47,12 @@ export function classFromRow(row: ClassRow): ManagedClass {
     id: row.id,
     title: row.title,
     categoryId: row.category_id as ManagedClass['categoryId'],
-    image: row.image,
+    image: pickClassCoverImage({
+      id: row.id,
+      categoryId: row.category_id as ManagedClass['categoryId'],
+      title: row.title,
+      image: row.image,
+    }),
     mentor: row.mentor,
     mentorImage: row.mentor_image,
     duration: row.duration,

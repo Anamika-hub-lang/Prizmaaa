@@ -77,6 +77,7 @@ export function MentorFreeCoursesPage() {
   return (
     <>
       <MentorPageHeader
+        backTo="/teacher"
         title="Free courses"
         subtitle="These appear on the student Free Courses tab — no payment required."
       />

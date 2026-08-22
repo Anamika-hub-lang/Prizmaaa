@@ -11,6 +11,7 @@ import {
   type ClassCategoryId,
 } from '../data/classCatalog'
 import { tintedSurfaceKey } from '../components/ui/dashboardCardStyles'
+import { MentorAvatar } from '../components/ui/MentorAvatar'
 
 const ALL: 'all' = 'all'
 const AUTH_RETURN_KEY = 'educture_auth_return'
@@ -145,7 +146,8 @@ export function LiveClassesPage() {
                       <p className="text-xs text-gray-600 mt-1.5">
                         {item.duration} · {item.sessions}
                       </p>
-                      <p className="text-xs text-educture-orange font-semibold mt-1 truncate">
+                      <p className="text-xs text-educture-orange font-semibold mt-1.5 truncate flex items-center gap-2">
+                        <MentorAvatar src={item.mentorImage} name={item.mentor} size="sm" />
                         {item.mentor}
                       </p>
                       <button

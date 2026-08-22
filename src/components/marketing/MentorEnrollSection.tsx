@@ -1,6 +1,33 @@
 import { Link } from 'react-router-dom'
-import { GraduationCap, Sparkles, Video, Users, ArrowRight } from 'lucide-react'
+import { ArrowRight, IndianRupee, Sparkles, TrendingUp, Users } from 'lucide-react'
 import { motion } from 'framer-motion'
+
+const mentorBenefits = [
+  {
+    icon: Users,
+    iconBg: 'bg-educture-orange/10',
+    iconColor: 'text-educture-orange',
+    title: 'Build your own student base',
+    description:
+      'Every class you teach adds learners to your circle. Grow a community that knows you, trusts you, and keeps coming back.',
+  },
+  {
+    icon: IndianRupee,
+    iconBg: 'bg-emerald-50',
+    iconColor: 'text-emerald-600',
+    title: 'Get paid for teaching',
+    description:
+      'Earn from the students you mentor. Your live sessions and guidance turn into real income on PRIZMA.',
+  },
+  {
+    icon: TrendingUp,
+    iconBg: 'bg-sky-100',
+    iconColor: 'text-sky-600',
+    title: 'Grow as an educator',
+    description:
+      'Your own mentor dashboard — classes, Google Meet links, resources, and student progress in one place.',
+  },
+] as const
 
 export function MentorEnrollSection() {
   return (
@@ -22,28 +49,26 @@ export function MentorEnrollSection() {
               <span className="font-script text-educture-orange text-4xl sm:text-5xl">mentor</span>
             </h2>
             <p className="text-sm text-gray-600 mt-4 max-w-md leading-relaxed">
-              Invite-only: admin adds your email first. Then apply here — you cannot become a mentor
-              from normal sign up. Host sessions, share resources, and guide students on projects.
+              Teach what you know, build your audience, and get paid — all on one platform built for
+              student growth. Apply once admin has approved your email.
             </p>
-            <ul className="mt-6 space-y-3 text-sm text-gray-700">
-              <li className="flex items-center gap-3">
-                <span className="w-9 h-9 rounded-xl bg-educture-orange/10 flex items-center justify-center">
-                  <Video className="w-4 h-4 text-educture-orange" />
-                </span>
-                Live Google Meet circles with your session track
-              </li>
-              <li className="flex items-center gap-3">
-                <span className="w-9 h-9 rounded-xl bg-sky-100 flex items-center justify-center">
-                  <Users className="w-4 h-4 text-sky-600" />
-                </span>
-                Mentor space — sessions, free resources, collaboration
-              </li>
-              <li className="flex items-center gap-3">
-                <span className="w-9 h-9 rounded-xl bg-violet-100 flex items-center justify-center">
-                  <GraduationCap className="w-4 h-4 text-violet-600" />
-                </span>
-                Only invited emails can apply from this form
-              </li>
+            <ul className="mt-6 space-y-4">
+              {mentorBenefits.map((benefit) => {
+                const Icon = benefit.icon
+                return (
+                  <li key={benefit.title} className="flex items-start gap-3">
+                    <span
+                      className={`w-9 h-9 rounded-xl ${benefit.iconBg} flex items-center justify-center shrink-0 mt-0.5`}
+                    >
+                      <Icon className={`w-4 h-4 ${benefit.iconColor}`} />
+                    </span>
+                    <div>
+                      <p className="text-sm font-semibold text-[#1a1a1a]">{benefit.title}</p>
+                      <p className="text-sm text-gray-600 mt-0.5 leading-relaxed">{benefit.description}</p>
+                    </div>
+                  </li>
+                )
+              })}
             </ul>
             <div className="flex flex-wrap gap-3 mt-8">
               <Link
@@ -74,10 +99,11 @@ export function MentorEnrollSection() {
                 alt=""
                 className="w-full rounded-2xl object-cover aspect-[4/3] mb-6"
               />
-              <p className="text-xs font-bold uppercase tracking-widest text-educture-orange">Mentor spotlight</p>
-              <p className="font-bold text-lg text-[#1a1a1a] mt-2">Your sessions. Your Meet links. Your peers.</p>
-              <p className="text-sm text-gray-500 mt-2">
-                Apply only if admin has allowed your email. We&apos;ll then set up your mentor space.
+              <p className="text-xs font-bold uppercase tracking-widest text-educture-orange">Why mentors join</p>
+              <p className="font-bold text-lg text-[#1a1a1a] mt-2">Your students. Your sessions. Your earnings.</p>
+              <p className="text-sm text-gray-500 mt-2 leading-relaxed">
+                Host live classes, share free resources, and watch your learner base grow — while PRIZMA
+                handles the platform side.
               </p>
             </div>
             <div

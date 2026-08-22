@@ -15,6 +15,7 @@ export function buildProfileCompletion(
   firstName: string | null | undefined,
   lastName: string | null | undefined,
   row: UserProfileRecord | null,
+  extras?: { hasProfilePhoto?: boolean },
 ): { percent: number; items: ProfileCompletionItem[] } {
   const items: ProfileCompletionItem[] = [
     {
@@ -68,6 +69,11 @@ export function buildProfileCompletion(
     )
   } else {
     items.push(
+      {
+        id: 'photo',
+        label: 'Profile photo',
+        done: Boolean(extras?.hasProfilePhoto),
+      },
       {
         id: 'expertise',
         label: 'Subjects / expertise',

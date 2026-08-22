@@ -106,6 +106,73 @@ export function StudentOverviewGrid({ stats }: {
   )
 }
 
+export function StudentOverviewCompact({ stats }: {
+  stats: ReturnType<typeof import('../../data/studentDashboard').computeDashboardStats>
+}) {
+  const items: Stat[] = [
+    {
+      label: 'Enrolled',
+      value: stats.totalEnrolled,
+      icon: BookOpen,
+    },
+    {
+      label: 'In progress',
+      value: stats.inProgress,
+      icon: TrendingUp,
+    },
+    {
+      label: 'Completed',
+      value: stats.completed,
+      icon: CheckCircle2,
+      accent: true,
+    },
+    {
+      label: 'Assignments due',
+      value: stats.assignmentsDue,
+      icon: ClipboardList,
+      href: '/student/assignments',
+    },
+  ]
+
+  return (
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      {items.map((item, index) => {
+        const tint = dashboardTint(index)
+        const inner = (
+          <>
+            <item.icon
+              className={`w-4 h-4 shrink-0 ${item.accent ? 'text-educture-orange' : 'text-gray-400'}`}
+            />
+            <p className="text-xl font-bold text-gray-900 mt-2 leading-none">{item.value}</p>
+            <p className="text-xs text-gray-500 mt-1">{item.label}</p>
+          </>
+        )
+
+        if (item.href) {
+          return (
+            <Link
+              key={item.label}
+              to={item.href}
+              className={`${dashboardCardBorder} ${tint.bg} ${tint.border} p-4 text-left hover:border-educture-orange/40 transition-colors`}
+            >
+              {inner}
+            </Link>
+          )
+        }
+
+        return (
+          <div
+            key={item.label}
+            className={`${dashboardCardBorder} ${tint.bg} ${tint.border} p-4 text-left`}
+          >
+            {inner}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 export function AssignmentsDuePanel({
   assignments,
   max = 3,

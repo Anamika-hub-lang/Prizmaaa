@@ -13,6 +13,7 @@ import {
   StudentOnboardingFields,
   onboardingInputClass,
 } from '../../components/onboarding/OnboardingFormFields'
+import { ProfilePhotoUpload } from '../../components/profile/ProfilePhotoUpload'
 
 export function ProfileDetailsPage() {
   const navigate = useNavigate()
@@ -146,6 +147,11 @@ export function ProfileDetailsPage() {
           onSubmit={(e) => void handleSubmit(e)}
           className="max-w-xl mx-auto rounded-3xl border-[3px] border-orange-100 bg-white p-6 sm:p-8 shadow-sm space-y-6"
         >
+          {!isStudent && (
+            <div className="flex justify-center sm:justify-start">
+              <ProfilePhotoUpload helperText="Students see this photo on your classes." />
+            </div>
+          )}
           <div className="grid sm:grid-cols-2 gap-4 text-left">
             <div>
               <label className="text-xs font-semibold text-gray-600">First name</label>

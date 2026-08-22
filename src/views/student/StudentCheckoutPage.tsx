@@ -5,9 +5,7 @@ import { AppButton } from '../../components/ui/AppButton'
 import { CheckoutStepper } from '../../components/checkout/CheckoutStepper'
 import { PaymentMethodForm } from '../../components/checkout/PaymentMethodForm'
 import { CashfreePayButton } from '../../components/checkout/CashfreePayButton'
-import { UpiQrPaymentPanel } from '../../components/checkout/UpiQrPaymentPanel'
-import { isUpiQrCheckoutEnabled, shouldUseCashfreeCheckout } from '../../lib/upiCheckout'
-import { UPI_ID } from '../../data/upiPayment'
+import { isCashfreeClientEnabled } from '../../lib/cashfreeCheckout'
 import { tintedSurface, tintedSurfaceKey } from '../../components/ui/dashboardCardStyles'
 import { useMentorContent } from '../../context/MentorContentContext'
 import { useStudentEnrollments } from '../../hooks/useStudentEnrollments'
@@ -30,8 +28,7 @@ export function StudentCheckoutPage() {
   const [searchParams] = useSearchParams()
   const { getClassById } = useMentorContent()
   const { enrollWithPaidPlan, enrollments } = useStudentEnrollments()
-  const upiQrOn = isUpiQrCheckoutEnabled()
-  const useCashfree = shouldUseCashfreeCheckout()
+  const cashfreeOn = isCashfreeClientEnabled()
   const item = classId ? getClassById(classId) : undefined
   const activeEnrollment = classId ? getActiveEnrollmentForClass(enrollments, classId) : undefined
 
@@ -92,7 +89,7 @@ export function StudentCheckoutPage() {
           )}
 
           <p className="text-center mt-8 text-sm text-gray-500">
-            All plans require payment upfront.
+            All plans require payment upfront via Cashfree.
           </p>
           <p className="text-center mt-4">
             <Link to={`/student/class/${item.id}`} className="text-sm text-gray-500 hover:text-educture-orange">
@@ -118,20 +115,6 @@ export function StudentCheckoutPage() {
   const amount = paymentSelection ? getPaymentAmount(paymentSelection) : 0
   const planLabel = paymentSelection ? getPaymentLabel(paymentSelection) : ''
   const tier = selectedTier as PricingPaymentTier
-
-  async function handleUpiPaid() {
-    if (!classId || !selectedTier) return
-    setPayError(null)
-    setSaving(true)
-    try {
-      await enrollWithPaidPlan(classId, tier, 'upi', UPI_ID)
-      window.location.assign(`/student/enrolled/${classId}?plan=${selectedTier}`)
-    } catch (err) {
-      setPayError(err instanceof Error ? err.message : 'Payment could not be completed')
-    } finally {
-      setSaving(false)
-    }
-  }
 
   async function handlePaidSubmit(type: import('../../types/enrollment').PaymentMethodType, raw: string) {
     if (!classId || !selectedTier) return
@@ -171,30 +154,14 @@ export function StudentCheckoutPage() {
             {tier === 'six-month' && (
               <p className="text-xs text-gray-500 mt-1">One payment · 6 months of live classes</p>
             )}
-            {useCashfree && (
+            {cashfreeOn && (
               <p className="text-xs text-sky-700 font-semibold mt-2">Secured by Cashfree Payments</p>
             )}
           </div>
         </div>
 
         <div className={`${tintedSurface(2)} p-6`}>
-          {upiQrOn ? (
-            <>
-              <UpiQrPaymentPanel
-                amountInr={amount}
-                title={planLabel}
-                subtitle={item.title}
-                confirmLabel={`I've paid ₹${amount.toLocaleString('en-IN')} — activate my class`}
-                saving={saving}
-                onConfirmPaid={handleUpiPaid}
-              />
-              {payError && (
-                <p className="text-sm text-red-600 mt-3" role="alert">
-                  {payError}
-                </p>
-              )}
-            </>
-          ) : useCashfree ? (
+          {cashfreeOn ? (
             <>
               <CashfreePayButton
                 classId={item.id}
@@ -212,7 +179,7 @@ export function StudentCheckoutPage() {
               <PaymentMethodForm
                 submitLabel={`Pay ₹${amount.toLocaleString('en-IN')} & enroll`}
                 saving={saving}
-                note="Demo checkout — enable Cashfree in .env for real payments."
+                note="Demo checkout — add Cashfree keys to .env for real payments."
                 onSubmit={handlePaidSubmit}
               />
               {payError && (

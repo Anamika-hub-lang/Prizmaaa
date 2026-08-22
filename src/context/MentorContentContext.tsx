@@ -4,10 +4,13 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react'
 import { useUser } from '@clerk/nextjs'
+import { getUserRole } from '../lib/userRole'
+import { resolveMentorImage } from '../lib/mentorAvatar'
 import {
   classCategories,
   formatBrowsePricingSummary,
@@ -30,6 +33,15 @@ import {
   updateAssignmentRow,
   subscribeContentRealtime,
 } from '../lib/supabaseContent'
+import {
+  assignmentBelongsToMentor,
+  classBelongsToMentor,
+  freeCourseBelongsToMentor,
+  legacyAssignmentsToClaim,
+  legacyClassesToClaim,
+  legacyFreeCoursesToClaim,
+  mentorDisplayName,
+} from '../lib/mentorContentOwnership'
 
 export type { ManagedClass, MentorAssignment }
 
@@ -59,6 +71,7 @@ type MentorContentContextValue = {
   getClassById: (id: string) => ManagedClass | undefined
   getClassesByCategory: (categoryId: ClassCategoryId) => ManagedClass[]
   publishedClasses: ManagedClass[]
+  myPublishedClasses: ManagedClass[]
   refresh: () => Promise<void>
 }
 
@@ -67,6 +80,7 @@ const MentorContentContext = createContext<MentorContentContextValue | null>(nul
 export function MentorContentProvider({ children }: { children: ReactNode }) {
   const { user } = useUser()
   const mentorClerkId = user?.id ?? null
+  const mentorName = mentorDisplayName(user)
 
   const [classes, setClasses] = useState<ManagedClass[]>([])
   const [freeCourses, setFreeCourses] = useState<FreeCourse[]>([])
@@ -110,23 +124,72 @@ export function MentorContentProvider({ children }: { children: ReactNode }) {
     return unsub
   }, [refresh])
 
+  useEffect(() => {
+    if (!mentorClerkId || usingLocalData) return
+
+    const claimClasses = legacyClassesToClaim(classes, mentorClerkId, mentorName)
+    const claimCourses = legacyFreeCoursesToClaim(freeCourses, mentorClerkId, mentorName)
+    const claimAssignments = legacyAssignmentsToClaim(assignments, mentorClerkId, mentorName)
+
+    const allUnclaimed = classes.length > 0 && classes.every((c) => !c.mentorClerkId)
+
+    if (claimClasses.length === 0 && claimCourses.length === 0 && claimAssignments.length === 0) {
+      if (allUnclaimed && classes.length > 0) {
+        for (const c of classes) {
+          setClasses((prev) =>
+            prev.map((row) => (row.id === c.id ? { ...row, mentorClerkId: mentorClerkId } : row)),
+          )
+          void updateClassRow(c.id, { mentorClerkId: mentorClerkId })
+        }
+      }
+      return
+    }
+
+    for (const c of claimClasses) {
+      setClasses((prev) =>
+        prev.map((row) => (row.id === c.id ? { ...row, mentorClerkId: mentorClerkId } : row)),
+      )
+      void updateClassRow(c.id, { mentorClerkId: mentorClerkId })
+    }
+    for (const c of claimCourses) {
+      setFreeCourses((prev) =>
+        prev.map((row) => (row.id === c.id ? { ...row, mentorClerkId: mentorClerkId } : row)),
+      )
+      void updateFreeCourseRow(c.id, { mentorClerkId: mentorClerkId })
+    }
+    for (const a of claimAssignments) {
+      setAssignments((prev) =>
+        prev.map((row) => (row.id === a.id ? { ...row, mentorClerkId: mentorClerkId } : row)),
+      )
+      void updateAssignmentRow(a.id, { mentorClerkId: mentorClerkId })
+    }
+  }, [classes, freeCourses, assignments, mentorClerkId, mentorName, usingLocalData])
+
   const addClass = useCallback(
     (input: Omit<ManagedClass, 'id' | 'price'>) => {
       const id = `class-${Date.now()}`
+      const mentorImage = resolveMentorImage(
+        input.mentorImage,
+        user?.hasImage ? user.imageUrl : null,
+      )
       const optimistic: ManagedClass = {
         ...input,
+        mentorImage,
         id,
         price: getDefaultPriceForCategory(input.categoryId),
         published: input.published ?? true,
         mentorClerkId: mentorClerkId ?? input.mentorClerkId ?? null,
       }
       setClasses((prev) => [...prev, optimistic])
-      insertClass({ ...input, mentorClerkId: mentorClerkId ?? undefined }, id).catch((e) => {
+      insertClass(
+        { ...input, mentorImage, mentorClerkId: mentorClerkId ?? undefined },
+        id,
+      ).catch((e) => {
         setSyncError(e instanceof Error ? e.message : 'Could not add class')
         setClasses((prev) => prev.filter((c) => c.id !== id))
       })
     },
-    [mentorClerkId],
+    [mentorClerkId, user?.hasImage, user?.imageUrl],
   )
 
   const updateClass = useCallback(
@@ -257,20 +320,50 @@ export function MentorContentProvider({ children }: { children: ReactNode }) {
 
   const publishedClasses = useMemo(() => classes.filter((c) => c.published), [classes])
 
-  const myClasses = useMemo(
-    () => (mentorClerkId ? classes.filter((c) => c.mentorClerkId === mentorClerkId) : []),
-    [classes, mentorClerkId],
+  const allClassesUnclaimed = useMemo(
+    () => classes.length > 0 && classes.every((c) => !c.mentorClerkId),
+    [classes],
   )
 
-  const myFreeCourses = useMemo(
-    () => (mentorClerkId ? freeCourses.filter((c) => c.mentorClerkId === mentorClerkId) : []),
-    [freeCourses, mentorClerkId],
-  )
+  const myClasses = useMemo(() => {
+    if (!mentorClerkId) return []
+    if (allClassesUnclaimed) return classes
+    return classes.filter((c) => classBelongsToMentor(c, mentorClerkId, mentorName))
+  }, [classes, mentorClerkId, mentorName, allClassesUnclaimed])
 
-  const myAssignments = useMemo(
-    () => (mentorClerkId ? assignments.filter((a) => a.mentorClerkId === mentorClerkId) : []),
-    [assignments, mentorClerkId],
-  )
+  const myFreeCourses = useMemo(() => {
+    if (!mentorClerkId) return []
+    return freeCourses.filter((c) => freeCourseBelongsToMentor(c, mentorClerkId, mentorName))
+  }, [freeCourses, mentorClerkId, mentorName])
+
+  const myAssignments = useMemo(() => {
+    if (!mentorClerkId) return []
+    return assignments.filter((a) => assignmentBelongsToMentor(a, mentorClerkId, mentorName))
+  }, [assignments, mentorClerkId, mentorName])
+
+  const myPublishedClasses = useMemo(() => myClasses.filter((c) => c.published), [myClasses])
+
+  const syncedPhotoRef = useRef<string | null>(null)
+  const mentorPhoto = user?.hasImage ? user.imageUrl?.trim() ?? '' : ''
+
+  useEffect(() => {
+    if (loading || usingLocalData) return
+    if (getUserRole(user) !== 'teacher' || !mentorClerkId || !mentorPhoto) return
+    const key = `${mentorClerkId}:${mentorPhoto}`
+    const stale = myClasses.filter((c) => c.mentorImage !== mentorPhoto)
+    if (stale.length === 0) {
+      syncedPhotoRef.current = key
+      return
+    }
+    if (syncedPhotoRef.current === key) return
+    syncedPhotoRef.current = key
+    for (const c of stale) {
+      setClasses((prev) =>
+        prev.map((row) => (row.id === c.id ? { ...row, mentorImage: mentorPhoto } : row)),
+      )
+      void updateClassRow(c.id, { mentorImage: mentorPhoto })
+    }
+  }, [loading, usingLocalData, user, mentorClerkId, mentorPhoto, myClasses])
 
   const value = useMemo(
     () => ({
@@ -299,6 +392,7 @@ export function MentorContentProvider({ children }: { children: ReactNode }) {
       getClassById,
       getClassesByCategory,
       publishedClasses,
+      myPublishedClasses,
       refresh,
     }),
     [
@@ -324,6 +418,7 @@ export function MentorContentProvider({ children }: { children: ReactNode }) {
       getClassById,
       getClassesByCategory,
       publishedClasses,
+      myPublishedClasses,
       refresh,
     ],
   )

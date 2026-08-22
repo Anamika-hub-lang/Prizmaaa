@@ -47,18 +47,6 @@ export function HomePage() {
 
         <CounsellingSection />
 
-        <InterviewPrepSection />
-
-        <InternshipSection />
-
-        {showAiHero && <AiToolsSection />}
-
-        <UniversityReviewsSection />
-
-        <UniversityCounselingSection />
-
-        <PrizmaEcosystemSection variant="home" />
-
         <section id="work" className="py-16 lg:py-20 bg-white">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 grid lg:grid-cols-12 gap-10 items-start">
             <div className="lg:col-span-4 text-left lg:sticky lg:top-28 gsap-reveal">
@@ -69,10 +57,10 @@ export function HomePage() {
                 Peer learning circles and collaborative projects — what you see once you are in.
               </p>
               <Link
-                to="/sign-in"
+                to="/classes"
                 className="inline-flex items-center justify-center mt-8 px-6 py-3 rounded-full border-[3px] border-gray-300 text-sm font-semibold hover:border-educture-orange hover:text-educture-orange transition-colors"
               >
-                See all sessions
+                See all classes
               </Link>
             </div>
             <div className="lg:col-span-8 grid sm:grid-cols-3 gap-4">
@@ -92,7 +80,7 @@ export function HomePage() {
                     <p className="font-bold text-[#1a1a1a] text-sm leading-snug">{c.title}</p>
                     <p className="text-xs text-gray-500 mt-1 capitalize">{c.categoryId} circle</p>
                     <Link
-                      to="/sign-in"
+                      to="/classes"
                       className="absolute bottom-4 right-4 w-9 h-9 rounded-full bg-educture-orange text-white flex items-center justify-center shadow-md group-hover:scale-110 transition-transform"
                     >
                       <ArrowUpRight className="w-4 h-4" />
@@ -107,9 +95,9 @@ export function HomePage() {
         <section className="py-16 lg:py-24 bg-sky-100/80 gsap-reveal">
           <div className="max-w-6xl mx-auto px-4 sm:px-6">
             <div className="text-center mb-12">
-              <p className="text-sky-600 text-[11px] font-bold uppercase tracking-[0.25em]">Inside PRIZMA</p>
+              <p className="text-sky-600 text-[11px] font-bold uppercase tracking-[0.25em]">Skill classes</p>
               <h2 className="font-display text-2xl sm:text-4xl text-[#1a1a1a] mt-2">
-                Sessions, guidance &{' '}
+                Live sessions &{' '}
                 <span className="font-script text-educture-orange text-3xl sm:text-4xl">plans</span>
               </h2>
               <p className="text-sm text-gray-600 mt-3 max-w-2xl mx-auto leading-relaxed">
@@ -117,22 +105,16 @@ export function HomePage() {
               </p>
               <div className="flex flex-wrap justify-center gap-2 mt-5">
                 <Link
-                  to="/ai"
-                  className="rounded-full border border-indigo-200 bg-white px-4 py-2 text-xs font-semibold text-indigo-800 hover:border-indigo-400"
+                  to="/classes"
+                  className="rounded-full border border-orange-200 bg-white px-4 py-2 text-xs font-semibold text-gray-700 hover:border-educture-orange"
                 >
-                  AI resume & matcher — free
+                  Browse all classes
                 </Link>
                 <Link
                   to="/counselling"
                   className="rounded-full border border-orange-200 bg-white px-4 py-2 text-xs font-semibold text-gray-700 hover:border-educture-orange"
                 >
                   Guidance — ₹{COUNSELLING_PRICE_INR}/{COUNSELLING_DURATION_LABEL}
-                </Link>
-                <Link
-                  to="/universities"
-                  className="rounded-full border border-sky-200 bg-white px-4 py-2 text-xs font-semibold text-gray-700 hover:border-sky-400"
-                >
-                  Campus stories — free
                 </Link>
               </div>
             </div>
@@ -146,6 +128,18 @@ export function HomePage() {
         </section>
 
         <MentorEnrollSection />
+
+        <InterviewPrepSection />
+
+        <InternshipSection />
+
+        {showAiHero && <AiToolsSection />}
+
+        <UniversityReviewsSection />
+
+        <UniversityCounselingSection />
+
+        <PrizmaEcosystemSection variant="home" />
 
         <TestimonialsMarquee />
 

@@ -7,6 +7,7 @@ import { useMentorContent } from '../../context/MentorContentContext'
 import { tintedSurface, tintedSurfaceKey } from '../../components/ui/dashboardCardStyles'
 import { useStudentEnrollments } from '../../hooks/useStudentEnrollments'
 import { getActiveEnrollmentForClass } from '../../lib/classEnrollmentPolicy'
+import { MentorAvatar } from '../../components/ui/MentorAvatar'
 
 export function StudentEnrolledPage() {
   const { classId } = useParams()
@@ -51,7 +52,7 @@ export function StudentEnrolledPage() {
         )}
 
         <div className={`${tintedSurfaceKey(item.id)} p-6 flex gap-4 items-center`}>
-          <img src={item.mentorImage} alt="" className="w-16 h-16 rounded-full object-cover" />
+          <MentorAvatar src={item.mentorImage} name={item.mentor} size="xl" />
           <div>
             <p className="text-xs text-educture-orange font-bold uppercase tracking-wide">Your mentor</p>
             <p className="font-bold text-lg">{item.mentor}</p>

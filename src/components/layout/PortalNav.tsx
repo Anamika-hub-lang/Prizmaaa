@@ -18,6 +18,7 @@ export function isPortalNavActive(pathname: string, item: PortalNavItem): boolea
     return true
   }
   if (item.exact) return pathname === item.to
+  if (item.match === '/teacher') return pathname === '/teacher'
   if (item.match === '/student') return pathname === '/student'
   if (item.match === '/student/browse') {
     return pathname === '/student/browse' || pathname.startsWith('/student/browse/')

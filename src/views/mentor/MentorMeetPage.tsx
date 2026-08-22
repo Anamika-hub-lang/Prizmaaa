@@ -28,6 +28,7 @@ export function MentorMeetPage() {
   return (
     <>
       <MentorPageHeader
+        backTo="/teacher"
         title="Google Meet links"
         subtitle="Students join live classes from My Courses — set the Meet URL and next session time here."
       />
@@ -35,7 +36,7 @@ export function MentorMeetPage() {
         <div className={`${tintedSurface(1)} p-5 flex gap-3`}>
           <Video className="w-6 h-6 text-educture-orange shrink-0" />
           <p className="text-sm text-gray-700 leading-relaxed">
-            When a student enrolls and pays ₹1,000, they use this link on the dashboard and enrolled page to join your live class.
+            After a student enrolls, they use this link on the dashboard and enrolled page to join your live class.
           </p>
         </div>
 

@@ -10,7 +10,9 @@ import { fetchMentorEligible } from '../../lib/mentorEligible'
 import { educationLevelLabel, howDidYouFindUsLabel, type HowDidYouFindUs, type StudentEducationLevel } from '../../data/onboardingFields'
 import { buildProfileCompletion } from '../../lib/profileCompletion'
 import { ProfileCompletionCard } from '../../components/profile/ProfileCompletionCard'
+import { ProfilePhotoUpload } from '../../components/profile/ProfilePhotoUpload'
 import { DeleteAccountSection } from '../../components/profile/DeleteAccountSection'
+import { useMentorContent } from '../../context/MentorContentContext'
 import {
   HowDidYouFindUsFields,
   MentorOnboardingFields,
@@ -69,6 +71,7 @@ function FieldRow({
 export function PortalProfilePage({ portal }: { portal: 'student' | 'teacher' }) {
   const { user } = useUser()
   const { signOut, getToken } = useAuth()
+  const { myClasses, updateClass } = useMentorContent()
   const [editing, setEditing] = useState(false)
   const [profileRow, setProfileRow] = useState<UserProfileRecord | null>(null)
   const [loadingProfile, setLoadingProfile] = useState(true)
@@ -176,9 +179,20 @@ export function PortalProfilePage({ portal }: { portal: 'student' | 'teacher' })
     setError(null)
   }
 
+  function applyPhotoToClasses(imageUrl: string) {
+    if (portal !== 'teacher' || !imageUrl.trim()) return
+    for (const c of myClasses) {
+      if (c.mentorImage === imageUrl) continue
+      updateClass(c.id, { mentorImage: imageUrl })
+    }
+  }
+
   const completionView = useMemo(
-    () => buildProfileCompletion(accountRole, user?.firstName, user?.lastName, profileRow),
-    [accountRole, user?.firstName, user?.lastName, profileRow],
+    () =>
+      buildProfileCompletion(accountRole, user?.firstName, user?.lastName, profileRow, {
+        hasProfilePhoto: Boolean(user?.hasImage),
+      }),
+    [accountRole, user?.firstName, user?.lastName, user?.hasImage, profileRow],
   )
 
   const completionEdit = useMemo(() => {
@@ -201,7 +215,9 @@ export function PortalProfilePage({ portal }: { portal: 'student' | 'teacher' })
       mentor_portfolio_url: portfolioUrl || null,
       profile_details_complete: false,
     }
-    return buildProfileCompletion(accountRole, firstName, lastName, mockRow)
+    return buildProfileCompletion(accountRole, firstName, lastName, mockRow, {
+      hasProfilePhoto: Boolean(user?.hasImage),
+    })
   }, [
     accountRole,
     firstName,
@@ -219,6 +235,7 @@ export function PortalProfilePage({ portal }: { portal: 'student' | 'teacher' })
     bio,
     portfolioUrl,
     user?.id,
+    user?.hasImage,
   ])
 
   const completion = editing ? completionEdit : completionView
@@ -326,17 +343,14 @@ export function PortalProfilePage({ portal }: { portal: 'student' | 'teacher' })
         )}
 
         <div className="rounded-3xl border-[3px] border-orange-100 bg-white p-6 sm:p-8 shadow-sm flex flex-col sm:flex-row gap-6 items-center sm:items-start text-left">
-          {user?.imageUrl ? (
-            <img
-              src={user.imageUrl}
-              alt=""
-              className="w-24 h-24 rounded-2xl object-cover ring-4 ring-educture-orange/15"
-            />
-          ) : (
-            <div className="w-24 h-24 rounded-2xl bg-educture-orange/10 flex items-center justify-center text-3xl font-bold text-educture-orange">
-              {(user?.fullName ?? 'U').charAt(0)}
-            </div>
-          )}
+          <ProfilePhotoUpload
+            helperText={
+              portal === 'teacher'
+                ? 'Students see this photo on your classes.'
+                : 'This photo appears on your account.'
+            }
+            onUploaded={applyPhotoToClasses}
+          />
           <div className="flex-1 min-w-0 text-center sm:text-left">
             <h2 className="text-xl font-bold text-[#1d1d1d]">{user?.fullName ?? '—'}</h2>
             <p className="text-sm text-educture-orange font-semibold mt-1">{roleLabel(role)}</p>
@@ -479,6 +493,11 @@ export function PortalProfilePage({ portal }: { portal: 'student' | 'teacher' })
               </>
             ) : (
               <>
+                <FieldRow
+                  label="Profile photo"
+                  value={user?.hasImage ? 'Added' : null}
+                  pending={pendingMap.get('photo')}
+                />
                 <FieldRow
                   label="Subjects / expertise"
                   value={profileRow?.mentor_expertise}

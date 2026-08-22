@@ -28,10 +28,8 @@ import {
   minBookingDateString,
   type CounsellingTimeSlot,
 } from '../data/counsellingSchedule'
-import { createCounsellingOrder, bookCounsellingViaUpi } from '../lib/counsellingPayment'
+import { createCounsellingOrder } from '../lib/counsellingPayment'
 import { openCashfreeCheckout, isCashfreeClientEnabled } from '../lib/cashfreeCheckout'
-import { isUpiQrCheckoutEnabled, shouldUseCashfreeCheckout } from '../lib/upiCheckout'
-import { UpiQrPaymentPanel } from '../components/checkout/UpiQrPaymentPanel'
 import { stashCashfreeOrderId } from '../lib/cashfreeOrderId'
 import { sanitizeIndianPhoneInput, validateIndianPhone } from '../lib/phoneValidation'
 
@@ -64,10 +62,8 @@ export function CounsellingCategoryPage() {
   const [note, setNote] = useState('')
   const [paying, setPaying] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [showQrPayment, setShowQrPayment] = useState(false)
 
-  const upiQrOn = isUpiQrCheckoutEnabled()
-  const useCashfree = shouldUseCashfreeCheckout()
+  const cashfreeOn = isCashfreeClientEnabled()
   const timeSlots = useMemo(() => availableSlotsForDate(scheduledDate), [scheduledDate])
 
   useEffect(() => {
@@ -93,7 +89,6 @@ export function CounsellingCategoryPage() {
 
   const selected = counsellingTopicById(topicId)
   const groupIdSafe = group.id
-  const bookingAmount = COUNSELLING_PRICE_INR
 
   function buildBookingPayload() {
     const phoneCheck = validateIndianPhone(phone)
@@ -135,13 +130,7 @@ export function CounsellingCategoryPage() {
       return
     }
 
-    if (upiQrOn) {
-      setShowQrPayment(true)
-      document.getElementById('book')?.scrollIntoView({ behavior: 'smooth' })
-      return
-    }
-
-    if (!useCashfree) {
+    if (!cashfreeOn) {
       setError('Online payment is not available right now. Please try again later.')
       return
     }
@@ -154,19 +143,6 @@ export function CounsellingCategoryPage() {
       await openCashfreeCheckout(paymentSessionId, mode)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Payment could not start')
-      setPaying(false)
-    }
-  }
-
-  async function handleUpiBookingConfirm() {
-    setError(null)
-    setPaying(true)
-    try {
-      const payload = buildBookingPayload()
-      await bookCounsellingViaUpi(getToken, payload)
-      navigate(`/counselling/${groupIdSafe}?booked=1&topic=${encodeURIComponent(topicId)}`)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not submit booking')
       setPaying(false)
     }
   }
@@ -252,7 +228,7 @@ export function CounsellingCategoryPage() {
             </p>
             <p className="text-xs text-center text-gray-400 mb-8 flex items-center justify-center gap-1">
               <Lock className="w-3 h-3" />
-              {upiQrOn ? 'Scan UPI QR to pay · booking confirmed after verification' : 'Secured by Cashfree · Booking confirmed only after payment'}
+              Secured by Cashfree · Booking confirmed only after payment
             </p>
 
             {booked ? (
@@ -269,33 +245,6 @@ export function CounsellingCategoryPage() {
                 >
                   Back to topics
                 </Link>
-              </div>
-            ) : showQrPayment ? (
-              <div className="rounded-3xl border-[3px] border-orange-100 bg-[#fff9f3] p-6 sm:p-8 shadow-sm">
-                <UpiQrPaymentPanel
-                  amountInr={bookingAmount}
-                  title={selected?.title ?? 'Guidance call'}
-                  subtitle={`${formatScheduleLabel(scheduledDate, scheduledTime)} · ${preferredMode === 'meet' ? 'Google Meet' : 'Phone call'}`}
-                  confirmLabel={`I've paid ₹${bookingAmount} — submit booking`}
-                  saving={paying}
-                  onConfirmPaid={handleUpiBookingConfirm}
-                />
-                {error && (
-                  <p className="text-sm text-red-600 mt-4" role="alert">
-                    {error}
-                  </p>
-                )}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowQrPayment(false)
-                    setPaying(false)
-                    setError(null)
-                  }}
-                  className="block w-full text-center text-sm text-gray-500 hover:text-educture-orange mt-4"
-                >
-                  ← Edit booking details
-                </button>
               </div>
             ) : (
               <form
@@ -464,14 +413,10 @@ export function CounsellingCategoryPage() {
                   disabled={paying || timeSlots.length === 0}
                   className="w-full flex items-center justify-center gap-2 py-3.5 rounded-full bg-educture-orange text-white font-semibold text-sm hover:bg-educture-orange-dark disabled:opacity-60 transition-colors shadow-[0_8px_24px_rgba(243,112,33,0.35)]"
                 >
-                  {paying
-                    ? 'Please wait…'
-                    : upiQrOn
-                      ? `Continue to pay ₹${COUNSELLING_PRICE_INR} via UPI`
-                      : `Pay ₹${COUNSELLING_PRICE_INR} & confirm booking`}
+                  {paying ? 'Please wait…' : `Pay ₹${COUNSELLING_PRICE_INR} & confirm booking`}
                 </button>
 
-                {!upiQrOn && !useCashfree && (
+                {!cashfreeOn && (
                   <p className="text-xs text-amber-700 text-center">
                     Online payments are not enabled in this environment.
                   </p>

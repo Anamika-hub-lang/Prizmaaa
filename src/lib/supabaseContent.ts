@@ -98,6 +98,7 @@ export async function updateClassRow(id: string, patch: Partial<ManagedClass>) {
   if (patch.meetLink !== undefined) payload.meet_link = patch.meetLink
   if (patch.nextSessionLabel !== undefined) payload.next_session_label = patch.nextSessionLabel
   if (patch.published !== undefined) payload.published = patch.published
+  if (patch.mentorClerkId !== undefined) payload.mentor_clerk_id = patch.mentorClerkId
   const { error } = await supabase.from('classes').update(payload).eq('id', id)
   if (error) throw error
 }
@@ -128,6 +129,7 @@ export async function updateFreeCourseRow(id: string, patch: Partial<FreeCourse>
   if (patch.lessons !== undefined) payload.lessons = patch.lessons
   if (patch.hours !== undefined) payload.hours = patch.hours
   if (patch.description !== undefined) payload.description = patch.description
+  if (patch.mentorClerkId !== undefined) payload.mentor_clerk_id = patch.mentorClerkId
   const { error } = await supabase.from('free_courses').update(payload).eq('id', id)
   if (error) throw error
 }
@@ -175,6 +177,7 @@ export async function updateAssignmentRow(id: string, patch: Partial<MentorAssig
   if (patch.course !== undefined) payload.course = patch.course
   if (patch.due !== undefined) payload.due = patch.due
   if (patch.img !== undefined) payload.img = patch.img
+  if (patch.mentorClerkId !== undefined) payload.mentor_clerk_id = patch.mentorClerkId
   const { error } = await supabase.from('assignments').update(payload).eq('id', id)
   if (error) throw error
 }

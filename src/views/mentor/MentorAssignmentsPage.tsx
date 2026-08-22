@@ -42,6 +42,7 @@ export function MentorAssignmentsPage() {
   return (
     <>
       <MentorPageHeader
+        backTo="/teacher"
         title="Assignments"
         subtitle="See which students have submitted work — status updates when they click Submit on their portal."
       />

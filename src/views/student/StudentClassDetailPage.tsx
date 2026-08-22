@@ -1,13 +1,12 @@
 import { Link, useParams } from 'react-router-dom'
-import { BadgeCheck, Video, CreditCard, Users } from 'lucide-react'
-import { StudentPageHeader, EnrollmentSteps } from '../../components/layout/StudentLayout'
+import { BadgeCheck, Video, Users } from 'lucide-react'
+import { StudentPageHeader } from '../../components/layout/StudentLayout'
 import { AppButton } from '../../components/ui/AppButton'
 import { useMentorContent } from '../../context/MentorContentContext'
 import { useStudentEnrollments } from '../../hooks/useStudentEnrollments'
 import { getActiveEnrollmentForClass } from '../../lib/classEnrollmentPolicy'
 import { ActiveEnrollmentBlock } from '../../components/checkout/ActiveEnrollmentBlock'
-import { tintedSurface, tintedSurfaceKey } from '../../components/ui/dashboardCardStyles'
-import { categoryPricing, formatInr } from '../../data/pricingPlans'
+import { MentorAvatar } from '../../components/ui/MentorAvatar'
 
 export function StudentClassDetailPage() {
   const { classId } = useParams()
@@ -18,88 +17,63 @@ export function StudentClassDetailPage() {
 
   if (!item) {
     return (
-      <div className="p-8 text-center">
+      <div className="py-8 text-center">
         <p className="text-gray-500">Class not found.</p>
-        <AppButton to="/student/browse" className="mt-4">Back to browse</AppButton>
+        <AppButton to="/student/browse" className="mt-4">
+          Back to browse
+        </AppButton>
       </div>
     )
   }
 
-  const plans = categoryPricing[item.categoryId]
-
   return (
-    <>
-      <StudentPageHeader title={item.title} subtitle={item.description} />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 grid lg:grid-cols-3 gap-8 text-left">
-        <div className="lg:col-span-2 space-y-6">
-          <img src={item.image} alt="" className="w-full rounded-2xl shadow-card object-cover aspect-video" />
+    <div className="text-left space-y-6">
+      <StudentPageHeader title={item.title} backTo="/student/browse" backLabel="Back to classes" />
 
-          <div className={`${tintedSurface(0)} p-6`}>
-            <h2 className="font-bold text-lg mb-4">How it works</h2>
-            <EnrollmentSteps />
-          </div>
+      <img
+        src={item.image}
+        alt=""
+        className="w-full rounded-2xl object-cover aspect-[16/9] bg-gray-100"
+      />
 
-          <div className={`${tintedSurface(1)} p-6`}>
-            <div className="flex items-start gap-3">
-              <Video className="w-6 h-6 text-educture-orange shrink-0 mt-0.5" />
-              <div>
-                <p className="font-bold text-[#1d1d1d]">Live on Google Meet</p>
-                <p className="text-sm text-gray-600 mt-2 leading-relaxed">
-                  After payment, your mentor shares the Google Meet link for every live session. Join from
-                  your calendar or the &quot;My Courses&quot; dashboard — camera on optional, chat open for questions.
-                </p>
-              </div>
-            </div>
+      <div className="flex flex-wrap items-center gap-4">
+        <div className="flex items-center gap-3 min-w-0">
+          <MentorAvatar src={item.mentorImage} name={item.mentor} size="md" />
+          <div className="min-w-0">
+            <p className="font-semibold text-sm text-gray-900 flex items-center gap-1 truncate">
+              {item.mentor}
+              <BadgeCheck className="w-4 h-4 text-educture-orange shrink-0" />
+            </p>
+            <p className="text-xs text-gray-500">Mentor</p>
           </div>
         </div>
+        <span className="hidden sm:block w-px h-8 bg-gray-200" />
+        <p className="text-sm text-gray-600 inline-flex items-center gap-2">
+          <Users className="w-4 h-4 text-educture-orange shrink-0" />
+          {item.sessions}
+        </p>
+        <p className="text-sm text-gray-600 inline-flex items-center gap-2">
+          <Video className="w-4 h-4 text-educture-orange shrink-0" />
+          Google Meet
+        </p>
+      </div>
 
-        <aside className="lg:col-span-1">
-          <div className={`${tintedSurfaceKey(item.id)} p-6 sticky top-24`}>
-            <p className="text-lg font-bold text-[#1d1d1d]">Official plans</p>
-            <p className="text-2xl font-bold text-educture-orange mt-2">
-              {formatInr(plans.monthlyInr)}
-              <span className="text-sm font-semibold text-gray-600"> / month</span>
-            </p>
-            <p className="text-sm text-gray-600 mt-1">
-              {formatInr(plans.threeMonthInr)} / 3 months · {formatInr(plans.sixMonthInr)} / 6 months
-            </p>
-            <p className="text-xs text-gray-500 mt-1">Pay upfront</p>
+      {item.description && (
+        <p className="text-sm text-gray-600 leading-relaxed line-clamp-3">{item.description}</p>
+      )}
 
-            <div className="flex items-center gap-3 mt-6 pb-6 border-b border-gray-100">
-              <img src={item.mentorImage} alt="" className="w-12 h-12 rounded-full object-cover" />
-              <div>
-                <p className="font-bold text-sm flex items-center gap-1">
-                  {item.mentor}
-                  <BadgeCheck className="w-4 h-4 text-educture-orange" />
-                </p>
-                <p className="text-xs text-gray-500">Your mentor after enroll</p>
-              </div>
-            </div>
-
-            <ul className="space-y-3 text-sm text-gray-600 my-6">
-              <li className="flex gap-2"><Users className="w-4 h-4 text-educture-orange shrink-0" /> {item.sessions}</li>
-              <li className="flex gap-2"><Video className="w-4 h-4 text-educture-orange shrink-0" /> Google Meet live</li>
-              <li className="flex gap-2"><CreditCard className="w-4 h-4 text-educture-orange shrink-0" /> Monthly · 3 months · 6 months at checkout</li>
-            </ul>
-
-            {activeEnrollment ? (
-              <div className="mt-4">
-                <ActiveEnrollmentBlock enrollment={activeEnrollment} />
-              </div>
-            ) : (
-              <AppButton to={`/student/checkout/${item.id}`} className="w-full justify-center mt-4" size="lg">
-                Choose plan & pay
-              </AppButton>
-            )}
-            <Link
-              to="/student/browse"
-              className="block text-center text-sm text-gray-500 mt-4 hover:text-educture-orange"
-            >
-              ← Back to categories
-            </Link>
-          </div>
-        </aside>
-      </main>
-    </>
+      {activeEnrollment ? (
+        <ActiveEnrollmentBlock enrollment={activeEnrollment} />
+      ) : (
+        <div className="flex flex-wrap items-center gap-4">
+          <AppButton to={`/student/checkout/${item.id}`} size="lg">
+            Enroll now
+          </AppButton>
+          <Link to="/student/browse" className="text-sm text-gray-500 hover:text-educture-orange">
+            Browse more classes
+          </Link>
+        </div>
+      )}
+    </div>
   )
 }
