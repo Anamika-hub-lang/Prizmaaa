@@ -3,7 +3,8 @@ import { notFound } from 'next/navigation'
 import { PublicClassDetailPage } from '@/views/PublicClassDetailPage'
 import { JsonLd } from '@/components/seo/JsonLd'
 import { fetchPublishedClassById } from '@/lib/publishedClasses'
-import { SITE_NAME, SITE_URL, absUrl, classDetailSeo } from '@/lib/seo'
+import { breadcrumbJsonLd, courseJsonLd } from '@/lib/jsonLd'
+import { classDetailSeo } from '@/lib/seo'
 
 type Props = { params: Promise<{ classId: string }> }
 
@@ -22,19 +23,14 @@ export default async function Page({ params }: Props) {
   return (
     <>
       <JsonLd
-        data={{
-          '@context': 'https://schema.org',
-          '@type': 'Course',
-          name: cls.title,
-          description: cls.description || `${cls.title} live online class on ${SITE_NAME}`,
-          provider: {
-            '@type': 'Organization',
-            name: SITE_NAME,
-            url: SITE_URL,
-          },
-          url: absUrl(`/classes/${cls.id}`),
-          image: cls.image || undefined,
-        }}
+        data={[
+          courseJsonLd(cls),
+          breadcrumbJsonLd([
+            { name: 'Home', path: '/' },
+            { name: 'Online classes', path: '/classes' },
+            { name: cls.title, path: `/classes/${cls.id}` },
+          ]),
+        ]}
       />
       <PublicClassDetailPage initialClass={cls} />
     </>

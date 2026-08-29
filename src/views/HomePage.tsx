@@ -18,6 +18,8 @@ import { UniversityCounselingSection } from '../components/marketing/UniversityC
 import { PrizmaEcosystemSection } from '../components/marketing/PrizmaEcosystemSection'
 import { useLandingGsap } from '../hooks/useLandingGsap'
 import { enabledAiFeatures } from '../data/aiFeatures'
+import { FaqSection } from '../components/seo/FaqSection'
+import { counsellingFaqs } from '../data/seoFaqs'
 
 const showAiHero = enabledAiFeatures.length > 0
 
@@ -50,16 +52,21 @@ export function HomePage() {
           <div className="max-w-6xl mx-auto px-4 sm:px-6 grid lg:grid-cols-12 gap-10 items-start">
             <div className="lg:col-span-4 text-left lg:sticky lg:top-28 gsap-reveal">
               <h2 className="font-display text-2xl sm:text-3xl text-[#1a1a1a] leading-snug">
-                Sessions students are joining
+                Live online classes and courses
               </h2>
               <p className="text-sm text-gray-500 mt-4 leading-relaxed">
-                Peer learning circles and collaborative projects — what you see once you are in.
+                Online courses for students on Google Meet — skills, academics, and professional tracks.
+                Need help choosing?{' '}
+                <Link to="/counselling" className="text-educture-orange font-semibold hover:underline">
+                  Book career counselling
+                </Link>{' '}
+                first.
               </p>
               <Link
                 to="/classes"
                 className="inline-flex items-center justify-center mt-8 px-6 py-3 rounded-full border-[3px] border-gray-300 text-sm font-semibold hover:border-educture-orange hover:text-educture-orange transition-colors"
               >
-                See all classes
+                See all online classes
               </Link>
             </div>
             <div className="lg:col-span-8 grid sm:grid-cols-3 gap-4">
@@ -114,6 +121,8 @@ export function HomePage() {
         <PrizmaEcosystemSection variant="home" />
 
         <TestimonialsMarquee />
+
+        <FaqSection heading="Career counselling FAQs" items={counsellingFaqs} />
 
         <ContactSection />
       </main>

@@ -22,7 +22,7 @@ export function CareerOfferingCard({ offering, onComingSoon }: Props) {
     <>
       <img
         src={offering.image}
-        alt=""
+        alt={offering.title}
         className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
         loading="lazy"
       />

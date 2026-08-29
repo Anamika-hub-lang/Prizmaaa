@@ -108,10 +108,16 @@ export function noIndexMetadata(title = 'PRIZMA', path?: string): Metadata {
 }
 
 /** Homepage uses an absolute title so the root template does not double the brand name. */
-export const homeTitleAbsolute = `${SITE_NAME} — Career Counselling, Online Classes & Student Guidance`
+export const homeTitleAbsolute = 'Career Counselling & Online Classes for Students | PRIZMA'
 
 export const homeDescription =
-  'PRIZMA is a student hub for career counselling, live online classes, college guidance, campus stories, and AI tools — learn with peers, seniors, and mentors.'
+  'Online career counselling for students from ₹199, plus live online classes, online courses, and college guidance. Book a 1-on-1 call or join a peer course on PRIZMA.'
+
+export const counsellingGroupHeadings: Record<CounsellingGroupId, string> = {
+  career: 'Career counselling and career guidance',
+  domain: 'Skill counselling for coding, UI/UX and data careers',
+  future: 'Career counselling for students after 10th and 12th',
+}
 
 export function counsellingGroupSeo(groupId: string) {
   const group = counsellingGroupById(groupId)
@@ -120,7 +126,7 @@ export function counsellingGroupSeo(groupId: string) {
     .map((t) => t.title)
     .join(', ')
   const titles: Record<CounsellingGroupId, string> = {
-    career: `Career Counselling & Guidance — ₹${COUNSELLING_PRICE_INR} per call`,
+    career: `Career Counselling for Students — ₹${COUNSELLING_PRICE_INR}`,
     domain: `Domain Skills Counselling — UI/UX, Coding, Data & More`,
     future: `After 10th, 12th & Exam Counselling`,
   }
@@ -134,8 +140,8 @@ export function counsellingGroupSeo(groupId: string) {
             'career counselling',
             'career guidance',
             'online career counselling',
+            'career counselling for students',
             'career counsellor India',
-            'PRIZMA counselling',
           ]
         : group.id === 'domain'
           ? [
@@ -164,14 +170,14 @@ export function classDetailSeo(input: {
 }) {
   const category = getCategoryById(input.categoryId)
   const fallback = [
-    `${input.title} is a live online class on PRIZMA`,
+    `${input.title} is a live online class and online course for students on PRIZMA`,
     input.mentor ? `with ${input.mentor}` : null,
     category ? `in ${category.title}` : null,
     input.duration || null,
     input.sessions || null,
   ]
     .filter(Boolean)
-    .join('. ')
+    .join(' · ')
   const description = input.description.trim() || fallback
   return pageMetadata({
     title: `${input.title} — Online Class`,
@@ -239,30 +245,30 @@ export function universityCounselingSeo(input: {
 
 export const staticPublicSeo = {
   classes: pageMetadata({
-    title: 'Online Classes & Live Peer Courses',
+    title: 'Online Classes & Courses for Students',
     description:
-      'Browse live online classes and peer courses on PRIZMA — skills, academics, and professional tracks on Google Meet. Enrol when you are ready.',
+      'Live online classes and online courses for students on PRIZMA — skills, academics, and professional tracks on Google Meet. Browse free, enrol when you are ready.',
     path: '/classes',
     keywords: [
       'online classes',
       'online courses',
+      'online courses for students',
+      'online learning platform',
       'live classes',
-      'peer learning',
       'Google Meet classes',
-      'PRIZMA classes',
     ],
   }),
   counselling: pageMetadata({
-    title: 'Career Counselling & Student Guidance',
-    description: `Book 1-on-1 career counselling, domain skill guidance, or after-10th/12th calls for ₹${COUNSELLING_PRICE_INR}. Practical plans from mentors and seniors on PRIZMA.`,
+    title: 'Online Career Counselling for Students',
+    description: `Book online career counselling and career guidance for students from ₹${COUNSELLING_PRICE_INR} per call. Live 1-on-1 plans for jobs, course selection, and college guidance.`,
     path: '/counselling',
     keywords: [
       'career counselling',
       'career guidance',
+      'online career counselling',
+      'career counselling for students',
       'online counselling',
-      'student counselling',
-      'career counsellor',
-      'PRIZMA guidance',
+      'PRIZMA',
     ],
   }),
   interviewPrep: pageMetadata({
@@ -287,25 +293,28 @@ export const staticPublicSeo = {
   colleges: pageMetadata({
     title: 'Colleges in India — Compare Courses, Fees & Placements',
     description:
-      'Explore colleges across India with courses, fees, placements, and entrance exams. Find a fit and get admission-path guidance on PRIZMA.',
+      'Explore colleges across India with courses, fees, and placements. Get college guidance, course selection help, and career counselling on PRIZMA.',
     path: '/colleges',
+    keywords: ['college guidance', 'course selection', 'colleges in India', 'career counselling'],
   }),
   collegeFind: pageMetadata({
-    title: 'College Finder — Match Courses, Budget & Location',
+    title: 'College Guidance & Course Selection',
     description:
-      'Answer a few questions about course, budget, and location. PRIZMA matches you with colleges and shows a practical admission path.',
+      'Use PRIZMA college guidance to match course, budget, and location. Get a shortlist for course selection and book career counselling if you want a second opinion.',
     path: '/colleges/find',
+    keywords: ['college guidance', 'course selection', 'college finder', 'career counselling', 'PRIZMA'],
   }),
   pricing: pageMetadata({
-    title: 'Pricing — Online Classes, Counselling & Plans',
+    title: 'Online Class and Career Counselling Pricing',
     description: `See PRIZMA pricing for live peer sessions, ₹${COUNSELLING_PRICE_INR} guidance calls, and ₹${INTERVIEW_PREP_PRICE_INR} mock interviews. Transparent access, join when you are ready.`,
     path: '/pricing',
   }),
   about: pageMetadata({
-    title: 'About PRIZMA — Students, Peers & Mentors',
+    title: 'About PRIZMA',
     description:
-      'PRIZMA is where students connect with peers and seniors, share campus stories, discover opportunities, and learn together through counselling and live classes.',
+      'PRIZMA is an online learning platform for students — career counselling, live online classes, college guidance, and peer learning with seniors and mentors.',
     path: '/about',
+    absoluteTitle: true,
   }),
   ai: pageMetadata({
     title: 'AI Resume Review & Opportunity Matcher',

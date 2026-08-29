@@ -130,6 +130,12 @@ export function PublicClassDetailPage({ initialClass }: { initialClass: Publishe
                 >
                   Browse all online classes
                 </Link>
+                <Link
+                  to="/counselling"
+                  className="mt-2 inline-flex w-full items-center justify-center text-sm font-semibold text-gray-600 hover:text-educture-orange"
+                >
+                  Need career counselling first?
+                </Link>
               </div>
             </aside>
           </div>

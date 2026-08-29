@@ -114,7 +114,7 @@ export function PrizmaEcosystemSection({ variant = 'home' }: Props) {
             <div className="flex gap-4 items-start">
               <img
                 src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=400&q=80"
-                alt=""
+                alt="Students learning together on PRIZMA"
                 className="w-20 h-20 sm:w-24 sm:h-24 shrink-0 rounded-2xl object-cover border-[3px] border-orange-50"
               />
               <div className="min-w-0">
@@ -147,7 +147,7 @@ export function PrizmaEcosystemSection({ variant = 'home' }: Props) {
             <div className="flex gap-4 items-start">
               <img
                 src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=400&q=80"
-                alt=""
+                alt="College guidance and student mentors"
                 className="w-20 h-20 sm:w-24 sm:h-24 shrink-0 rounded-2xl object-cover border-[3px] border-white shadow-sm"
               />
               <div className="min-w-0">

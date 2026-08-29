@@ -67,12 +67,12 @@ export function CollegesPage() {
               College Finder
             </p>
             <h1 className="font-display text-3xl sm:text-4xl mt-2 leading-tight">
-              Find your{' '}
-              <span className="font-script text-educture-orange text-4xl sm:text-5xl">college</span>
+              College guidance and{' '}
+              <span className="font-script text-educture-orange text-4xl sm:text-5xl">course selection</span>
             </h1>
             <p className="text-sm text-gray-400 mt-3 max-w-xl">
-              You choose the college — PRIZMA guides what comes next: path in, seniors, guidance calls,
-              classes & opportunities.
+              Compare colleges in India by course, budget, and placements. Then book career counselling
+              or join online classes if you need a skill path after you choose.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
               <Link

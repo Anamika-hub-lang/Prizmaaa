@@ -134,7 +134,7 @@ export function InterviewPrepPage() {
 
       <main className="flex-1">
         <section className="relative overflow-hidden bg-[#0f0f12] text-white">
-          <img src={offering.image} alt="" className="absolute inset-0 h-full w-full object-cover opacity-30" />
+          <img src={offering.image} alt="Mock interview preparation on PRIZMA" className="absolute inset-0 h-full w-full object-cover opacity-30" />
           <div className="absolute inset-0 bg-gradient-to-r from-[#0f0f12] via-[#0f0f12]/90 to-[#0f0f12]/70" />
           <div className="relative max-w-6xl mx-auto px-4 sm:px-6 py-12 sm:py-16 text-left">
             <Link

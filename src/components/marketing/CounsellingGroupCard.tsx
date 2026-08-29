@@ -27,7 +27,7 @@ export function CounsellingGroupCard({ group, variant = 'plain', size = 'default
       >
         <img
           src={group.image}
-          alt=""
+          alt={`${group.title} counselling — ${group.subtitle}`}
           className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
           loading="lazy"
         />

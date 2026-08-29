@@ -1,9 +1,8 @@
-import { redirect } from 'next/navigation'
+import { permanentRedirect } from 'next/navigation'
 import { noIndexMetadata } from '@/lib/seo'
 
-export const metadata = noIndexMetadata()
+export const metadata = noIndexMetadata('Compare colleges', '/colleges')
 
 export default function Page() {
-  redirect('/colleges')
+  permanentRedirect('/colleges')
 }
-

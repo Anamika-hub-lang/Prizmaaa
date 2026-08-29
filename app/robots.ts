@@ -24,6 +24,8 @@ export default function robots(): MetadataRoute.Robots {
           '/counselling/payment',
           '/library',
           '/blog',
+          '/colleges/compare',
+          '/reviews',
         ],
       },
     ],

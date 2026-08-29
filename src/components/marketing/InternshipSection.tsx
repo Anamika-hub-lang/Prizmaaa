@@ -35,7 +35,7 @@ export function InternshipSection() {
             <div className="relative overflow-hidden rounded-[1.75rem] border-2 border-white/10 min-h-[280px] sm:min-h-[340px]">
               <img
                 src={offering.image}
-                alt=""
+                alt={offering.title}
                 className="absolute inset-0 h-full w-full object-cover"
                 loading="lazy"
               />

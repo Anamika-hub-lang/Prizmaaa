@@ -96,7 +96,7 @@ export function MentorEnrollSection() {
             <div className="rounded-3xl border-[3px] border-orange-100 bg-white p-6 sm:p-8 shadow-[0_24px_60px_rgba(243,112,33,0.12)]">
               <img
                 src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&q=80"
-                alt=""
+                alt="Students in a live online class on PRIZMA"
                 className="w-full rounded-2xl object-cover aspect-[4/3] mb-6"
               />
               <p className="text-xs font-bold uppercase tracking-widest text-educture-orange">Why mentors join</p>

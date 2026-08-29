@@ -8,9 +8,9 @@ import { NavbarAuth } from '../auth/NavbarAuth'
 
 const links = [
   { to: '/', label: 'Home' },
-  { to: '/classes', label: 'Classes' },
-  { to: '/colleges', label: 'Colleges' },
-  { to: '/counselling', label: 'Guidance' },
+  { to: '/classes', label: 'Online classes' },
+  { to: '/colleges', label: 'College guidance' },
+  { to: '/counselling', label: 'Career counselling' },
   { to: '/ai', label: 'AI Tools' },
   { to: '/universities', label: 'Stories' },
   { to: '/about', label: 'About' },
@@ -26,7 +26,7 @@ export function MainNavbar() {
         <div className="flex items-center justify-between gap-4">
           <BrandLogo to="/" size="lg" className="py-0.5" />
 
-          <nav className="hidden lg:flex items-center justify-center gap-8 text-[15px] font-medium text-gray-600">
+          <nav className="hidden lg:flex items-center justify-center gap-5 text-[14px] font-medium text-gray-600">
             {links.map((link) => (
               <Link
                 key={link.to}

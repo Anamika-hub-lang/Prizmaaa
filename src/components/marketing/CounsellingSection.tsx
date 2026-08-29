@@ -31,7 +31,7 @@ export function CounsellingSection({ id = 'counselling' }: CounsellingSectionPro
       <div className="max-w-6xl mx-auto px-4 sm:px-6 relative z-10">
         <div className="grid lg:grid-cols-12 gap-8 lg:gap-10 items-stretch text-left">
           <motion.div
-            initial={{ opacity: 0, y: 12 }}
+            initial={false}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             className="lg:col-span-5 space-y-5 sm:space-y-6"
@@ -42,11 +42,12 @@ export function CounsellingSection({ id = 'counselling' }: CounsellingSectionPro
                 1-on-1 peer & mentor guidance
               </span>
               <h2 className="font-display text-3xl sm:text-4xl leading-[1.1] mt-4">
-                Not sure what&apos;s{' '}
-                <span className="font-script text-educture-orange text-4xl sm:text-5xl">next?</span>
+                Online career counselling{' '}
+                <span className="font-script text-educture-orange text-4xl sm:text-5xl">for students</span>
               </h2>
               <p className="text-sm text-gray-300 mt-3 leading-relaxed">
-                Pick a topic, book a call on the next page. Talk live on Google Meet or phone with people who get it.
+                Book live career counselling and career guidance from ₹{COUNSELLING_PRICE_INR}. Talk on
+                Google Meet or phone, then join online classes if you need a skill path.
               </p>
             </div>
 
@@ -84,13 +85,13 @@ export function CounsellingSection({ id = 'counselling' }: CounsellingSectionPro
               to="/counselling"
               className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-educture-orange text-white font-semibold text-sm shadow-[0_12px_40px_rgba(243,112,33,0.45)] hover:bg-educture-orange-dark transition-colors"
             >
-              Book a guidance call
+              Book career counselling
               <ArrowRight className="w-4 h-4" />
             </Link>
           </motion.div>
 
           <motion.div
-            initial={{ opacity: 0, y: 12 }}
+            initial={false}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.08 }}

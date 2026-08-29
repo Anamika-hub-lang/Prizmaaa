@@ -14,6 +14,9 @@ import {
 } from '../data/classCatalog'
 import { tintedSurfaceKey } from '../components/ui/dashboardCardStyles'
 import { MentorAvatar } from '../components/ui/MentorAvatar'
+import { FaqSection } from '../components/seo/FaqSection'
+import { classesFaqs } from '../data/seoFaqs'
+import { COUNSELLING_PRICE_INR } from '../data/counsellingServices'
 
 const ALL: 'all' = 'all'
 const AUTH_RETURN_KEY = 'educture_auth_return'
@@ -72,15 +75,19 @@ export function LiveClassesPage({ initialClasses = [] }: { initialClasses?: Arra
               <div>
                 <p className="text-educture-orange font-bold text-xs uppercase tracking-[0.2em] flex items-center gap-2">
                   <Video className="w-4 h-4" />
-                  Learn together
+                  Online learning platform
                 </p>
                 <h1 className="font-display text-2xl sm:text-3xl lg:text-4xl mt-1 leading-tight">
-                  Browse peer{' '}
-                  <span className="font-script text-educture-orange text-3xl sm:text-4xl">sessions</span>
+                  Online classes and live{' '}
+                  <span className="font-script text-educture-orange text-3xl sm:text-4xl">courses</span>
                 </h1>
                 <p className="text-sm text-gray-400 mt-2 max-w-xl leading-relaxed">
-                  Explore every live peer session on PRIZMA. Join when you&apos;re ready to enroll —{' '}
-                  {pricingLine}.
+                  Live online classes and online courses for students on Google Meet — skills, academics,
+                  and professional tracks. Need help picking a course?{' '}
+                  <Link to="/counselling" className="text-educture-orange font-semibold hover:underline">
+                    Book career counselling
+                  </Link>
+                  . {pricingLine}.
                 </p>
               </div>
               {!isSignedIn && (
@@ -131,9 +138,13 @@ export function LiveClassesPage({ initialClasses = [] }: { initialClasses?: Arra
 
             {classes.length === 0 ? (
               <p className="text-center text-sm text-gray-500 py-16">
-                No peer sessions published in this category yet. Check back soon.
+                No online classes published in this category yet. Check back soon.
               </p>
             ) : (
+              <>
+                <h2 className="font-display text-xl text-[#1a1a1a] mb-4">
+                  {filter === ALL ? 'All live online classes' : 'Online classes in this track'}
+                </h2>
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
                 {classes.map((item) => (
                   <article
@@ -154,11 +165,11 @@ export function LiveClassesPage({ initialClasses = [] }: { initialClasses?: Arra
                       <p className="text-[10px] font-bold uppercase tracking-wide text-educture-orange">
                         {classCategories.find((c) => c.id === item.categoryId)?.title ?? item.categoryId}
                       </p>
-                      <h2 className="font-bold text-[#1d1d1d] text-sm sm:text-base mt-1 leading-snug">
+                      <h3 className="font-bold text-[#1d1d1d] text-sm sm:text-base mt-1 leading-snug">
                         <Link to={`/classes/${item.id}`} className="hover:text-educture-orange">
                           {item.title}
                         </Link>
-                      </h2>
+                      </h3>
                       <p className="text-xs text-gray-600 mt-1.5">
                         {item.duration} · {item.sessions}
                       </p>
@@ -178,11 +189,17 @@ export function LiveClassesPage({ initialClasses = [] }: { initialClasses?: Arra
                   </article>
                 ))}
               </div>
+              </>
             )}
 
             <p className="text-center text-xs text-gray-500 mt-10 leading-relaxed">
-              Browsing is free. You only need an account when you enroll in a peer session.
+              Browsing online classes is free. You only need an account when you enrol.{' '}
+              <Link to="/counselling" className="text-educture-orange font-semibold hover:underline">
+                Career counselling
+              </Link>{' '}
+              is ₹{COUNSELLING_PRICE_INR} if you want help choosing a course.
             </p>
+            <FaqSection heading="Online classes FAQs" items={classesFaqs} />
           </div>
         </section>
       </main>

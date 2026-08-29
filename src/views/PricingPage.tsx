@@ -15,8 +15,8 @@ export function PricingPage() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 text-center">
           <p className="text-sky-600 text-[11px] font-bold uppercase tracking-[0.25em]">Plans & access</p>
           <h1 className="font-display text-3xl sm:text-4xl text-[#1a1a1a] mt-3">
-            Peer sessions, guidance &{' '}
-            <span className="font-script text-educture-orange text-4xl sm:text-5xl">everything else</span>
+            Online class and career counselling{' '}
+            <span className="font-script text-educture-orange text-4xl sm:text-5xl">pricing</span>
           </h1>
           <p className="text-gray-600 text-sm sm:text-base mt-5 max-w-2xl mx-auto leading-relaxed">
             {pricingEcosystemIntro}

@@ -17,6 +17,7 @@ export function CounselingUniversityCard({ university }: Props) {
       <div className="relative h-32 sm:h-36 overflow-hidden">
         <UniversityImage
           src={university.image}
+          alt={`${university.name} campus counselling`}
           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />

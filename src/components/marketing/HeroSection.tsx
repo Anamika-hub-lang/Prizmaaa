@@ -58,16 +58,16 @@ export function HeroSection() {
             </div>
 
             <h1 className="gsap-hero-in font-display text-[2.1rem] sm:text-[2.85rem] lg:text-[3.4rem] text-[#1a1a1a] leading-[1.06] tracking-tight break-words">
-              You Choose the College.{' '}
+              Career counselling and{' '}
               <span className="font-script text-educture-orange text-[2.25rem] sm:text-[3.35rem] lg:text-[4rem] leading-[0.95] block mt-1 break-words">
-                We Guide the Journey.
+                online classes for students
               </span>
             </h1>
 
             <p className="gsap-hero-in text-gray-600 text-sm sm:text-base leading-relaxed mt-5 max-w-[34rem]">
-              Pick colleges by your goals, budget, courses & placements — then PRIZMA shows you the
-              admission path, connects you with real seniors, ₹{COUNSELLING_PRICE_INR} guidance calls,
-              skill classes & opportunities to actually get there.
+              PRIZMA is an online learning platform for students: 1-on-1 online career counselling from ₹
+              {COUNSELLING_PRICE_INR}, live online classes, course selection, and college guidance — so you
+              choose a path and know how to get there.
             </p>
 
             <div className="gsap-hero-in flex flex-wrap gap-2 mt-5">
@@ -83,10 +83,10 @@ export function HeroSection() {
 
             <div className="gsap-hero-in flex flex-wrap items-center gap-3 mt-8">
               <Link
-                to="/colleges/find"
+                to="/counselling"
                 className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-educture-orange text-white font-semibold text-sm shadow-[0_12px_28px_rgba(243,112,33,0.35)] hover:bg-educture-orange-dark transition-all"
               >
-                Find My College
+                Book career counselling
                 <ArrowUpRight className="w-4 h-4" />
               </Link>
               <Link
@@ -94,7 +94,13 @@ export function HeroSection() {
                 className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full border-2 border-sky-200 bg-sky-50 text-sm font-semibold text-sky-800 hover:border-sky-400 hover:bg-sky-100 transition-colors"
               >
                 <GraduationCap className="w-4 h-4" />
-                Join Live Classes
+                Browse online classes
+              </Link>
+              <Link
+                to="/colleges/find"
+                className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full border-2 border-gray-200 bg-white text-sm font-semibold text-gray-800 hover:border-educture-orange hover:text-educture-orange transition-colors"
+              >
+                College guidance
               </Link>
             </div>
           </div>
@@ -117,9 +123,9 @@ export function HeroSection() {
                         <span className="text-orange-300/80">Step 01</span>
                         · You choose
                       </p>
-                      <h2 className="font-display text-xl sm:text-2xl text-white mt-1 leading-tight">
+                      <p className="font-display text-xl sm:text-2xl text-white mt-1 leading-tight">
                         Pick your college
-                      </h2>
+                      </p>
                       <p className="text-xs text-gray-400 mt-1.5">
                         Goals · Budget · Courses · Placements · Dream companies
                       </p>
@@ -157,9 +163,9 @@ export function HeroSection() {
                     <Sparkles className="w-3 h-3" />
                     Step 02–06 · We guide
                   </p>
-                  <h2 className="font-display text-xl sm:text-2xl text-[#1a1a1a] mt-1 leading-tight">
+                  <p className="font-display text-xl sm:text-2xl text-[#1a1a1a] mt-1 leading-tight">
                     How to get there
-                  </h2>
+                  </p>
                   <p className="text-xs text-gray-500 mt-1.5">
                     Path, seniors, guidance calls, skills & opportunities — all linked
                   </p>

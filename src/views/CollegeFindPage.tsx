@@ -122,12 +122,12 @@ export function CollegeFindPage() {
           <Sparkles className="w-6 h-6 text-educture-orange shrink-0" />
           <div>
             <h1 className="font-display text-2xl sm:text-3xl text-[#1a1a1a]">
-              {step === 'results' ? 'Colleges for you' : 'Find your match'}
+              {step === 'results' ? 'Colleges for you' : 'College guidance and course selection'}
             </h1>
             <p className="text-sm text-gray-500 mt-0.5">
               {step === 'results'
                 ? "Tap I'm interested — a counsellor will contact you."
-                : `Step ${stepIndex + 1} of ${STEPS.length}`}
+                : `Answer a few questions about course, budget, and location. Need a second opinion? Book career counselling after your shortlist. Step ${stepIndex + 1} of ${STEPS.length}.`}
             </p>
           </div>
         </div>

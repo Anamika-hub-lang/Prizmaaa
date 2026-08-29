@@ -34,6 +34,9 @@ import { createCounsellingOrder } from '../lib/counsellingPayment'
 import { openCashfreeCheckout, isCashfreeClientEnabled } from '../lib/cashfreeCheckout'
 import { stashCashfreeOrderId } from '../lib/cashfreeOrderId'
 import { sanitizeIndianPhoneInput, validateIndianPhone } from '../lib/phoneValidation'
+import { counsellingGroupHeadings } from '../lib/seo'
+import { FaqSection } from '../components/seo/FaqSection'
+import { counsellingFaqs } from '../data/seoFaqs'
 
 const GROUP_IDS: CounsellingGroupId[] = ['career', 'domain', 'future']
 
@@ -157,7 +160,7 @@ export function CounsellingCategoryPage() {
         <section className="relative overflow-hidden bg-[#0f0f12] text-white">
           <img
             src={group.image}
-            alt=""
+            alt={`${group.title} career counselling on PRIZMA`}
             className="absolute inset-0 h-full w-full object-cover opacity-30"
           />
           <div className="absolute inset-0 bg-gradient-to-r from-[#0f0f12] via-[#0f0f12]/90 to-[#0f0f12]/70" />
@@ -167,15 +170,21 @@ export function CounsellingCategoryPage() {
               className="inline-flex items-center gap-1.5 text-sm font-semibold text-educture-orange hover:underline"
             >
               <ArrowLeft className="w-4 h-4" />
-              All topics
+              All career counselling
             </Link>
             <p className="text-educture-orange font-bold text-xs uppercase tracking-[0.2em] mt-6">
-              {group.title} guidance
+              {group.title} · {group.subtitle}
             </p>
             <h1 className="font-display text-3xl sm:text-4xl lg:text-5xl mt-2 leading-tight max-w-2xl">
-              {group.subtitle}
+              {counsellingGroupHeadings[group.id]}
             </h1>
-            <p className="text-sm sm:text-base text-gray-300 mt-4 max-w-xl leading-relaxed">{group.description}</p>
+            <p className="text-sm sm:text-base text-gray-300 mt-4 max-w-xl leading-relaxed">
+              {group.description} Book a ₹{COUNSELLING_PRICE_INR} online career counselling call, or{' '}
+              <Link to="/classes" className="text-educture-orange font-semibold hover:underline">
+                browse online classes
+              </Link>{' '}
+              if you already know the skill.
+            </p>
             <div className="inline-flex items-center gap-2 mt-6 rounded-2xl border border-educture-orange/40 bg-educture-orange/10 px-4 py-2.5">
               <IndianRupee className="w-4 h-4 text-educture-orange" />
               <span className="font-bold">₹{COUNSELLING_PRICE_INR}</span>
@@ -432,12 +441,13 @@ export function CounsellingCategoryPage() {
                 className="inline-flex items-center gap-1 text-sm font-semibold text-gray-500 hover:text-educture-orange"
               >
                 <ArrowLeft className="w-4 h-4" />
-                Other topics
+                All career counselling
                 <ArrowRight className="w-4 h-4" />
               </Link>
             </p>
           </div>
         </section>
+        <FaqSection heading="Career counselling FAQs" items={counsellingFaqs} />
       </main>
 
       <MarketingFooter />

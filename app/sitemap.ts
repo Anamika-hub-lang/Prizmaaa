@@ -14,9 +14,9 @@ function entry(
 ): MetadataRoute.Sitemap[number] {
   return {
     url: absUrl(path),
-    lastModified: opts.lastModified ?? new Date(),
     changeFrequency: opts.changeFrequency ?? 'weekly',
     priority: opts.priority ?? 0.7,
+    ...(opts.lastModified ? { lastModified: opts.lastModified } : {}),
   }
 }
 
@@ -45,7 +45,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     entry('/pricing', { priority: 0.6, changeFrequency: 'monthly' }),
     entry('/ai', { priority: 0.65, changeFrequency: 'monthly' }),
     entry('/become-mentor', { priority: 0.5, changeFrequency: 'monthly' }),
-    entry('/reviews', { priority: 0.4, changeFrequency: 'monthly' }),
   ]
 
   const collegeRoutes = colleges.map((college) =>
@@ -60,7 +59,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     entry(`/classes/${cls.id}`, {
       priority: 0.8,
       changeFrequency: 'weekly',
-      lastModified: cls.createdAt ? new Date(cls.createdAt) : new Date(),
+      lastModified: cls.createdAt ? new Date(cls.createdAt) : undefined,
     }),
   )
 

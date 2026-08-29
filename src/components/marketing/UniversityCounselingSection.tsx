@@ -220,7 +220,7 @@ export function UniversityCounselingSection() {
                   <div className="p-5 flex gap-4 items-center">
                     <img
                       src={counselor.image}
-                      alt=""
+                      alt={counselor.name}
                       className="w-16 h-16 rounded-2xl object-cover border-2 border-orange-50 shrink-0"
                       loading="lazy"
                     />

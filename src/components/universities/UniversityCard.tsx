@@ -21,6 +21,7 @@ export function UniversityCard({ university, avgRating, reviewCount, variant = '
       >
         <UniversityImage
           src={university.image}
+          alt={`${university.name} campus`}
           className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/20" />
@@ -60,6 +61,7 @@ export function UniversityCard({ university, avgRating, reviewCount, variant = '
     >
       <UniversityImage
         src={university.image}
+        alt={`${university.name} campus`}
         className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl object-cover border-2 border-orange-50 shrink-0"
       />
       <div className="min-w-0 flex-1">

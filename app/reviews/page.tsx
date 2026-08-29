@@ -6,6 +6,7 @@ export const metadata = pageMetadata({
   description:
     'Read and share student and mentor stories about PRIZMA career counselling, online classes, and campus guidance.',
   path: '/reviews',
+  index: false,
 })
 
 export default function Page() {
