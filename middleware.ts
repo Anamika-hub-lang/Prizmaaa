@@ -29,7 +29,28 @@ function roleFromClaims(sessionClaims: Record<string, unknown> | null | undefine
   return typeof role === 'string' ? role : null
 }
 
+const CANONICAL_HOST = 'prizma.guru'
+const HOSTS_TO_CANONICAL = new Set([
+  'www.prizma.guru',
+  'prizma-guru.vercel.app',
+  'education-six-amber.vercel.app',
+])
+
+function canonicalHostRedirect(req: { headers: Headers; nextUrl: URL }): NextResponse | null {
+  const host = req.headers.get('host')?.split(':')[0]?.toLowerCase() ?? ''
+  if (!HOSTS_TO_CANONICAL.has(host)) return null
+  // Keep /api on *.vercel.app so Cashfree/Clerk callbacks are not 308'd.
+  if (host.endsWith('.vercel.app') && req.nextUrl.pathname.startsWith('/api')) {
+    return null
+  }
+  const dest = new URL(req.nextUrl.pathname + req.nextUrl.search, `https://${CANONICAL_HOST}`)
+  return NextResponse.redirect(dest, 308)
+}
+
 export default clerkMiddleware(async (auth, req) => {
+  const hostRedirect = canonicalHostRedirect(req)
+  if (hostRedirect) return hostRedirect
+
   if (!isProtectedRoute(req)) return
 
   // Payment return must stay public so order_id survives before sign-in.
@@ -64,7 +85,7 @@ export default clerkMiddleware(async (auth, req) => {
 
 export const config = {
   matcher: [
-    '/((?!_next|sitemap\\.xml|robots\\.txt|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest|xml|txt)).*)',
+    '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
     '/(api|trpc)(.*)',
   ],
 }

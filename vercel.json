@@ -1,4 +1,18 @@
 {
   "framework": "nextjs",
-  "buildCommand": "next build --webpack"
+  "buildCommand": "next build --webpack",
+  "redirects": [
+    {
+      "source": "/",
+      "has": [{ "type": "host", "value": "www.prizma.guru" }],
+      "destination": "https://prizma.guru/",
+      "permanent": true
+    },
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "www.prizma.guru" }],
+      "destination": "https://prizma.guru/:path*",
+      "permanent": true
+    }
+  ]
 }
