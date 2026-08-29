@@ -30,6 +30,7 @@ const nextConfig: NextConfig = {
       { source: '/contact', destination: '/about', permanent: true },
       { source: '/library', destination: '/', permanent: true },
       { source: '/blog', destination: '/', permanent: true },
+      { source: '/colleges/compare', destination: '/colleges', permanent: true },
     ]
   },
 }
