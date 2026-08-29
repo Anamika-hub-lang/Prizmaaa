@@ -10,20 +10,36 @@ import { getCategoryById, type ClassCategoryId } from '../data/classCatalog'
 
 export const SITE_NAME = 'PRIZMA'
 export const SITE_HOST = 'prizma.guru'
-
-export const SITE_URL = (
-  process.env.NEXT_PUBLIC_SITE_URL?.trim() ||
-  process.env.PUBLIC_APP_URL?.trim() ||
-  `https://${SITE_HOST}`
-).replace(/\/$/, '')
+/** Canonical origin for sitemap, robots, and public meta. Never use *.vercel.app here. */
+export const SITE_URL = `https://${SITE_HOST}`
 
 export const DEFAULT_OG_IMAGE = '/prizma-logo.png'
 
 export const indexFollow = { index: true, follow: true } as const
 export const noIndexRobots = { index: false, follow: false } as const
 
+function toCanonicalPublicUrl(url: URL): string {
+  const path = `${url.pathname}${url.search}${url.hash}`
+  if (path === '/') return `${SITE_URL}/`
+  return `${SITE_URL}${path}`
+}
+
 export function absUrl(path = '/'): string {
-  if (path.startsWith('http://') || path.startsWith('https://')) return path
+  if (path.startsWith('http://') || path.startsWith('https://')) {
+    try {
+      const parsed = new URL(path)
+      if (
+        parsed.hostname === SITE_HOST ||
+        parsed.hostname === `www.${SITE_HOST}` ||
+        parsed.hostname.endsWith('.vercel.app')
+      ) {
+        return toCanonicalPublicUrl(parsed)
+      }
+    } catch {
+      /* keep original */
+    }
+    return path
+  }
   const normalized = path.startsWith('/') ? path : `/${path}`
   return `${SITE_URL}${normalized}`
 }
