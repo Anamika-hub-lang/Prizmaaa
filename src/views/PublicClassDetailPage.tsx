@@ -7,11 +7,20 @@ import { MainNavbar } from '../components/layout/MainNavbar'
 import { MarketingFooter } from '../components/marketing/MarketingSections'
 import { MentorAvatar } from '../components/ui/MentorAvatar'
 import { formatBrowsePricingSummary, getCategoryById } from '../data/classCatalog'
+import { SeoCoverImage } from '../components/seo/SeoCoverImage'
+import { classPublicPath } from '../lib/classSlug'
+import { classPublicDescription } from '../lib/seo'
 import type { PublishedClass } from '../lib/publishedClasses'
 
 const AUTH_RETURN_KEY = 'educture_auth_return'
 
-export function PublicClassDetailPage({ initialClass }: { initialClass: PublishedClass }) {
+export function PublicClassDetailPage({
+  initialClass,
+  relatedClasses = [],
+}: {
+  initialClass: PublishedClass
+  relatedClasses?: PublishedClass[]
+}) {
   const navigate = useNavigate()
   const { isSignedIn } = useAuth()
   const category = getCategoryById(initialClass.categoryId)
@@ -52,27 +61,24 @@ export function PublicClassDetailPage({ initialClass }: { initialClass: Publishe
             <h1 className="font-display text-2xl sm:text-3xl lg:text-4xl mt-2 leading-tight">
               {initialClass.title}
             </h1>
-            {initialClass.description ? (
-              <p className="text-sm text-gray-400 mt-3 max-w-2xl leading-relaxed">
-                {initialClass.description}
-              </p>
-            ) : (
-              <p className="text-sm text-gray-400 mt-3 max-w-2xl leading-relaxed">
-                A live online class on PRIZMA. Join the peer session on Google Meet when you enrol —{' '}
-                {pricingLine}.
-              </p>
-            )}
+            <p className="text-sm text-gray-400 mt-3 max-w-2xl leading-relaxed">
+              {classPublicDescription(initialClass)} {pricingLine}.
+            </p>
           </div>
         </section>
 
         <section className="py-8 sm:py-10">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 grid lg:grid-cols-12 gap-8 items-start">
             <div className="lg:col-span-7">
-              <img
-                src={initialClass.image}
-                alt={initialClass.title}
-                className="w-full rounded-2xl object-cover aspect-video border-2 border-orange-100"
-              />
+              <div className="relative w-full aspect-video rounded-2xl overflow-hidden border-2 border-orange-100">
+                <SeoCoverImage
+                  src={initialClass.image}
+                  alt={`${initialClass.title} online class`}
+                  sizes="(max-width: 1024px) 100vw, 640px"
+                  priority
+                  className="object-cover"
+                />
+              </div>
               <div className="mt-6 grid sm:grid-cols-3 gap-3">
                 <div className="rounded-xl bg-white border border-orange-100 px-4 py-3">
                   <p className="text-xs text-gray-500 inline-flex items-center gap-1.5">
@@ -139,6 +145,26 @@ export function PublicClassDetailPage({ initialClass }: { initialClass: Publishe
               </div>
             </aside>
           </div>
+          {relatedClasses.length > 0 ? (
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 mt-10 pb-4">
+              <h2 className="font-display text-xl text-[#1a1a1a]">Related online classes</h2>
+              <ul className="mt-4 grid sm:grid-cols-3 gap-3">
+                {relatedClasses.map((item) => (
+                  <li key={item.id}>
+                    <Link
+                      to={classPublicPath(item)}
+                      className="block rounded-2xl border-2 border-orange-100 bg-white p-4 hover:border-educture-orange/50"
+                    >
+                      <p className="text-xs font-bold uppercase tracking-wide text-educture-orange">
+                        {getCategoryById(item.categoryId)?.title ?? item.categoryId}
+                      </p>
+                      <p className="font-semibold text-sm text-[#1a1a1a] mt-1">{item.title}</p>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
         </section>
       </main>
 

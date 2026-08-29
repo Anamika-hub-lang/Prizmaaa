@@ -13,7 +13,7 @@ export const SITE_HOST = 'prizma.guru'
 /** Canonical origin for sitemap, robots, and public meta. Never use *.vercel.app here. */
 export const SITE_URL = `https://${SITE_HOST}`
 
-export const DEFAULT_OG_IMAGE = '/prizma-logo.png'
+export const DEFAULT_OG_IMAGE = '/og-prizma.png'
 
 export const indexFollow = { index: true, follow: true } as const
 export const noIndexRobots = { index: false, follow: false } as const
@@ -88,7 +88,7 @@ export function pageMetadata({
       siteName: SITE_NAME,
       type: 'website',
       locale: 'en_IN',
-      images: [{ url: ogImage, alt: title }],
+      images: [{ url: ogImage, width: 1200, height: 630, alt: title }],
     },
     twitter: {
       card: 'summary_large_image',
@@ -158,8 +158,32 @@ export function counsellingGroupSeo(groupId: string) {
   })
 }
 
+export function classPublicDescription(input: {
+  title: string
+  description: string
+  categoryId: ClassCategoryId
+  mentor: string
+  duration: string
+  sessions: string
+}): string {
+  const category = getCategoryById(input.categoryId)
+  const facts = [
+    input.mentor ? `with ${input.mentor}` : null,
+    category ? category.title : null,
+    input.duration || null,
+    input.sessions || null,
+  ]
+    .filter(Boolean)
+    .join(' · ')
+  const raw = input.description.trim()
+  if (raw.length >= 80) return raw
+  if (raw) return facts ? `${raw} Live online class on PRIZMA — ${facts}.` : raw
+  return `${input.title} is a live online class on PRIZMA${facts ? ` — ${facts}` : ''}.`
+}
+
 export function classDetailSeo(input: {
   id: string
+  slug?: string
   title: string
   description: string
   categoryId: ClassCategoryId
@@ -169,28 +193,12 @@ export function classDetailSeo(input: {
   image?: string
 }) {
   const category = getCategoryById(input.categoryId)
-  const fallback = [
-    `${input.title} is a live online class and online course for students on PRIZMA`,
-    input.mentor ? `with ${input.mentor}` : null,
-    category ? `in ${category.title}` : null,
-    input.duration || null,
-    input.sessions || null,
-  ]
-    .filter(Boolean)
-    .join(' · ')
-  const description = input.description.trim() || fallback
   return pageMetadata({
     title: `${input.title} — Online Class`,
-    description,
-    path: `/classes/${input.id}`,
+    description: classPublicDescription(input),
+    path: `/classes/${input.slug ?? input.id}`,
     image: input.image,
-    keywords: [
-      input.title,
-      'online class',
-      'online course',
-      'live class',
-      category?.title ?? 'peer session',
-    ],
+    keywords: [input.title, 'online class', 'online course', category?.title ?? 'live class'],
   })
 }
 

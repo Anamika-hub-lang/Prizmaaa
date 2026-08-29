@@ -1,7 +1,8 @@
 import { COUNSELLING_PRICE_INR } from '../data/counsellingServices'
 import type { SeoFaqItem } from '../data/seoFaqs'
+import { classPublicPath } from './classSlug'
 import type { PublishedClass } from './publishedClasses'
-import { SITE_NAME, SITE_URL, absUrl } from './seo'
+import { classPublicDescription, SITE_NAME, SITE_URL, absUrl } from './seo'
 
 export function faqJsonLd(items: SeoFaqItem[]) {
   return {
@@ -41,12 +42,12 @@ export function counsellingServiceJsonLd() {
 }
 
 export function courseJsonLd(cls: PublishedClass) {
-  const url = absUrl(`/classes/${cls.id}`)
+  const url = absUrl(classPublicPath(cls))
   return {
     '@context': 'https://schema.org',
     '@type': 'Course',
     name: cls.title,
-    description: cls.description || `${cls.title} is a live online class for students on ${SITE_NAME}.`,
+    description: classPublicDescription(cls),
     url,
     image: cls.image || undefined,
     provider: {
@@ -81,7 +82,7 @@ export function classesItemListJsonLd(classes: PublishedClass[]) {
     itemListElement: classes.slice(0, 20).map((cls, index) => ({
       '@type': 'ListItem',
       position: index + 1,
-      url: absUrl(`/classes/${cls.id}`),
+      url: absUrl(classPublicPath(cls)),
       name: cls.title,
     })),
   }

@@ -56,7 +56,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   )
 
   const classRoutes = publishedClasses.map((cls) =>
-    entry(`/classes/${cls.id}`, {
+    entry(`/classes/${cls.slug}`, {
       priority: 0.8,
       changeFrequency: 'weekly',
       lastModified: cls.createdAt ? new Date(cls.createdAt) : undefined,

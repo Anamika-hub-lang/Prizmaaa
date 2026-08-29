@@ -19,7 +19,9 @@ import { PrizmaEcosystemSection } from '../components/marketing/PrizmaEcosystemS
 import { useLandingGsap } from '../hooks/useLandingGsap'
 import { enabledAiFeatures } from '../data/aiFeatures'
 import { FaqSection } from '../components/seo/FaqSection'
+import { SeoCoverImage } from '../components/seo/SeoCoverImage'
 import { counsellingFaqs } from '../data/seoFaqs'
+import { attachClassSlugs, classPublicPath } from '../lib/classSlug'
 
 const showAiHero = enabledAiFeatures.length > 0
 
@@ -28,12 +30,7 @@ const workPastels = ['bg-sky-50', 'bg-[#fff4eb]', 'bg-violet-50']
 export function HomePage() {
   useLandingGsap()
   const { publishedClasses } = useMentorContent()
-  const livePreview = publishedClasses.slice(0, 3).map((c) => ({
-    id: c.id,
-    title: c.title,
-    categoryId: c.categoryId,
-    image: c.image,
-  }))
+  const livePreview = attachClassSlugs(publishedClasses).slice(0, 3)
   const work =
     livePreview.length >= 3
       ? livePreview
@@ -71,18 +68,21 @@ export function HomePage() {
             </div>
             <div className="lg:col-span-8 grid sm:grid-cols-3 gap-4">
               {work.map((c, i) => {
-                const href = c.id.startsWith('showcase-') ? '/classes' : `/classes/${c.id}`
+                const href = c.id.startsWith('showcase-') ? '/classes' : classPublicPath(c)
                 return (
                 <article
                   key={c.id}
                   className={`gsap-card-in group rounded-3xl border-[3px] border-orange-100 overflow-hidden ${workPastels[i]} card-lift hover:border-educture-orange transition-colors`}
                 >
                   <div className="p-3 pb-0">
-                    <img
-                      src={c.image}
-                      alt={c.title}
-                      className="w-full h-36 object-cover rounded-2xl border-[3px] border-white shadow-sm group-hover:scale-[1.03] transition-transform duration-300"
-                    />
+                    <div className="relative w-full h-36 rounded-2xl overflow-hidden border-[3px] border-white shadow-sm">
+                      <SeoCoverImage
+                        src={c.image}
+                        alt={`${c.title} online class`}
+                        sizes="(max-width: 640px) 100vw, 240px"
+                        className="object-cover group-hover:scale-[1.03] transition-transform duration-300"
+                      />
+                    </div>
                   </div>
                   <div className="p-4 pt-3 relative">
                     <p className="font-bold text-[#1a1a1a] text-sm leading-snug">

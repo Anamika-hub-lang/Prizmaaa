@@ -1,10 +1,12 @@
 import type { ClassCategoryId } from '../data/classCatalog'
+import { attachClassSlugs } from './classSlug'
 import { pickClassCoverImage } from './classCoverImages'
 import { supabase } from './supabase'
 
 export type PublishedClass = {
   id: string
   title: string
+  slug: string
   description: string
   categoryId: ClassCategoryId
   image: string
@@ -34,7 +36,7 @@ function mapRow(row: {
   sessions: string | null
   price: number | null
   created_at: string | null
-}): PublishedClass {
+}): Omit<PublishedClass, 'slug'> {
   const categoryId = asCategoryId(row.category_id)
   return {
     id: row.id,
@@ -72,22 +74,11 @@ export async function fetchPublishedClasses(): Promise<PublishedClass[]> {
     return []
   }
 
-  return data.map(mapRow)
+  return attachClassSlugs(data.map(mapRow))
 }
 
-export async function fetchPublishedClassById(id: string): Promise<PublishedClass | null> {
-  if (!supabase || !id) return null
-  const { data, error } = await supabase
-    .from('classes')
-    .select(SELECT_FIELDS)
-    .eq('id', id)
-    .eq('published', true)
-    .maybeSingle()
-
-  if (error) {
-    console.warn('[SEO] Could not load class:', error.message)
-    return null
-  }
-  if (!data) return null
-  return mapRow(data)
+export async function fetchPublishedClassByParam(param: string): Promise<PublishedClass | null> {
+  if (!param) return null
+  const published = await fetchPublishedClasses()
+  return published.find((cls) => cls.slug === param || cls.id === param) ?? null
 }

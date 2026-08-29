@@ -36,7 +36,7 @@ import { stashCashfreeOrderId } from '../lib/cashfreeOrderId'
 import { sanitizeIndianPhoneInput, validateIndianPhone } from '../lib/phoneValidation'
 import { counsellingGroupHeadings } from '../lib/seo'
 import { FaqSection } from '../components/seo/FaqSection'
-import { counsellingFaqs } from '../data/seoFaqs'
+import { faqsForGroup } from '../data/seoFaqs'
 
 const GROUP_IDS: CounsellingGroupId[] = ['career', 'domain', 'future']
 
@@ -447,7 +447,7 @@ export function CounsellingCategoryPage() {
             </p>
           </div>
         </section>
-        <FaqSection heading="Career counselling FAQs" items={counsellingFaqs} />
+        <FaqSection heading={faqsForGroup(group.id).heading} items={faqsForGroup(group.id).items} />
       </main>
 
       <MarketingFooter />

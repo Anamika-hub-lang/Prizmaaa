@@ -2,8 +2,8 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { CounsellingCategoryPage } from '@/views/CounsellingCategoryPage'
 import { JsonLd } from '@/components/seo/JsonLd'
-import { counsellingGroupById, counsellingGroups } from '@/data/counsellingServices'
-import { counsellingFaqs } from '@/data/seoFaqs'
+import { counsellingGroupById, counsellingGroups, type CounsellingGroupId } from '@/data/counsellingServices'
+import { faqsForGroup } from '@/data/seoFaqs'
 import { counsellingServiceJsonLd, faqJsonLd } from '@/lib/jsonLd'
 import { counsellingGroupSeo } from '@/lib/seo'
 
@@ -24,10 +24,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function Page({ params }: Props) {
   const { groupId } = await params
-  if (!counsellingGroupById(groupId)) notFound()
+  const group = counsellingGroupById(groupId)
+  if (!group) notFound()
+  const faqs = faqsForGroup(group.id as CounsellingGroupId)
   return (
     <>
-      <JsonLd data={[counsellingServiceJsonLd(), faqJsonLd(counsellingFaqs)]} />
+      <JsonLd data={[counsellingServiceJsonLd(), faqJsonLd(faqs.items)]} />
       <CounsellingCategoryPage />
     </>
   )

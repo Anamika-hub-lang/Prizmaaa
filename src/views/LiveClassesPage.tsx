@@ -15,8 +15,10 @@ import {
 import { tintedSurfaceKey } from '../components/ui/dashboardCardStyles'
 import { MentorAvatar } from '../components/ui/MentorAvatar'
 import { FaqSection } from '../components/seo/FaqSection'
+import { SeoCoverImage } from '../components/seo/SeoCoverImage'
 import { classesFaqs } from '../data/seoFaqs'
 import { COUNSELLING_PRICE_INR } from '../data/counsellingServices'
+import { attachClassSlugs, classPublicPath } from '../lib/classSlug'
 
 const ALL: 'all' = 'all'
 const AUTH_RETURN_KEY = 'educture_auth_return'
@@ -24,6 +26,7 @@ const AUTH_RETURN_KEY = 'educture_auth_return'
 export function LiveClassesPage({ initialClasses = [] }: { initialClasses?: Array<{
   id: string
   title: string
+  slug?: string
   categoryId: ClassCategoryId
   image: string
   mentor: string
@@ -36,7 +39,17 @@ export function LiveClassesPage({ initialClasses = [] }: { initialClasses?: Arra
   const { isSignedIn } = useAuth()
   const [filter, setFilter] = useState<ClassCategoryId | typeof ALL>(ALL)
   const pricingLine = formatBrowsePricingSummary()
-  const catalog = publishedClasses.length > 0 ? publishedClasses : initialClasses
+  const listingSource: Array<{
+    id: string
+    title: string
+    categoryId: ClassCategoryId
+    image: string
+    mentor: string
+    mentorImage: string
+    duration: string
+    sessions: string
+  }> = publishedClasses.length > 0 ? publishedClasses : initialClasses
+  const catalog = attachClassSlugs(listingSource)
 
   const classes = useMemo(() => {
     if (filter === ALL) return catalog
@@ -151,13 +164,13 @@ export function LiveClassesPage({ initialClasses = [] }: { initialClasses?: Arra
                     key={item.id}
                     className={`overflow-hidden rounded-2xl text-left ${tintedSurfaceKey(item.id)}`}
                   >
-                    <div className="relative border-b-2 border-white/70">
-                      <Link to={`/classes/${item.id}`}>
-                        <img
+                    <div className="relative h-40 sm:h-44 border-b-2 border-white/70">
+                      <Link to={classPublicPath(item)} className="absolute inset-0">
+                        <SeoCoverImage
                           src={item.image}
-                          alt={item.title}
-                          className="w-full h-40 sm:h-44 object-cover"
-                          loading="lazy"
+                          alt={`${item.title} online class`}
+                          sizes="(max-width: 640px) 100vw, (max-width: 1280px) 33vw, 280px"
+                          className="object-cover"
                         />
                       </Link>
                     </div>
@@ -166,7 +179,7 @@ export function LiveClassesPage({ initialClasses = [] }: { initialClasses?: Arra
                         {classCategories.find((c) => c.id === item.categoryId)?.title ?? item.categoryId}
                       </p>
                       <h3 className="font-bold text-[#1d1d1d] text-sm sm:text-base mt-1 leading-snug">
-                        <Link to={`/classes/${item.id}`} className="hover:text-educture-orange">
+                        <Link to={classPublicPath(item)} className="hover:text-educture-orange">
                           {item.title}
                         </Link>
                       </h3>

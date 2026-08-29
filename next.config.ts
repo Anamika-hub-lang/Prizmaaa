@@ -7,6 +7,11 @@ const nextConfig: NextConfig = {
   // Vercel project still has Output Directory = "dist" (old Vite setting).
   // Point Next at dist so the platform finds the App Router build output.
   distDir: 'dist',
+  images: {
+    remotePatterns: [
+      { protocol: 'https', hostname: 'images.unsplash.com', pathname: '/**' },
+    ],
+  },
   reactStrictMode: true,
   turbopack: {
     resolveAlias: {
