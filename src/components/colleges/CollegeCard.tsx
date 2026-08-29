@@ -1,8 +1,8 @@
 import { Link } from 'react-router-dom'
-import { Building2, ExternalLink, MapPin } from 'lucide-react'
+import { Building2, MapPin } from 'lucide-react'
 import type { College } from '../../lib/colleges/types'
 import { collegeTypeLabel, formatFees, formatPackage } from '../../lib/colleges/repository'
-import { AdmissionPathTrail } from './AdmissionPathTrail'
+import { UniversityLeadCtas } from '../universities/UniversityLeadCtas'
 
 type Props = {
   college: College
@@ -10,80 +10,59 @@ type Props = {
 
 export function CollegeCard({ college }: Props) {
   return (
-    <article className="rounded-2xl border-[3px] border-orange-100 bg-white p-5 hover:border-educture-orange transition-colors">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-[11px] font-bold uppercase tracking-wider text-educture-orange">
-            {collegeTypeLabel(college.type)}
-          </p>
-          <h3 className="font-display text-lg text-[#1a1a1a] mt-1 leading-snug">
-            <Link to={`/colleges/${college.slug}`} className="hover:text-educture-orange">
-              {college.name}
-            </Link>
-          </h3>
-          <p className="text-sm text-gray-500 mt-1 flex items-center gap-1">
-            <MapPin className="w-3.5 h-3.5 shrink-0" />
-            {college.city}, {college.state}
-          </p>
-        </div>
+    <article className="h-full flex flex-col rounded-2xl border-[3px] border-orange-100 bg-white overflow-hidden hover:border-educture-orange transition-colors">
+      <div className="p-4 pb-3 bg-[#fff9f3] border-b border-orange-100">
+        <UniversityLeadCtas
+          compact
+          universityId={college.slug}
+          universityName={college.name}
+          locationHint={`${college.city}, ${college.state}`}
+          courseOptions={[...college.courses, 'Undecided / need counselling']}
+        />
       </div>
 
-      <div className="mt-3 pt-3 border-t border-orange-50">
-        <AdmissionPathTrail college={college} compact />
-      </div>
+      <div className="p-4 flex-1 flex flex-col">
+        <p className="text-[11px] font-bold uppercase tracking-wider text-educture-orange">
+          {collegeTypeLabel(college.type)}
+        </p>
+        <h3 className="font-display text-base text-[#1a1a1a] mt-1 leading-snug line-clamp-2">
+          <Link to={`/colleges/${college.slug}`} className="hover:text-educture-orange">
+            {college.name}
+          </Link>
+        </h3>
+        <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+          <MapPin className="w-3.5 h-3.5 shrink-0" />
+          {college.city}, {college.state}
+        </p>
 
-      <dl className="mt-4 grid grid-cols-2 gap-3 text-sm">
-        <div>
-          <dt className="text-gray-400 text-xs">Fees</dt>
-          <dd className="font-semibold text-gray-800">{formatFees(college.fees)}</dd>
-        </div>
-        <div>
-          <dt className="text-gray-400 text-xs">Avg package</dt>
-          <dd className="font-semibold text-gray-800">{formatPackage(college.averagePackage)}</dd>
-        </div>
-        <div>
-          <dt className="text-gray-400 text-xs">Entrance</dt>
-          <dd className="font-semibold text-gray-800 truncate">{college.entrance.join(', ')}</dd>
-        </div>
-        <div>
-          <dt className="text-gray-400 text-xs">Hostel</dt>
-          <dd className="font-semibold text-gray-800">{college.hostel ? 'Yes' : 'No'}</dd>
-        </div>
-      </dl>
+        <dl className="mt-3 grid grid-cols-2 gap-2 text-sm">
+          <div>
+            <dt className="text-gray-400 text-[11px]">Fees</dt>
+            <dd className="font-semibold text-gray-800">{formatFees(college.fees)}</dd>
+          </div>
+          <div>
+            <dt className="text-gray-400 text-[11px]">Avg package</dt>
+            <dd className="font-semibold text-gray-800">{formatPackage(college.averagePackage)}</dd>
+          </div>
+        </dl>
 
-      <div className="mt-4 flex flex-wrap gap-2">
-        {college.courses.slice(0, 3).map((course) => (
-          <span
-            key={course}
-            className="text-[11px] font-medium px-2 py-1 rounded-full bg-orange-50 text-gray-700"
-          >
-            {course}
-          </span>
-        ))}
-      </div>
+        <div className="mt-3 flex flex-wrap gap-1.5">
+          {college.courses.slice(0, 2).map((course) => (
+            <span
+              key={course}
+              className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-orange-50 text-gray-700"
+            >
+              {course}
+            </span>
+          ))}
+        </div>
 
-      <div className="mt-4 flex flex-wrap items-center gap-3 text-sm">
         <Link
           to={`/colleges/${college.slug}`}
-          className="font-semibold text-educture-orange hover:underline"
+          className="mt-auto pt-3 text-xs font-semibold text-educture-orange hover:underline"
         >
-          View details
+          View details →
         </Link>
-        <Link
-          to={`/colleges/${college.slug}#guidance`}
-          className="font-semibold text-sky-700 hover:underline"
-        >
-          Get guided →
-        </Link>
-        <a
-          href={college.website}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-gray-400 hover:text-educture-orange inline-flex items-center gap-1 ml-auto"
-        >
-          <ExternalLink className="w-3.5 h-3.5" />
-          Website
-        </a>
       </div>
     </article>
   )

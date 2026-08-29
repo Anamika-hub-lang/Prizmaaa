@@ -17,8 +17,10 @@ export function MarketingFooter() {
           <p className="font-bold text-educture-orange text-xs uppercase tracking-widest mb-4">Explore</p>
           <ul className="space-y-2 text-sm">
             <li><Link to="/" className="hover:text-white">Home</Link></li>
+            <li><Link to="/classes" className="hover:text-white">Online classes</Link></li>
+            <li><Link to="/counselling" className="hover:text-white">Career counselling</Link></li>
+            <li><Link to="/colleges" className="hover:text-white">Colleges</Link></li>
             <li><Link to="/about" className="hover:text-white">About</Link></li>
-            <li><Link to="/pricing" className="hover:text-white">Plans</Link></li>
           </ul>
         </div>
         <div>

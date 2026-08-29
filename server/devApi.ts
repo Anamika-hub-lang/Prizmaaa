@@ -6,9 +6,11 @@ import { profileRowFromClerkUser, profileRowFromClerkWebhook } from './lib/profi
 import { createServiceSupabase, upsertProfile, upsertProfileDetails } from './lib/supabaseAdmin'
 import { sendNotifyEmail } from './lib/sendNotifyEmail'
 import {
+  CASHFREE_PRODUCTION_ORIGIN,
   cashfreeCreateOrder,
   cashfreeFetchOrder,
   isCashfreeConfigured,
+  parseCashfreeMode,
   type CashfreeServerConfig,
 } from './lib/cashfreeServer'
 import { upsertEnrollmentAfterPayment } from './lib/enrollmentAdmin'
@@ -17,7 +19,7 @@ import {
   resolvePaymentEnrollmentNote,
   upsertCashfreeOrderIntent,
 } from './lib/cashfreeOrderIntent'
-import { TRIAL_DAYS, serverPaymentAmount } from './lib/pricingServer'
+import { TRIAL_DAYS, resolveServerPaymentAmount } from './lib/pricingServer'
 import {
   isActiveEnrollmentRow,
   activeEnrollmentBlockedMessage,
@@ -28,9 +30,17 @@ import {
   getCounsellingBookingIntent,
   upsertCounsellingBookingIntent,
 } from './lib/counsellingBookingIntent'
-import { validateIndianPhoneServer, validateScheduledDateTime } from './lib/phoneValidation'
+import {
+  firstIndianMobile,
+  validateIndianPhoneServer,
+  validateScheduledDateTime,
+} from './lib/phoneValidation'
 import { resolveBookingAssignment } from './lib/counsellorAssign'
 import { tryHandleRoleDashboardApi } from './roleDashboardApi'
+import { tryHandleUniversityLeadApi } from './universityLeadApi'
+import { tryHandleMentorClassShareApi } from './mentorClassShareApi'
+import { tryHandleClassNotificationsApi } from './classNotificationsApi'
+import { tryHandleCategoryPricingApi } from './categoryPricingApi'
 import { counsellingPriceInr } from './lib/counsellingPricing'
 import { isMentorEmailAllowed, isMissingTableError, normalizeMentorEmail } from './lib/mentorAllowlist'
 import {
@@ -63,27 +73,56 @@ export type DevApiEnv = {
   geminiApiKey?: string
 }
 
+function headerFirst(value: string | string[] | undefined): string | undefined {
+  if (Array.isArray(value)) return value[0]?.split(',')[0]?.trim()
+  return value?.split(',')[0]?.trim()
+}
+
 function cashfreeCfg(env: DevApiEnv): CashfreeServerConfig {
   return {
     clientId: env.cashfreeClientId,
     clientSecret: env.cashfreeClientSecret,
-    mode: env.cashfreeMode === 'production' ? 'production' : 'sandbox',
+    mode: parseCashfreeMode(env.cashfreeMode, env.cashfreeClientSecret),
   }
 }
 
 function requestOrigin(req: IncomingMessage): string {
-  const host = req.headers.host ?? 'localhost:3000'
+  const host =
+    headerFirst(req.headers['x-forwarded-host']) ||
+    headerFirst(req.headers.host) ||
+    'localhost:3000'
   const proto =
-    (req.headers['x-forwarded-proto'] as string | undefined) ??
+    headerFirst(req.headers['x-forwarded-proto']) ||
     (host.includes('localhost') ? 'http' : 'https')
   return `${proto}://${host}`
 }
 
-/** Cashfree return_url must be https in production; stay on same host so Clerk + stored order id match. */
+function isEphemeralVercelOrigin(origin: string): boolean {
+  try {
+    const host = new URL(origin).hostname
+    return (
+      host.endsWith('.vercel.app') &&
+      (host.includes('anamika-hub-langs-projects') || /-[a-z0-9]{8,}-/i.test(host))
+    )
+  } catch {
+    return false
+  }
+}
+
+/** Cashfree return_url must be the whitelisted https origin, not a per-deploy Vercel URL. */
 function paymentReturnBase(env: DevApiEnv, req: IncomingMessage): string {
   const origin = requestOrigin(req)
   const configured = env.publicAppUrl?.trim().replace(/\/$/, '')
-  const mode = env.cashfreeMode === 'production' ? 'production' : 'sandbox'
+  const mode = parseCashfreeMode(env.cashfreeMode, env.cashfreeClientSecret)
+  const canonical =
+    configured?.startsWith('https://') ? configured : CASHFREE_PRODUCTION_ORIGIN
+
+  if (mode === 'production') {
+    if (isEphemeralVercelOrigin(origin) || !origin.startsWith('https://')) {
+      return canonical
+    }
+    return origin
+  }
 
   if (origin.startsWith('https://')) {
     return origin
@@ -91,12 +130,6 @@ function paymentReturnBase(env: DevApiEnv, req: IncomingMessage): string {
 
   if (configured?.startsWith('https://')) {
     return configured
-  }
-
-  if (mode === 'production' && origin.startsWith('http://')) {
-    throw new Error(
-      'Cashfree production needs an https return URL. Add PUBLIC_APP_URL=https://your-live-site.com in .env. For local testing use an https tunnel (e.g. ngrok) or Cashfree sandbox keys with CASHFREE_MODE=sandbox.',
-    )
   }
 
   return origin
@@ -1944,6 +1977,7 @@ async function handleCashfreeCreateOrder(
     classId?: string
     purpose?: string
     planTier?: string
+    phone?: string
   }
   try {
     body = (await readBodyJson(req)) as typeof body
@@ -2009,13 +2043,59 @@ async function handleCashfreeCreateOrder(
 
   let amount = TRIAL_VERIFY_INR
   if (purpose === 'paid' && planTier) {
-    amount = serverPaymentAmount(categoryId, planTier)
+    amount = await resolveServerPaymentAmount(supabase, categoryId, planTier)
   }
 
   const clerk = createClerkClient({ secretKey: env.clerkSecretKey })
   const user = await clerk.users.getUser(clerkId)
-  const email = user.emailAddresses[0]?.emailAddress
-  const phone = user.phoneNumbers[0]?.phoneNumber
+  const email =
+    user.primaryEmailAddress?.emailAddress ??
+    user.emailAddresses[0]?.emailAddress ??
+    undefined
+
+  const { data: profileRow } = await supabase
+    .from('profiles')
+    .select('phone, email, full_name')
+    .eq('clerk_id', clerkId)
+    .maybeSingle()
+
+  const phone = firstIndianMobile(
+    profileRow?.phone as string | null | undefined,
+    user.primaryPhoneNumber?.phoneNumber,
+    ...user.phoneNumbers.map((p) => p.phoneNumber),
+    body.phone,
+  )
+  const customerEmail =
+    email ??
+    (typeof profileRow?.email === 'string' && profileRow.email.includes('@')
+      ? profileRow.email.trim()
+      : undefined)
+
+  if (!phone) {
+    json(res, 400, {
+      error:
+        'Add your 10-digit WhatsApp number on Profile before paying, or enter it at checkout.',
+      code: 'missing_customer_phone',
+    })
+    return
+  }
+  if (!customerEmail) {
+    json(res, 400, {
+      error: 'Your account is missing an email address. Add one on Profile, then try again.',
+      code: 'missing_customer_email',
+    })
+    return
+  }
+
+  if (body.phone && !profileRow?.phone) {
+    const { error: phoneSaveErr } = await supabase
+      .from('profiles')
+      .update({ phone })
+      .eq('clerk_id', clerkId)
+    if (phoneSaveErr) {
+      console.warn('[dev-api] cashfree create-order phone save failed', phoneSaveErr.message)
+    }
+  }
 
   const orderId = `edu_${Date.now()}`
   const origin = paymentReturnBase(env, req)
@@ -2034,8 +2114,11 @@ async function handleCashfreeCreateOrder(
       orderId,
       amount,
       customerId: clerkId,
-      customerName: user.fullName ?? undefined,
-      customerEmail: email,
+      customerName:
+        user.fullName?.trim() ||
+        (typeof profileRow?.full_name === 'string' ? profileRow.full_name.trim() : '') ||
+        undefined,
+      customerEmail,
       customerPhone: phone,
       returnUrl,
       orderNote: JSON.stringify(note),
@@ -2063,6 +2146,11 @@ async function handleCashfreeCreateOrder(
       classId,
       purpose,
       planTier: planTier ?? null,
+      customerId: clerkId,
+      customerEmailSet: Boolean(customerEmail),
+      customerPhoneLast4: phone.slice(-4),
+      mode: cfg.mode,
+      returnUrl,
     })
 
     json(res, 200, {
@@ -2430,6 +2518,56 @@ export function handleDevApiRequest(
     return true
   }
 
+  if (
+    path &&
+    tryHandleUniversityLeadApi(path, req, res, env, {
+      json,
+      verifyClerkSession,
+      requireSupabaseAdmin,
+      isAdminClerkUser,
+      readBodyJson,
+    })
+  ) {
+    return true
+  }
+
+  if (
+    path &&
+    tryHandleMentorClassShareApi(path, req, res, env, {
+      json,
+      verifyClerkSession,
+      requireSupabaseAdmin,
+      readBodyJson,
+    })
+  ) {
+    return true
+  }
+
+  if (
+    path &&
+    tryHandleClassNotificationsApi(path, req, res, env, {
+      json,
+      verifyClerkSession,
+      requireSupabaseAdmin,
+      readBodyJson,
+    })
+  ) {
+    return true
+  }
+
+  if (
+    path &&
+    tryHandleCategoryPricingApi(path, req, res, env, {
+      json,
+      verifyClerkSession,
+      requireSupabaseAdmin,
+      isAdminClerkUser,
+      readBodyJson,
+    })
+  ) {
+    return true
+  }
+
   if (path === '/api/user/role') {
     void handleSetRole(req, res, env).catch((err) => {
       console.error('[dev-api] role', err)
@@ -2637,7 +2775,7 @@ export function devApiEnvFromProcess(): DevApiEnv {
     resendApiKey: process.env.RESEND_API_KEY,
     cashfreeClientId: process.env.CASHFREE_CLIENT_ID,
     cashfreeClientSecret: process.env.CASHFREE_CLIENT_SECRET,
-    cashfreeMode: process.env.CASHFREE_MODE === 'production' ? 'production' : 'sandbox',
+    cashfreeMode: parseCashfreeMode(process.env.CASHFREE_MODE, process.env.CASHFREE_CLIENT_SECRET),
     publicAppUrl,
     adminClerkUserIds: process.env.ADMIN_CLERK_USER_IDS,
     geminiApiKey: process.env.GEMINI_API_KEY?.trim() || undefined,

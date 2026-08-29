@@ -1,3 +1,5 @@
+'use client'
+
 import { Link } from 'react-router-dom'
 
 import { ArrowLeft, IndianRupee } from 'lucide-react'

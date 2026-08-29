@@ -1,3 +1,5 @@
+'use client'
+
 import {
   createContext,
   useCallback,
@@ -8,7 +10,7 @@ import {
   useState,
   type ReactNode,
 } from 'react'
-import { useUser } from '@clerk/nextjs'
+import { useUser, useAuth } from '@clerk/nextjs'
 import { getUserRole } from '../lib/userRole'
 import { resolveMentorImage } from '../lib/mentorAvatar'
 import {
@@ -37,11 +39,13 @@ import {
   assignmentBelongsToMentor,
   classBelongsToMentor,
   freeCourseBelongsToMentor,
+  isClassOwner,
   legacyAssignmentsToClaim,
   legacyClassesToClaim,
   legacyFreeCoursesToClaim,
   mentorDisplayName,
 } from '../lib/mentorContentOwnership'
+import { fetchSharedClassIds } from '../lib/classCoMentorsApi'
 
 export type { ManagedClass, MentorAssignment }
 
@@ -58,6 +62,8 @@ type MentorContentContextValue = {
   syncError: string | null
   isRealtime: boolean
   usingLocalData: boolean
+  sharedClassIds: string[]
+  isOwnerOfClass: (classId: string) => boolean
   addClass: (input: Omit<ManagedClass, 'id' | 'price'>) => void
   updateClass: (id: string, patch: Partial<ManagedClass>) => void
   removeClass: (id: string) => void
@@ -73,18 +79,21 @@ type MentorContentContextValue = {
   publishedClasses: ManagedClass[]
   myPublishedClasses: ManagedClass[]
   refresh: () => Promise<void>
+  refreshSharedClasses: () => Promise<void>
 }
 
 const MentorContentContext = createContext<MentorContentContextValue | null>(null)
 
 export function MentorContentProvider({ children }: { children: ReactNode }) {
   const { user } = useUser()
+  const { getToken } = useAuth()
   const mentorClerkId = user?.id ?? null
   const mentorName = mentorDisplayName(user)
 
   const [classes, setClasses] = useState<ManagedClass[]>([])
   const [freeCourses, setFreeCourses] = useState<FreeCourse[]>([])
   const [assignments, setAssignments] = useState<MentorAssignment[]>([])
+  const [sharedClassIds, setSharedClassIds] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
   const [syncError, setSyncError] = useState<string | null>(null)
   const [usingLocalData, setUsingLocalData] = useState(false)
@@ -104,17 +113,30 @@ export function MentorContentProvider({ children }: { children: ReactNode }) {
     [],
   )
 
+  const refreshSharedClasses = useCallback(async () => {
+    if (!mentorClerkId || getUserRole(user) !== 'teacher') {
+      setSharedClassIds([])
+      return
+    }
+    try {
+      setSharedClassIds(await fetchSharedClassIds(getToken))
+    } catch {
+      setSharedClassIds([])
+    }
+  }, [mentorClerkId, user, getToken])
+
   const refresh = useCallback(async () => {
     try {
       setSyncError(null)
       const data = await fetchAllContent()
       applyData(data)
+      await refreshSharedClasses()
     } catch (e) {
       setSyncError(e instanceof Error ? e.message : 'Failed to load data')
     } finally {
       setLoading(false)
     }
-  }, [applyData])
+  }, [applyData, refreshSharedClasses])
 
   useEffect(() => {
     refresh()
@@ -205,13 +227,19 @@ export function MentorContentProvider({ children }: { children: ReactNode }) {
 
   const removeClass = useCallback(
     (id: string) => {
+      if (!mentorClerkId) return
+      const item = classes.find((c) => c.id === id)
+      if (item && !isClassOwner(item, mentorClerkId)) {
+        setSyncError('Only the class owner can remove this class.')
+        return
+      }
       setClasses((prev) => prev.filter((c) => c.id !== id))
       deleteClassRow(id).catch((e) => {
         setSyncError(e instanceof Error ? e.message : 'Could not remove class')
         refresh()
       })
     },
-    [refresh],
+    [refresh, mentorClerkId, classes],
   )
 
   const setMeetForClass = useCallback(
@@ -325,11 +353,24 @@ export function MentorContentProvider({ children }: { children: ReactNode }) {
     [classes],
   )
 
+  const sharedClassIdSet = useMemo(() => new Set(sharedClassIds), [sharedClassIds])
+
   const myClasses = useMemo(() => {
     if (!mentorClerkId) return []
     if (allClassesUnclaimed) return classes
-    return classes.filter((c) => classBelongsToMentor(c, mentorClerkId, mentorName))
-  }, [classes, mentorClerkId, mentorName, allClassesUnclaimed])
+    return classes.filter((c) =>
+      classBelongsToMentor(c, mentorClerkId, mentorName, sharedClassIdSet),
+    )
+  }, [classes, mentorClerkId, mentorName, allClassesUnclaimed, sharedClassIdSet])
+
+  const isOwnerOfClass = useCallback(
+    (classId: string) => {
+      if (!mentorClerkId) return false
+      const item = classes.find((c) => c.id === classId)
+      return item ? isClassOwner(item, mentorClerkId) : false
+    },
+    [classes, mentorClerkId],
+  )
 
   const myFreeCourses = useMemo(() => {
     if (!mentorClerkId) return []
@@ -393,7 +434,10 @@ export function MentorContentProvider({ children }: { children: ReactNode }) {
       getClassesByCategory,
       publishedClasses,
       myPublishedClasses,
+      sharedClassIds,
+      isOwnerOfClass,
       refresh,
+      refreshSharedClasses,
     }),
     [
       classes,
@@ -419,7 +463,10 @@ export function MentorContentProvider({ children }: { children: ReactNode }) {
       getClassesByCategory,
       publishedClasses,
       myPublishedClasses,
+      sharedClassIds,
+      isOwnerOfClass,
       refresh,
+      refreshSharedClasses,
     ],
   )
 

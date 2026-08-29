@@ -1,23 +1,27 @@
 import { useState } from 'react'
 import { CheckCircle2, Clock, User } from 'lucide-react'
+import { useAuth } from '@clerk/nextjs'
 import { useMentorContent } from '../../context/MentorContentContext'
 import { MentorPageHeader } from '../../components/layout/TeacherLayout'
 import { AppButton } from '../../components/ui/AppButton'
 import { dashboardCardBorder, dashboardTint } from '../../components/ui/dashboardCardStyles'
+import { createClassNotification } from '../../lib/classNotificationsApi'
 
 type MentorTab = 'all' | 'awaiting' | 'submitted'
 
 export function MentorAssignmentsPage() {
-  const { myAssignments, addAssignment, updateAssignment } = useMentorContent()
+  const { myAssignments, myClasses, addAssignment, updateAssignment } = useMentorContent()
+  const { getToken } = useAuth()
   const [tab, setTab] = useState<MentorTab>('all')
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editTitle, setEditTitle] = useState('')
   const [editCourse, setEditCourse] = useState('')
   const [editDue, setEditDue] = useState('')
   const [title, setTitle] = useState('')
-  const [course, setCourse] = useState('')
+  const [classId, setClassId] = useState('')
   const [due, setDue] = useState('')
   const [img, setImg] = useState('https://images.unsplash.com/photo-1561070791-2526d30994b5?w=400&q=80')
+  const [notifyError, setNotifyError] = useState<string | null>(null)
 
   const awaiting = myAssignments.filter((a) => a.status === 'pending')
   const submitted = myAssignments.filter((a) => a.status === 'submitted')
@@ -27,9 +31,23 @@ export function MentorAssignmentsPage() {
 
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault()
-    addAssignment({ title, course, due, img })
+    const cls = myClasses.find((c) => c.id === classId)
+    if (!cls) {
+      setNotifyError('Choose a class so enrolled students get notified.')
+      return
+    }
+    setNotifyError(null)
+    addAssignment({ title, course: cls.title, due, img })
+    void createClassNotification(getToken, {
+      classId: cls.id,
+      type: 'assignment',
+      title: `New assignment: ${title}`,
+      body: due ? `Due ${due}` : undefined,
+      linkPath: '/student/assignments',
+    }).catch((err) => {
+      setNotifyError(err instanceof Error ? err.message : 'Assignment saved, but notify failed')
+    })
     setTitle('')
-    setCourse('')
     setDue('')
   }
 
@@ -42,7 +60,6 @@ export function MentorAssignmentsPage() {
   return (
     <>
       <MentorPageHeader
-        backTo="/teacher"
         title="Assignments"
         subtitle="See which students have submitted work — status updates when they click Submit on their portal."
       />
@@ -71,13 +88,19 @@ export function MentorAssignmentsPage() {
             required
             className="w-full px-4 py-3 rounded-xl border-2 border-orange-200 bg-white/80 text-sm outline-none focus:border-educture-orange"
           />
-          <input
-            placeholder="Course name"
-            value={course}
-            onChange={(e) => setCourse(e.target.value)}
+          <select
+            value={classId}
+            onChange={(e) => setClassId(e.target.value)}
             required
             className="w-full px-4 py-3 rounded-xl border-2 border-orange-200 bg-white/80 text-sm outline-none"
-          />
+          >
+            <option value="">Select class</option>
+            {myClasses.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.title}
+              </option>
+            ))}
+          </select>
           <input
             placeholder="Due date text"
             value={due}
@@ -91,6 +114,7 @@ export function MentorAssignmentsPage() {
             onChange={(e) => setImg(e.target.value)}
             className="w-full px-4 py-3 rounded-xl border-2 border-orange-200 bg-white/80 text-sm outline-none"
           />
+          {notifyError && <p className="text-sm text-red-600">{notifyError}</p>}
           <AppButton type="submit">Publish to students</AppButton>
         </form>
 

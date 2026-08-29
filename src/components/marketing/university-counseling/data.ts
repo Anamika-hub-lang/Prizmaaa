@@ -102,17 +102,17 @@ export const howItWorksSteps = [
   {
     step: '01',
     title: 'Pick a campus',
-    description: 'Search or choose from popular campuses you are curious about.',
+    description: 'Browse courses, fees, location, and eligibility for campuses you are considering.',
   },
   {
     step: '02',
-    title: 'Connect with a mentor',
-    description: 'We match you with a senior or mentor who knows that campus inside out.',
+    title: 'Request counselling',
+    description: 'Tap Get counselling, I\'m interested, or Apply — a PRIZMA counsellor contacts you.',
   },
   {
     step: '03',
-    title: 'Get real perspectives',
-    description: 'Course fit, campus life, and whether the place is right for you — from people who lived it.',
+    title: 'Get matched',
+    description: 'We share your details with a partnered university only if you consent and it is a fit.',
   },
 ] as const
 

@@ -2,8 +2,20 @@ import { load } from '@cashfreepayments/cashfree-js'
 
 export type CashfreeClientMode = 'sandbox' | 'production'
 
+function parseClientMode(raw: string | undefined): CashfreeClientMode | null {
+  const mode = raw?.trim().toLowerCase()
+  if (mode === 'production' || mode === 'prod' || mode === 'live') return 'production'
+  if (mode === 'sandbox' || mode === 'test') return 'sandbox'
+  return null
+}
+
 export function cashfreeClientMode(): CashfreeClientMode {
-  return process.env.NEXT_PUBLIC_CASHFREE_MODE === 'production' ? 'production' : 'sandbox'
+  const fromEnv = parseClientMode(process.env.NEXT_PUBLIC_CASHFREE_MODE)
+  if (fromEnv) return fromEnv
+  if (typeof window !== 'undefined' && /(?:^|\.)prizma-guru\.vercel\.app$/i.test(window.location.hostname)) {
+    return 'production'
+  }
+  return 'sandbox'
 }
 
 export function isCashfreeClientEnabled(): boolean {
@@ -14,10 +26,14 @@ export async function openCashfreeCheckout(
   paymentSessionId: string,
   mode?: CashfreeClientMode,
 ): Promise<void> {
-  const checkoutMode = mode ?? cashfreeClientMode()
+  const sessionId = paymentSessionId.trim()
+  if (!sessionId.startsWith('session_')) {
+    throw new Error('Could not start payment. Try again.')
+  }
+  const checkoutMode = parseClientMode(mode) ?? cashfreeClientMode()
   const cashfree = await load({ mode: checkoutMode })
   await cashfree.checkout({
-    paymentSessionId,
-    redirectTarget: '_self',
+    paymentSessionId: sessionId,
+    redirectTarget: '_modal',
   })
 }

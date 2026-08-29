@@ -1,3 +1,5 @@
+'use client'
+
 import { Link } from 'react-router-dom'
 import { PageShell } from '../components/layout/PageShell'
 import { PricingCards } from '../components/marketing/PricingCards'

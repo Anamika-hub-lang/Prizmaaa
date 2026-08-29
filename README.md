@@ -25,5 +25,17 @@ Open [http://localhost:3000](http://localhost:3000).
 - Cashfree returns (public): `/student/payment/return`, `/counselling/payment/return`
 - Clerk webhook: `POST /api/webhooks/clerk`
 - Payments API: `POST /api/cashfree/create-order`, `POST /api/cashfree/confirm`
+- University leads: `/admin/leads`, `/counsellor/leads`, `/partner`
+- University lead capture: `POST /api/university-leads`
+
+## University leads schema
+
+In Supabase **SQL Editor**, also run `supabase/university-leads.sql` after the core scripts. This creates partners, programmes, leads, notes, shares, and commissions. APIs use the service role only — student phone numbers are never public.
+
+For shared teaching between mentors, also run `supabase/class-co-mentors.sql`.
+
+For student notification bell (assignments / schedule / syllabus PDF), run `supabase/class-notifications.sql`.
+
+For admin-editable Academic / Professional / Skills plan prices, run `supabase/category-pricing.sql`. Then open **Admin → Pricing**.
 
 In Clerk Dashboard, set sign-in/up URLs and webhook endpoint to your Next.js host (local: `http://localhost:3000`).

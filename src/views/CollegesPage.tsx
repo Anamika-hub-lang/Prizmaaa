@@ -1,3 +1,5 @@
+'use client'
+
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Building2, Search, Sparkles } from 'lucide-react'
@@ -246,15 +248,15 @@ export function CollegesPage() {
               </p>
 
               {loading ? (
-                <div className="grid sm:grid-cols-2 gap-4">
-                  {[1, 2, 3, 4].map((i) => (
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {[1, 2, 3, 4, 5, 6].map((i) => (
                     <div key={i} className="h-48 rounded-2xl bg-orange-50 animate-pulse" />
                   ))}
                 </div>
               ) : filtered.length === 0 ? (
                 <CollegesEmptyState />
               ) : (
-                <div className="grid sm:grid-cols-2 gap-4">
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {filtered.map((college) => (
                     <CollegeCard key={college.slug} college={college} />
                   ))}

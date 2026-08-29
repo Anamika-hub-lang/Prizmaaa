@@ -1,11 +1,17 @@
 'use client'
 
-import { CalendarCheck, Tags, ToggleLeft } from 'lucide-react'
+import { CalendarCheck, ClipboardList, Tags, ToggleLeft } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { DashboardPageHeader, DashboardSidebar, type SidebarNavItem } from './DashboardSidebar'
 
 const counsellorNav: SidebarNavItem[] = [
   { to: '/counsellor', icon: Tags, label: 'Assigned types', match: '/counsellor', exact: true },
+  {
+    to: '/counsellor/leads',
+    icon: ClipboardList,
+    label: 'University leads',
+    match: '/counsellor/leads',
+  },
   {
     to: '/counsellor/bookings',
     icon: CalendarCheck,

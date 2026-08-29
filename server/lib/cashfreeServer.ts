@@ -6,6 +6,20 @@ export type CashfreeServerConfig = {
 
 import { normalizeCashfreeOrderNoteRaw } from './cashfreeOrderNote'
 
+/** Stable production origin Cashfree must whitelist (not per-deploy *.vercel.app URLs). */
+export const CASHFREE_PRODUCTION_ORIGIN = 'https://prizma-guru.vercel.app'
+
+export function parseCashfreeMode(
+  raw: string | undefined,
+  secret?: string,
+): 'sandbox' | 'production' {
+  const mode = raw?.trim().toLowerCase()
+  if (mode === 'production' || mode === 'prod' || mode === 'live') return 'production'
+  if (mode === 'sandbox' || mode === 'test') return 'sandbox'
+  if (secret && cashfreeSecretLooksProduction(secret)) return 'production'
+  return 'sandbox'
+}
+
 const API_VERSION = '2023-08-01'
 
 function pgBase(mode: 'sandbox' | 'production') {
@@ -26,7 +40,7 @@ function cashfreeSecretLooksSandbox(secret: string): boolean {
 
 function validateCashfreeModeVsSecret(cfg: CashfreeServerConfig): void {
   const secret = cfg.clientSecret ?? ''
-  const mode = cfg.mode === 'production' ? 'production' : 'sandbox'
+  const mode = parseCashfreeMode(cfg.mode, secret)
   if (mode === 'sandbox' && cashfreeSecretLooksProduction(secret)) {
     throw new Error(
       'Cashfree credentials mismatch: production secret with sandbox mode. Set CASHFREE_MODE=production and VITE_CASHFREE_MODE=production, or use sandbox Client ID / Secret from Cashfree test dashboard.',
@@ -45,18 +59,31 @@ type CreateOrderInput = {
   currency?: string
   customerId: string
   customerName?: string
-  customerEmail?: string
-  customerPhone?: string
+  customerEmail: string
+  customerPhone: string
   returnUrl: string
   orderNote: string
 }
 
 export async function cashfreeCreateOrder(cfg: CashfreeServerConfig, input: CreateOrderInput) {
-  const mode = cfg.mode === 'production' ? 'production' : 'sandbox'
+  const mode = parseCashfreeMode(cfg.mode, cfg.clientSecret)
   if (!cfg.clientId || !cfg.clientSecret) {
     throw new Error('Cashfree credentials missing')
   }
   validateCashfreeModeVsSecret(cfg)
+
+  const customerId = input.customerId.trim()
+  const customerPhone = input.customerPhone.trim()
+  const customerEmail = input.customerEmail.trim()
+  if (!customerId) {
+    throw new Error('Cashfree customer_id is required')
+  }
+  if (!customerPhone) {
+    throw new Error('Cashfree customer_phone is required')
+  }
+  if (!customerEmail) {
+    throw new Error('Cashfree customer_email is required')
+  }
 
   const res = await fetch(`${pgBase(mode)}/orders`, {
     method: 'POST',
@@ -71,10 +98,10 @@ export async function cashfreeCreateOrder(cfg: CashfreeServerConfig, input: Crea
       order_amount: input.amount,
       order_currency: input.currency ?? 'INR',
       customer_details: {
-        customer_id: input.customerId,
-        customer_name: input.customerName ?? 'Student',
-        customer_email: input.customerEmail,
-        customer_phone: input.customerPhone ?? '9999999999',
+        customer_id: customerId,
+        customer_name: input.customerName?.trim() || 'Student',
+        customer_email: customerEmail,
+        customer_phone: customerPhone,
       },
       order_meta: {
         return_url: input.returnUrl,
@@ -104,7 +131,7 @@ export async function cashfreeCreateOrder(cfg: CashfreeServerConfig, input: Crea
 }
 
 export async function cashfreeFetchOrder(cfg: CashfreeServerConfig, orderId: string) {
-  const mode = cfg.mode === 'production' ? 'production' : 'sandbox'
+  const mode = parseCashfreeMode(cfg.mode, cfg.clientSecret)
   if (!cfg.clientId || !cfg.clientSecret) {
     throw new Error('Cashfree credentials missing')
   }

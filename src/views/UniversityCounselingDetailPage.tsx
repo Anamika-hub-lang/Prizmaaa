@@ -1,10 +1,14 @@
+'use client'
+
 import { Link, Navigate, useParams } from 'react-router-dom'
 import { ArrowLeft, BadgeCheck, GraduationCap, MapPin, Sparkles } from 'lucide-react'
 import { MainNavbar } from '../components/layout/MainNavbar'
 import { MarketingFooter } from '../components/marketing/MarketingSections'
-import { ComingSoonToast, useComingSoonToast } from '../components/marketing/university-counseling/ComingSoonToast'
-import { Badge, CounselingButton } from '../components/marketing/university-counseling/ui'
+import { Badge } from '../components/marketing/university-counseling/ui'
 import { UniversityImage } from '../components/universities/UniversityImage'
+import { UniversityLeadCtas } from '../components/universities/UniversityLeadCtas'
+import { courseOptionsForLead } from '../data/universityPrograms'
+import { universityById } from '../data/universities'
 import {
   counselingUniversityById,
   counselorsForUniversity,
@@ -14,13 +18,14 @@ import {
 export function UniversityCounselingDetailPage() {
   const { universityId = '' } = useParams()
   const university = counselingUniversityById(universityId)
-  const { visible, showToast, message } = useComingSoonToast()
 
   if (!university) {
     return <Navigate to="/university-counseling" replace />
   }
 
   const counselors = counselorsForUniversity(university.name)
+  const catalog = universityById(university.id)
+  const courseOptions = courseOptionsForLead(catalog, university.highlights)
 
   return (
     <>
@@ -43,7 +48,7 @@ export function UniversityCounselingDetailPage() {
                 All campuses
               </Link>
               <Badge variant="gray" className="mt-6 bg-white/10 border-white/20 text-orange-200">
-                Coming Soon
+                Campus counselling
               </Badge>
               <h1 className="font-display text-3xl sm:text-4xl lg:text-5xl mt-4 leading-tight max-w-2xl">
                 {university.name}
@@ -65,9 +70,14 @@ export function UniversityCounselingDetailPage() {
                   </span>
                 ))}
               </div>
-              <CounselingButton onClick={showToast} className="mt-8 opacity-90">
-                Connect at {university.shortName}
-              </CounselingButton>
+              <div className="mt-8">
+                <UniversityLeadCtas
+                  universityId={university.id}
+                  universityName={university.name}
+                  locationHint={`${university.location}, ${university.state}`}
+                  courseOptions={courseOptions}
+                />
+              </div>
             </div>
           </section>
 
@@ -100,11 +110,9 @@ export function UniversityCounselingDetailPage() {
                 </p>
                 <div className="grid sm:grid-cols-2 gap-4 mt-6 max-w-2xl">
                   {counselors.map((c) => (
-                    <button
+                    <div
                       key={c.id}
-                      type="button"
-                      onClick={showToast}
-                      className="flex gap-4 rounded-2xl border-2 border-orange-100 bg-[#fff9f3] p-4 text-left hover:border-violet-200 transition-colors"
+                      className="flex gap-4 rounded-2xl border-2 border-orange-100 bg-[#fff9f3] p-4 text-left"
                     >
                       <UniversityImage
                         src={c.image}
@@ -115,10 +123,10 @@ export function UniversityCounselingDetailPage() {
                         <p className="text-xs text-gray-500 mt-0.5">{c.experience} experience</p>
                         <span className="inline-flex items-center gap-1 mt-2 text-[10px] font-bold uppercase text-emerald-700">
                           <BadgeCheck className="w-3 h-3" />
-                          Verified · Soon
+                          Verified mentor
                         </span>
                       </div>
-                    </button>
+                    </div>
                   ))}
                 </div>
               </div>
@@ -129,23 +137,26 @@ export function UniversityCounselingDetailPage() {
             <div className="max-w-xl mx-auto px-4 text-center">
               <GraduationCap className="w-10 h-10 text-violet-600 mx-auto" />
               <h2 className="font-display text-2xl text-[#1a1a1a] mt-4">
-                Campus Connect for {university.shortName} launches soon
+                Talk to PRIZMA about {university.shortName}
               </h2>
               <p className="text-sm text-gray-600 mt-2 leading-relaxed">
-                We&apos;re onboarding verified seniors and mentors. You&apos;ll get real perspectives on
-                course fit, campus life, and whether {university.shortName} is right for you.
+                Share your course and location preferences. A counsellor will contact you — we never
+                publish your phone number, and we only share it with this campus if you consent.
               </p>
-              <CounselingButton onClick={showToast} className="mt-6">
-                Notify me
-              </CounselingButton>
+              <div className="mt-6 flex justify-center">
+                <UniversityLeadCtas
+                  universityId={university.id}
+                  universityName={university.name}
+                  locationHint={`${university.location}, ${university.state}`}
+                  courseOptions={courseOptions}
+                />
+              </div>
             </div>
           </section>
         </main>
 
         <MarketingFooter />
       </div>
-
-      <ComingSoonToast visible={visible} message={message} />
     </>
   )
 }

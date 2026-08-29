@@ -15,17 +15,16 @@ export function FooterLight() {
         <div>
           <p className="font-bold text-xs uppercase mb-3 tracking-wider text-gray-800">Explore</p>
           <ul className="space-y-2 text-sm text-gray-600">
-            <li><Link to="/courses" className="hover:text-educture-orange">Sessions</Link></li>
-            <li><Link to="/mentors" className="hover:text-educture-orange">Mentors</Link></li>
-            <li><Link to="/live" className="hover:text-educture-orange">Learn together</Link></li>
+            <li><Link to="/classes" className="hover:text-educture-orange">Online classes</Link></li>
+            <li><Link to="/counselling" className="hover:text-educture-orange">Career counselling</Link></li>
+            <li><Link to="/about" className="hover:text-educture-orange">About</Link></li>
           </ul>
         </div>
         <div>
           <p className="font-bold text-xs uppercase mb-3 tracking-wider text-gray-800">Company</p>
           <ul className="space-y-2 text-sm text-gray-600">
             <li><Link to="/about" className="hover:text-educture-orange">About Us</Link></li>
-            <li><Link to="/pricing" className="hover:text-educture-orange">Plans</Link></li>
-            <li><Link to="/contact" className="hover:text-educture-orange">Contact</Link></li>
+            <li><Link to="/about#contact" className="hover:text-educture-orange">Contact</Link></li>
           </ul>
         </div>
         <div>

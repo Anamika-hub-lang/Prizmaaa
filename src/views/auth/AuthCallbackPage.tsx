@@ -1,3 +1,5 @@
+'use client'
+
 import { Navigate, useLocation } from 'react-router-dom'
 import { useUser } from '@clerk/nextjs'
 import { isAdminUser } from '../../lib/adminAccess'

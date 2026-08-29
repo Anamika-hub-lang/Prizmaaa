@@ -1,3 +1,5 @@
+'use client'
+
 import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { Building2, Search } from 'lucide-react'

@@ -179,12 +179,6 @@ export function PrizmaEcosystemSection({ variant = 'home' }: Props) {
                 >
                   Campus stories
                 </Link>
-                <Link
-                  to="/pricing"
-                  className="inline-flex items-center gap-1 rounded-full border border-orange-200 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 hover:border-educture-orange"
-                >
-                  Session plans
-                </Link>
               </div>
             )}
             <Link

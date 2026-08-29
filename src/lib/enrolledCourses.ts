@@ -27,9 +27,10 @@ export function enrollmentToEnrolledCourse(
         mentorImage: classItem.mentorImage,
         progress: enrollment.progress,
         status: enrollment.status,
-        nextSession: classItem.nextSessionLabel
-          ? `${classItem.nextSessionLabel} · Google Meet`
-          : undefined,
+        nextSession:
+          classItem.nextSessionLabel && classItem.nextSessionLabel !== 'Set in Meet tab'
+            ? classItem.nextSessionLabel
+            : undefined,
         category: categoryLabels[classItem.categoryId] ?? classItem.categoryId,
         type: 'online',
         billingStatus: enrollment.billingStatus,

@@ -1,9 +1,10 @@
+'use client'
+
 import { Link } from 'react-router-dom'
 import { ArrowUpRight } from 'lucide-react'
 import { HeroSection } from '../components/marketing/HeroSection'
 import { MainNavbar } from '../components/layout/MainNavbar'
 import { MarketingFooter, ContactSection } from '../components/marketing/MarketingSections'
-import { PricingCards } from '../components/marketing/PricingCards'
 import { useMentorContent } from '../context/MentorContentContext'
 import { MentorEnrollSection } from '../components/marketing/MentorEnrollSection'
 import { TestimonialsMarquee } from '../components/marketing/TestimonialsMarquee'
@@ -16,8 +17,6 @@ import { UniversityReviewsSection } from '../components/marketing/UniversityRevi
 import { UniversityCounselingSection } from '../components/marketing/UniversityCounselingSection'
 import { PrizmaEcosystemSection } from '../components/marketing/PrizmaEcosystemSection'
 import { useLandingGsap } from '../hooks/useLandingGsap'
-import { COUNSELLING_DURATION_LABEL, COUNSELLING_PRICE_INR } from '../data/counsellingServices'
-import { pricingEcosystemIntro } from '../data/aboutStory'
 import { enabledAiFeatures } from '../data/aiFeatures'
 
 const showAiHero = enabledAiFeatures.length > 0
@@ -64,7 +63,9 @@ export function HomePage() {
               </Link>
             </div>
             <div className="lg:col-span-8 grid sm:grid-cols-3 gap-4">
-              {work.map((c, i) => (
+              {work.map((c, i) => {
+                const href = c.id.startsWith('showcase-') ? '/classes' : `/classes/${c.id}`
+                return (
                 <article
                   key={c.id}
                   className={`gsap-card-in group rounded-3xl border-[3px] border-orange-100 overflow-hidden ${workPastels[i]} card-lift hover:border-educture-orange transition-colors`}
@@ -72,58 +73,29 @@ export function HomePage() {
                   <div className="p-3 pb-0">
                     <img
                       src={c.image}
-                      alt=""
+                      alt={c.title}
                       className="w-full h-36 object-cover rounded-2xl border-[3px] border-white shadow-sm group-hover:scale-[1.03] transition-transform duration-300"
                     />
                   </div>
                   <div className="p-4 pt-3 relative">
-                    <p className="font-bold text-[#1a1a1a] text-sm leading-snug">{c.title}</p>
+                    <p className="font-bold text-[#1a1a1a] text-sm leading-snug">
+                      <Link to={href} className="hover:text-educture-orange">
+                        {c.title}
+                      </Link>
+                    </p>
                     <p className="text-xs text-gray-500 mt-1 capitalize">{c.categoryId} circle</p>
                     <Link
-                      to="/classes"
+                      to={href}
                       className="absolute bottom-4 right-4 w-9 h-9 rounded-full bg-educture-orange text-white flex items-center justify-center shadow-md group-hover:scale-110 transition-transform"
+                      aria-label={`View ${c.title}`}
                     >
                       <ArrowUpRight className="w-4 h-4" />
                     </Link>
                   </div>
                 </article>
-              ))}
+                )
+              })}
             </div>
-          </div>
-        </section>
-
-        <section className="py-16 lg:py-24 bg-sky-100/80 gsap-reveal">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6">
-            <div className="text-center mb-12">
-              <p className="text-sky-600 text-[11px] font-bold uppercase tracking-[0.25em]">Skill classes</p>
-              <h2 className="font-display text-2xl sm:text-4xl text-[#1a1a1a] mt-2">
-                Live sessions &{' '}
-                <span className="font-script text-educture-orange text-3xl sm:text-4xl">plans</span>
-              </h2>
-              <p className="text-sm text-gray-600 mt-3 max-w-2xl mx-auto leading-relaxed">
-                {pricingEcosystemIntro}
-              </p>
-              <div className="flex flex-wrap justify-center gap-2 mt-5">
-                <Link
-                  to="/classes"
-                  className="rounded-full border border-orange-200 bg-white px-4 py-2 text-xs font-semibold text-gray-700 hover:border-educture-orange"
-                >
-                  Browse all classes
-                </Link>
-                <Link
-                  to="/counselling"
-                  className="rounded-full border border-orange-200 bg-white px-4 py-2 text-xs font-semibold text-gray-700 hover:border-educture-orange"
-                >
-                  Guidance — ₹{COUNSELLING_PRICE_INR}/{COUNSELLING_DURATION_LABEL}
-                </Link>
-              </div>
-            </div>
-            <PricingCards />
-            <p className="text-center mt-10">
-              <Link to="/pricing" className="text-sm font-semibold text-educture-orange hover:underline">
-                See all plans →
-              </Link>
-            </p>
           </div>
         </section>
 

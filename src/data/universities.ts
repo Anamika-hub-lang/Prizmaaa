@@ -183,6 +183,13 @@ const universityCatalog: Omit<University, 'image'>[] = [
   { id: 'om-sterling', name: 'Om Sterling Global University', shortName: 'Om Sterling', location: 'Hisar', state: 'Haryana', type: 'private' },
   { id: 'niilm-kaithal', name: 'NIILM University', shortName: 'NIILM Kaithal', location: 'Kaithal', state: 'Haryana', type: 'private' },
 
+  // —— Online & distance (search-friendly) ——
+  { id: 'gla-university', name: 'GLA University', shortName: 'GLA University', location: 'Mathura', state: 'Uttar Pradesh', type: 'private' },
+  { id: 'gla-university-online', name: 'GLA University Online', shortName: 'GLA Online', location: 'Online', state: 'Uttar Pradesh', type: 'private' },
+  { id: 'chandigarh-university', name: 'Chandigarh University', shortName: 'Chandigarh University', location: 'Mohali', state: 'Punjab', type: 'private' },
+  { id: 'chandigarh-university-online', name: 'Chandigarh University Online', shortName: 'CU Online', location: 'Online', state: 'Punjab', type: 'private' },
+  { id: 'amity-university-online', name: 'Amity University Online', shortName: 'Amity Online', location: 'Online', state: 'Uttar Pradesh', type: 'private' },
+
   // —— Haryana: Jat / aided colleges ——
   { id: 'jat-college-rohtak', name: "All India Jat Heroes' Memorial College", shortName: 'Jat College Rohtak', location: 'Rohtak', state: 'Haryana', type: 'state' },
   { id: 'crm-jat-hisar', name: 'Chhaju Ram Memorial Jat College', shortName: 'CRM Jat College Hisar', location: 'Hisar', state: 'Haryana', type: 'state' },

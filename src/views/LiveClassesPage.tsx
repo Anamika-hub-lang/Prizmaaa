@@ -1,3 +1,5 @@
+'use client'
+
 import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '@clerk/nextjs'
@@ -16,17 +18,27 @@ import { MentorAvatar } from '../components/ui/MentorAvatar'
 const ALL: 'all' = 'all'
 const AUTH_RETURN_KEY = 'educture_auth_return'
 
-export function LiveClassesPage() {
+export function LiveClassesPage({ initialClasses = [] }: { initialClasses?: Array<{
+  id: string
+  title: string
+  categoryId: ClassCategoryId
+  image: string
+  mentor: string
+  mentorImage: string
+  duration: string
+  sessions: string
+}> }) {
   const navigate = useNavigate()
   const { publishedClasses } = useMentorContent()
   const { isSignedIn } = useAuth()
   const [filter, setFilter] = useState<ClassCategoryId | typeof ALL>(ALL)
   const pricingLine = formatBrowsePricingSummary()
+  const catalog = publishedClasses.length > 0 ? publishedClasses : initialClasses
 
   const classes = useMemo(() => {
-    if (filter === ALL) return publishedClasses
-    return publishedClasses.filter((c) => c.categoryId === filter)
-  }, [publishedClasses, filter])
+    if (filter === ALL) return catalog
+    return catalog.filter((c) => c.categoryId === filter)
+  }, [catalog, filter])
 
   function handleEnroll(classId: string) {
     const next = `/student/class/${classId}`
@@ -96,10 +108,10 @@ export function LiveClassesPage() {
                     : 'border-orange-100 bg-white text-gray-600 hover:border-educture-orange/40'
                 }`}
               >
-                All ({publishedClasses.length})
+                All ({catalog.length})
               </button>
               {classCategories.map((cat) => {
-                const count = publishedClasses.filter((c) => c.categoryId === cat.id).length
+                const count = catalog.filter((c) => c.categoryId === cat.id).length
                 return (
                   <button
                     key={cat.id}
@@ -129,19 +141,23 @@ export function LiveClassesPage() {
                     className={`overflow-hidden rounded-2xl text-left ${tintedSurfaceKey(item.id)}`}
                   >
                     <div className="relative border-b-2 border-white/70">
-                      <img
-                        src={item.image}
-                        alt=""
-                        className="w-full h-40 sm:h-44 object-cover"
-                        loading="lazy"
-                      />
+                      <Link to={`/classes/${item.id}`}>
+                        <img
+                          src={item.image}
+                          alt={item.title}
+                          className="w-full h-40 sm:h-44 object-cover"
+                          loading="lazy"
+                        />
+                      </Link>
                     </div>
                     <div className="p-4 sm:p-5">
                       <p className="text-[10px] font-bold uppercase tracking-wide text-educture-orange">
                         {classCategories.find((c) => c.id === item.categoryId)?.title ?? item.categoryId}
                       </p>
                       <h2 className="font-bold text-[#1d1d1d] text-sm sm:text-base mt-1 leading-snug">
-                        {item.title}
+                        <Link to={`/classes/${item.id}`} className="hover:text-educture-orange">
+                          {item.title}
+                        </Link>
                       </h2>
                       <p className="text-xs text-gray-600 mt-1.5">
                         {item.duration} · {item.sessions}

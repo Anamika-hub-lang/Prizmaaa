@@ -1,3 +1,5 @@
+'use client'
+
 import { ArrowUpRight, Users } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { PageShell } from '../components/layout/PageShell'

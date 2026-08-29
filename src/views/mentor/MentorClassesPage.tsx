@@ -9,6 +9,8 @@ import { AppButton } from '../../components/ui/AppButton'
 import { tintedSurface, tintedSurfaceKey } from '../../components/ui/dashboardCardStyles'
 import { pickClassCoverImage, isGenericClassCover } from '../../lib/classCoverImages'
 import { resolveMentorImage } from '../../lib/mentorAvatar'
+import { ClassSharePanel } from '../../components/mentor/ClassSharePanel'
+import { ClassNotifyPanel } from '../../components/mentor/ClassNotifyPanel'
 
 type ClassFormState = {
   title: string
@@ -47,7 +49,8 @@ function classToForm(c: ManagedClass): ClassFormState {
 
 export function MentorClassesPage() {
   const { user } = useUser()
-  const { myClasses, addClass, updateClass, removeClass, categories } = useMentorContent()
+  const { myClasses, addClass, updateClass, removeClass, categories, isOwnerOfClass, refreshSharedClasses } =
+    useMentorContent()
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [form, setForm] = useState<ClassFormState>(emptyForm)
@@ -92,7 +95,7 @@ export function MentorClassesPage() {
       sessions: form.sessions.trim(),
       description: form.description.trim(),
       meetLink: 'https://meet.google.com/',
-      nextSessionLabel: 'Set in Meet tab',
+      nextSessionLabel: '',
       published: form.published,
     }
 
@@ -124,9 +127,8 @@ export function MentorClassesPage() {
   return (
     <>
       <MentorPageHeader
-        backTo="/teacher"
         title="Online classes"
-        subtitle="Upload, publish, and manage the live classes students can join."
+        subtitle="Upload, publish, and share live classes with a co-mentor when you need backup."
       />
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 text-left">
         <AppButton type="button" onClick={() => (showForm && !editingId ? resetForm() : openCreate())} className="mb-6">
@@ -270,6 +272,13 @@ export function MentorClassesPage() {
                       {c.published ? 'Published' : 'Hidden'}
                     </span>
                   </p>
+                  <ClassSharePanel
+                    classId={c.id}
+                    classTitle={c.title}
+                    isOwner={isOwnerOfClass(c.id)}
+                    onChanged={() => void refreshSharedClasses()}
+                  />
+                  <ClassNotifyPanel classId={c.id} classTitle={c.title} />
                   <div className="flex flex-wrap items-center gap-3 mt-3">
                     <button
                       type="button"
@@ -285,13 +294,15 @@ export function MentorClassesPage() {
                     >
                       {c.published ? 'Hide' : 'Publish'}
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => handleRemove(c)}
-                      className="text-xs text-red-500 font-semibold hover:underline"
-                    >
-                      Remove
-                    </button>
+                    {isOwnerOfClass(c.id) ? (
+                      <button
+                        type="button"
+                        onClick={() => handleRemove(c)}
+                        className="text-xs text-red-500 font-semibold hover:underline"
+                      >
+                        Remove
+                      </button>
+                    ) : null}
                   </div>
                 </div>
               </article>

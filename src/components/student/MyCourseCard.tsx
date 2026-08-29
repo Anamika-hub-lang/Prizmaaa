@@ -1,8 +1,6 @@
 import { Link } from 'react-router-dom'
 import { tintedSurfaceKey } from '../ui/dashboardCardStyles'
 import { Calendar, Video, ExternalLink, PlayCircle } from 'lucide-react'
-import { planTierLabel } from '../../lib/classEnrollmentPolicy'
-import { MentorAvatar } from '../ui/MentorAvatar'
 
 export type EnrolledCourse = {
   id: string
@@ -62,23 +60,12 @@ export function MyCourseCard({
 
       <div className="flex-1 p-5 sm:p-6 flex flex-col min-w-0">
         <p className="text-xs font-semibold text-educture-orange uppercase tracking-wide">{course.category}</p>
-        {course.billingStatus === 'trial' && course.trialDaysLeft != null && (
+        {course.billingStatus === 'trial' && course.trialDaysLeft != null ? (
           <p className="text-xs font-semibold text-sky-700 bg-sky-50 border border-sky-100 rounded-full px-3 py-1 mt-2 inline-block">
             Free trial · {course.trialDaysLeft} day(s) left
-            {course.paymentLabel ? ` · ${course.paymentLabel}` : ''}
           </p>
-        )}
-        {course.billingStatus === 'active' && (
-          <p className="text-xs font-semibold text-educture-orange bg-orange-50 border border-orange-100 rounded-full px-3 py-1 mt-2 inline-block">
-            {planTierLabel(course.planTier)} plan
-            {course.paymentLabel ? ` · ${course.paymentLabel}` : ''}
-          </p>
-        )}
+        ) : null}
         <h3 className="font-bold text-[#1d1d1d] text-base sm:text-lg leading-snug mt-1">{course.title}</h3>
-        <div className="flex items-center gap-2 mt-3">
-          <MentorAvatar src={course.mentorImage} name={course.mentor} size="sm" />
-          <span className="text-sm text-gray-600">{course.mentor}</span>
-        </div>
 
         {course.status === 'ongoing' && (
           <div className="mt-4">

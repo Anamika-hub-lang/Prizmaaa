@@ -34,13 +34,19 @@ export function classBelongsToMentor(
   item: ManagedClass,
   mentorClerkId: string,
   displayName: string,
+  sharedClassIds: ReadonlySet<string> = new Set(),
 ): boolean {
+  if (sharedClassIds.has(item.id)) return true
   if (item.mentorClerkId === mentorClerkId) return true
   if (item.mentorClerkId) return false
   const label = item.mentor.trim()
   if (!displayName) return true
   if (isLegacyPlaceholder(label)) return true
   return namesMatch(label, displayName)
+}
+
+export function isClassOwner(item: ManagedClass, mentorClerkId: string): boolean {
+  return Boolean(mentorClerkId) && item.mentorClerkId === mentorClerkId
 }
 
 export function freeCourseBelongsToMentor(

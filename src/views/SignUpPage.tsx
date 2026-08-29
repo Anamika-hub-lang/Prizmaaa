@@ -1,3 +1,5 @@
+'use client'
+
 import { Link, Navigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { BrandLogo, BRAND_NAME } from '../components/brand/BrandLogo'

@@ -56,8 +56,8 @@ export function StudentTrialPaymentPage() {
   return (
     <>
       <StudentPageHeader
-        title="Step 2 — Start Starter trial"
-        subtitle={`${cashfreeOn ? 'Verify via Cashfree' : 'Save payment method'} for ${item.title}. No full monthly charge for ${TRIAL_DAYS} days.`}
+        title="Start trial"
+        subtitle={item.title}
       />
       <main className="max-w-lg mx-auto px-4 sm:px-6 py-8">
         <CheckoutStepper current={2} path="trial" />
@@ -65,15 +65,7 @@ export function StudentTrialPaymentPage() {
         <div className={`${tintedSurfaceKey(item.id)} p-5 mb-6 text-left`}>
           <p className="text-xs font-bold uppercase text-sky-600">Starter plan</p>
           <p className="font-bold mt-1">{item.title}</p>
-          <p className="text-sm text-gray-600 mt-1">
-            {TRIAL_DAYS} days free · then pay ₹{monthly.toLocaleString('en-IN')}/month via Cashfree when you choose Growth
-          </p>
-          {cashfreeOn && (
-            <p className="text-xs text-gray-500 mt-2">
-              Cashfree ₹{TRIAL_VERIFY_INR} verification today to save your payment method. Full monthly billing after
-              trial unless you cancel from the dashboard.
-            </p>
-          )}
+          <p className="text-sm text-gray-600 mt-1">{TRIAL_DAYS} days free</p>
         </div>
 
         <div className={`${tintedSurface(1)} p-6`}>
@@ -84,12 +76,8 @@ export function StudentTrialPaymentPage() {
               <CashfreePayButton
                 classId={item.id}
                 purpose="trial"
-                label={`Verify with Cashfree (₹${TRIAL_VERIFY_INR}) & start trial`}
+                label={`Pay ₹${TRIAL_VERIFY_INR} & start trial`}
               />
-              <p className="text-xs text-gray-500 mt-4 leading-relaxed">
-                Secured by Cashfree. After success you return to PRIZMA and the class appears on your dashboard with a
-                trial badge.
-              </p>
             </>
           ) : (
             <>

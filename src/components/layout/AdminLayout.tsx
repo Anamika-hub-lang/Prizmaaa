@@ -2,9 +2,12 @@
 
 import {
   BookOpen,
+  Building2,
   CalendarCheck,
+  ClipboardList,
   FileSpreadsheet,
   GraduationCap,
+  IndianRupee,
   LayoutDashboard,
   Tags,
   UserPlus,
@@ -42,8 +45,12 @@ const adminNav: SidebarNavItem[] = [
     match: '/admin/counselling',
   },
   { to: '/admin/enrollments', icon: GraduationCap, label: 'Courses', match: '/admin/enrollments' },
+  { to: '/admin/pricing', icon: IndianRupee, label: 'Pricing', match: '/admin/pricing' },
   { to: '/admin/interviews', icon: BookOpen, label: 'Classes', match: '/admin/interviews' },
   { to: '/admin/mentors', icon: UserPlus, label: 'Mentors', match: '/admin/mentors' },
+  { to: '/admin/leads', icon: ClipboardList, label: 'University leads', match: '/admin/leads' },
+  { to: '/admin/partners', icon: Building2, label: 'Partners', match: '/admin/partners' },
+  { to: '/admin/commissions', icon: IndianRupee, label: 'Commissions', match: '/admin/commissions' },
 ]
 
 export function AdminLayout({ children }: { children: ReactNode }) {

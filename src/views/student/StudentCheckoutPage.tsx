@@ -13,11 +13,11 @@ import { CategoryPlanCards } from '../../components/pricing/CategoryPlanCards'
 import { ActiveEnrollmentBlock } from '../../components/checkout/ActiveEnrollmentBlock'
 import { getActiveEnrollmentForClass } from '../../lib/classEnrollmentPolicy'
 import {
-  categoryPricing,
   getPaymentAmount,
   getPaymentLabel,
   type PricingPaymentTier,
 } from '../../data/pricingPlans'
+import { useCategoryPricing } from '../../context/CategoryPricingContext'
 
 function isPaymentTier(value: string | null): value is PricingPaymentTier {
   return value === 'monthly' || value === 'three-month' || value === 'six-month'
@@ -27,6 +27,7 @@ export function StudentCheckoutPage() {
   const { classId } = useParams()
   const [searchParams] = useSearchParams()
   const { getClassById } = useMentorContent()
+  const { pricing: categoryPricing } = useCategoryPricing()
   const { enrollWithPaidPlan, enrollments } = useStudentEnrollments()
   const cashfreeOn = isCashfreeClientEnabled()
   const item = classId ? getClassById(classId) : undefined
@@ -88,10 +89,7 @@ export function StudentCheckoutPage() {
             />
           )}
 
-          <p className="text-center mt-8 text-sm text-gray-500">
-            All plans require payment upfront via Cashfree.
-          </p>
-          <p className="text-center mt-4">
+          <p className="text-center mt-8">
             <Link to={`/student/class/${item.id}`} className="text-sm text-gray-500 hover:text-educture-orange">
               ← Back to class details
             </Link>
@@ -133,8 +131,8 @@ export function StudentCheckoutPage() {
   return (
     <>
       <StudentPageHeader
-        title="Step 2 — Complete payment"
-        subtitle={`${planLabel} for ${item.title}. After success, this class appears on your dashboard.`}
+        title="Payment"
+        subtitle={item.title}
       />
       <main className="max-w-lg mx-auto px-4 sm:px-6 py-8">
         <CheckoutStepper current={2} path="paid" />
@@ -145,18 +143,9 @@ export function StudentCheckoutPage() {
             <p className="font-bold text-lg">{item.title}</p>
             <p className="text-sm text-gray-500 mt-1">{planLabel}</p>
             <p className="text-2xl font-bold text-educture-orange mt-4">₹{amount.toLocaleString('en-IN')}</p>
-            {tier === 'monthly' && (
-              <p className="text-xs text-gray-500 mt-1">1 month access · pay upfront</p>
-            )}
-            {tier === 'three-month' && (
-              <p className="text-xs text-gray-500 mt-1">One payment · 3 months of live classes</p>
-            )}
-            {tier === 'six-month' && (
-              <p className="text-xs text-gray-500 mt-1">One payment · 6 months of live classes</p>
-            )}
-            {cashfreeOn && (
-              <p className="text-xs text-sky-700 font-semibold mt-2">Secured by Cashfree Payments</p>
-            )}
+            {tier === 'monthly' && <p className="text-xs text-gray-500 mt-1">1 month</p>}
+            {tier === 'three-month' && <p className="text-xs text-gray-500 mt-1">3 months</p>}
+            {tier === 'six-month' && <p className="text-xs text-gray-500 mt-1">6 months</p>}
           </div>
         </div>
 
@@ -167,12 +156,8 @@ export function StudentCheckoutPage() {
                 classId={item.id}
                 purpose="paid"
                 planTier={tier}
-                label={`Pay ₹${amount.toLocaleString('en-IN')} with Cashfree`}
+                label={`Pay ₹${amount.toLocaleString('en-IN')}`}
               />
-              <p className="text-xs text-gray-500 mt-4 leading-relaxed">
-                You will be redirected to Cashfree checkout (UPI, cards, net banking). After payment, your class
-                unlocks on the dashboard.
-              </p>
             </>
           ) : (
             <>

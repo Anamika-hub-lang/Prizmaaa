@@ -1,12 +1,12 @@
 import { Link } from 'react-router-dom'
 import { Gem, Paperclip, Building2, ArrowUpRight } from 'lucide-react'
 import {
-  categoryPricing,
   formatInr,
   type PricingCategoryId,
   type PricingPaymentTier,
 } from '../../data/pricingPlans'
 import { planCardHint } from '../../data/paymentFlow'
+import { useCategoryPricing } from '../../context/CategoryPricingContext'
 
 const MARKETING_BROWSE_PATH = '/student/browse'
 
@@ -41,7 +41,8 @@ export function CategoryPlanCards({
   classId,
   onSelectPay,
 }: Props) {
-  const config = categoryPricing[categoryId]
+  const { pricing } = useCategoryPricing()
+  const config = pricing[categoryId]
   const images = categoryImages[categoryId]
 
   const tiers = [
@@ -184,9 +185,11 @@ export function CategoryPlanCards({
                   </li>
                 ))}
               </ul>
-              <p className="text-xs text-gray-500 mb-4 leading-relaxed border-t border-orange-50 pt-3">
-                {planCardHint(plan.key, mode)}
-              </p>
+              {planCardHint(plan.key, mode) ? (
+                <p className="text-xs text-gray-500 mb-4 leading-relaxed border-t border-orange-50 pt-3">
+                  {planCardHint(plan.key, mode)}
+                </p>
+              ) : null}
               {isCheckoutPayCard ? (
                 <button
                   type="button"

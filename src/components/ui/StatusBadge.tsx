@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 
-type StatusTone = 'pending' | 'approved' | 'rejected' | 'upcoming' | 'completed' | 'assigned' | 'unassigned' | 'neutral'
+export type StatusTone = 'pending' | 'approved' | 'rejected' | 'upcoming' | 'completed' | 'assigned' | 'unassigned' | 'neutral'
 
 const toneClass: Record<StatusTone, string> = {
   pending: 'bg-amber-100 border-amber-200 text-amber-900',

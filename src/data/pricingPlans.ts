@@ -20,7 +20,9 @@ export type CategoryPricing = {
   image: string
 }
 
-export const categoryPricing: Record<PricingCategoryId, CategoryPricing> = {
+export type CategoryPricingMap = Record<PricingCategoryId, CategoryPricing>
+
+export const defaultCategoryPricing: CategoryPricingMap = {
   skills: {
     title: 'Skills Sessions',
     monthlyInr: 999,
@@ -44,10 +46,51 @@ export const categoryPricing: Record<PricingCategoryId, CategoryPricing> = {
   },
 }
 
+/** Live admin-edited prices (set by CategoryPricingProvider). Falls back to defaults. */
+let liveCategoryPricing: CategoryPricingMap | null = null
+
+export function setLiveCategoryPricing(next: CategoryPricingMap | null) {
+  liveCategoryPricing = next
+}
+
+export function getLiveCategoryPricing(): CategoryPricingMap {
+  return liveCategoryPricing ?? defaultCategoryPricing
+}
+
+/**
+ * Prefer getLiveCategoryPricing() in React via useCategoryPricing().
+ * This alias keeps existing imports working and reads live prices when loaded.
+ */
+export const categoryPricing: CategoryPricingMap = new Proxy(defaultCategoryPricing, {
+  get(_target, prop: string | symbol) {
+    const live = getLiveCategoryPricing()
+    if (prop === 'skills' || prop === 'professional' || prop === 'academic') {
+      return live[prop]
+    }
+    return Reflect.get(live, prop)
+  },
+  ownKeys() {
+    return ['skills', 'professional', 'academic']
+  },
+  getOwnPropertyDescriptor(_target, prop) {
+    if (prop === 'skills' || prop === 'professional' || prop === 'academic') {
+      return {
+        configurable: true,
+        enumerable: true,
+        value: getLiveCategoryPricing()[prop],
+      }
+    }
+    return undefined
+  },
+}) as CategoryPricingMap
+
 export const pricingCategoryOrder: PricingCategoryId[] = ['skills', 'professional', 'academic']
 
-export function getPaymentAmount(selection: PricingPaymentSelection): number {
-  const p = categoryPricing[selection.categoryId]
+export function getPaymentAmount(
+  selection: PricingPaymentSelection,
+  pricing: CategoryPricingMap = getLiveCategoryPricing(),
+): number {
+  const p = pricing[selection.categoryId]
   switch (selection.tier) {
     case 'monthly':
       return p.monthlyInr
@@ -62,8 +105,11 @@ export function getPaymentAmount(selection: PricingPaymentSelection): number {
   }
 }
 
-export function getPaymentLabel(selection: PricingPaymentSelection): string {
-  const p = categoryPricing[selection.categoryId]
+export function getPaymentLabel(
+  selection: PricingPaymentSelection,
+  pricing: CategoryPricingMap = getLiveCategoryPricing(),
+): string {
+  const p = pricing[selection.categoryId]
   switch (selection.tier) {
     case 'monthly':
       return `${p.title} · 1 month`
@@ -83,30 +129,31 @@ export function formatInr(amount: number): string {
 }
 
 export function getCategoryMonthlyInr(categoryId: PricingCategoryId): number {
-  return categoryPricing[categoryId].monthlyInr
+  return getLiveCategoryPricing()[categoryId].monthlyInr
 }
 
 export function getCategoryThreeMonthInr(categoryId: PricingCategoryId): number {
-  return categoryPricing[categoryId].threeMonthInr
+  return getLiveCategoryPricing()[categoryId].threeMonthInr
 }
 
 export function getCategorySixMonthInr(categoryId: PricingCategoryId): number {
-  return categoryPricing[categoryId].sixMonthInr
+  return getLiveCategoryPricing()[categoryId].sixMonthInr
 }
 
 /** One line for browse cards: monthly + 3-month + 6-month bundle prices. */
 export function formatCategoryPlanPrices(categoryId: PricingCategoryId): string {
-  const p = categoryPricing[categoryId]
+  const p = getLiveCategoryPricing()[categoryId]
   return `${formatInr(p.monthlyInr)}/mo · ${formatInr(p.threeMonthInr)} / 3 mo · ${formatInr(p.sixMonthInr)} / 6 mo`
 }
 
 export function formatBrowsePricingSummary(): string {
+  const pricing = getLiveCategoryPricing()
   const labels: Record<PricingCategoryId, string> = {
     skills: 'Skills',
     professional: 'Professional',
     academic: 'Academic',
   }
   return pricingCategoryOrder
-    .map((id) => `${labels[id]} ${formatInr(categoryPricing[id].monthlyInr)}/mo`)
+    .map((id) => `${labels[id]} ${formatInr(pricing[id].monthlyInr)}/mo`)
     .join(' · ')
 }

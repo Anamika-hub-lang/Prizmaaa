@@ -1,3 +1,5 @@
+'use client'
+
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useUser } from '@clerk/nextjs'
@@ -7,6 +9,8 @@ import { MarketingFooter } from '../components/marketing/MarketingSections'
 import { UniversityReviewCard } from '../components/universities/UniversityReviewCard'
 import { UniversityImage } from '../components/universities/UniversityImage'
 import { StarRating, StarRatingInput } from '../components/universities/StarRating'
+import { UniversityLeadCtas } from '../components/universities/UniversityLeadCtas'
+import { programsForUniversity, courseOptionsForLead } from '../data/universityPrograms'
 import { universityById, universityTypeLabels } from '../data/universities'
 import {
   averageRating,
@@ -53,6 +57,7 @@ export function UniversityDetailPage() {
 
   const avg = averageRating(reviews)
   const breakdown = ratingBreakdown(reviews)
+  const programs = programsForUniversity(university)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -151,6 +156,31 @@ export function UniversityDetailPage() {
                 )}
               </div>
             </div>
+          </div>
+        </section>
+
+        <section className="bg-white border-b border-orange-100">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 grid md:grid-cols-3 gap-4">
+            <div className="rounded-2xl border-[3px] border-orange-100 p-4">
+              <p className="text-xs uppercase tracking-wide text-gray-400">Courses</p>
+              <p className="text-sm font-semibold text-[#1a1a1a] mt-1">{programs.courses.join(' · ')}</p>
+            </div>
+            <div className="rounded-2xl border-[3px] border-orange-100 p-4">
+              <p className="text-xs uppercase tracking-wide text-gray-400">Fees</p>
+              <p className="text-sm font-semibold text-[#1a1a1a] mt-1">{programs.feesLabel}</p>
+            </div>
+            <div className="rounded-2xl border-[3px] border-orange-100 p-4">
+              <p className="text-xs uppercase tracking-wide text-gray-400">Eligibility</p>
+              <p className="text-sm font-semibold text-[#1a1a1a] mt-1">{programs.eligibility}</p>
+            </div>
+          </div>
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 pb-8">
+            <UniversityLeadCtas
+              universityId={university.id}
+              universityName={university.name}
+              locationHint={`${university.location}, ${university.state}`}
+              courseOptions={courseOptionsForLead(university)}
+            />
           </div>
         </section>
 

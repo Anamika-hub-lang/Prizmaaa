@@ -1,3 +1,5 @@
+'use client'
+
 import { useEffect, useMemo, useState } from 'react'
 import { Link, Navigate, useParams, useSearchParams, useNavigate } from 'react-router-dom'
 import { useAuth, useUser } from '@clerk/nextjs'

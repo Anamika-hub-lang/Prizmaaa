@@ -1,3 +1,5 @@
+'use client'
+
 import { Link, useLocation } from 'react-router-dom'
 import { Menu, X } from 'lucide-react'
 import { BrandLogo } from '../brand/BrandLogo'
@@ -6,12 +8,12 @@ import { NavbarAuth } from '../auth/NavbarAuth'
 
 const links = [
   { to: '/', label: 'Home' },
+  { to: '/classes', label: 'Classes' },
   { to: '/colleges', label: 'Colleges' },
   { to: '/counselling', label: 'Guidance' },
   { to: '/ai', label: 'AI Tools' },
   { to: '/universities', label: 'Stories' },
   { to: '/about', label: 'About' },
-  { to: '/pricing', label: 'Plans' },
 ]
 
 export function MainNavbar() {

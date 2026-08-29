@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import {
-  categoryPricing,
   pricingCategoryOrder,
   formatInr,
   type PricingCategoryId,
 } from '../../data/pricingPlans'
 import { CategoryPlanCards } from '../pricing/CategoryPlanCards'
+import { useCategoryPricing } from '../../context/CategoryPricingContext'
 
 type Props = {
   layout?: 'tabs' | 'all'
@@ -13,6 +13,7 @@ type Props = {
 
 export function PricingCards({ layout = 'tabs' }: Props) {
   const [activeCategory, setActiveCategory] = useState<PricingCategoryId>('skills')
+  const { pricing: categoryPricing } = useCategoryPricing()
 
   if (layout === 'all') {
     return (

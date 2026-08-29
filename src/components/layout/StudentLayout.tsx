@@ -1,9 +1,12 @@
+'use client'
+
 import type { ReactNode } from 'react'
 import { useState } from 'react'
 import { Link } from '../../compat/react-router-dom'
 import { Menu, X } from 'lucide-react'
 import { CashfreePendingConfirm } from '../checkout/CashfreePendingConfirm'
 import { PortalUserAvatar } from './PortalUserAvatar'
+import { StudentNotificationBell } from '../student/StudentNotificationBell'
 import { StudentMobileNav, StudentSidebar, studentSidebarNav } from './StudentSidebar'
 
 const mobileNav = studentSidebarNav.slice(0, 4)
@@ -40,10 +43,14 @@ export function StudentLayout({ children }: { children: ReactNode }) {
           >
             {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
-          <PortalUserAvatar profilePath="/student/profile" />
+          <div className="flex items-center gap-2">
+            <StudentNotificationBell />
+            <PortalUserAvatar profilePath="/student/profile" />
+          </div>
         </header>
 
-        <div className="hidden md:flex items-center justify-end px-6 py-3 bg-white/80 border-b border-gray-100">
+        <div className="hidden md:flex items-center justify-end gap-3 px-6 py-3 bg-white/80 border-b border-gray-100">
+          <StudentNotificationBell />
           <PortalUserAvatar profilePath="/student/profile" />
         </div>
 

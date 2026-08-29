@@ -1,10 +1,11 @@
+'use client'
+
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowLeft, ArrowRight, Sparkles } from 'lucide-react'
 import { MainNavbar } from '../components/layout/MainNavbar'
 import { MarketingFooter } from '../components/marketing/MarketingSections'
 import { MatchResultCard } from '../components/colleges/MatchResultCard'
-import { CollegeGuidanceFlow } from '../components/colleges/CollegeGuidanceFlow'
 import { useColleges } from '../hooks/useColleges'
 import {
   defaultFinderPreferences,
@@ -102,28 +103,51 @@ export function CollegeFindPage() {
     <div className="min-h-screen flex flex-col bg-[#fdf8f0]">
       <MainNavbar />
 
-      <main className="flex-1 max-w-3xl mx-auto px-4 sm:px-6 py-8 w-full">
-        <Link to="/colleges" className="text-sm text-gray-500 hover:text-educture-orange inline-flex items-center gap-1">
+      <main
+        className={`flex-1 w-full py-8 sm:py-10 ${
+          step === 'results'
+            ? 'max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-10'
+            : 'max-w-3xl mx-auto px-4 sm:px-6'
+        }`}
+      >
+        <Link
+          to="/colleges"
+          className="text-sm text-gray-500 hover:text-educture-orange inline-flex items-center gap-1"
+        >
           <ArrowLeft className="w-4 h-4" />
           All colleges
         </Link>
 
         <div className="mt-6 flex items-center gap-3">
-          <Sparkles className="w-6 h-6 text-educture-orange" />
+          <Sparkles className="w-6 h-6 text-educture-orange shrink-0" />
           <div>
-            <h1 className="font-display text-2xl sm:text-3xl text-[#1a1a1a]">Find your match</h1>
-            <p className="text-sm text-gray-500">Step {stepIndex + 1} of {STEPS.length}</p>
+            <h1 className="font-display text-2xl sm:text-3xl text-[#1a1a1a]">
+              {step === 'results' ? 'Colleges for you' : 'Find your match'}
+            </h1>
+            <p className="text-sm text-gray-500 mt-0.5">
+              {step === 'results'
+                ? "Tap I'm interested — a counsellor will contact you."
+                : `Step ${stepIndex + 1} of ${STEPS.length}`}
+            </p>
           </div>
         </div>
 
-        <div className="mt-4 h-2 rounded-full bg-orange-100 overflow-hidden">
-          <div
-            className="h-full bg-educture-orange transition-all duration-300"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
+        {step !== 'results' && (
+          <div className="mt-4 h-2 rounded-full bg-orange-100 overflow-hidden">
+            <div
+              className="h-full bg-educture-orange transition-all duration-300"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+        )}
 
-        <div className="mt-8 rounded-2xl border-[3px] border-orange-100 bg-white p-6 sm:p-8">
+        <div
+          className={
+            step === 'results'
+              ? 'mt-8 sm:mt-10'
+              : 'mt-8 rounded-2xl border-[3px] border-orange-100 bg-white p-6 sm:p-8'
+          }
+        >
           {loading && step !== 'results' ? (
             <p className="text-gray-500">Loading colleges…</p>
           ) : (
@@ -364,14 +388,12 @@ export function CollegeFindPage() {
 
               {step === 'results' && (
                 <div>
-                  <h2 className="font-display text-xl text-[#1a1a1a]">Colleges for you</h2>
-                  <p className="text-sm text-gray-500 mt-1">
-                    You choose from these — open any college to see the path in and how PRIZMA guides you next.
-                  </p>
                   {matches.length === 0 ? (
-                    <p className="text-gray-600 mt-8">No colleges found. Try going back and broadening filters.</p>
+                    <p className="text-gray-600">
+                      No colleges found. Try going back and broadening filters.
+                    </p>
                   ) : (
-                    <div className="mt-6 space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 lg:gap-6">
                       {matches.map((m, index) => (
                         <MatchResultCard key={m.college.slug} match={m} rank={index + 1} />
                       ))}
@@ -406,7 +428,7 @@ export function CollegeFindPage() {
           )}
 
           {step === 'results' && (
-            <div className="mt-8 flex gap-4">
+            <div className="mt-10 flex flex-wrap items-center gap-x-8 gap-y-3 border-t border-orange-100/80 pt-6">
               <button
                 type="button"
                 onClick={() => setStepIndex(0)}
@@ -414,18 +436,15 @@ export function CollegeFindPage() {
               >
                 Start over
               </button>
-              <Link to="/colleges" className="text-sm text-gray-500 hover:text-educture-orange">
+              <Link
+                to="/colleges"
+                className="text-sm font-semibold text-gray-500 hover:text-educture-orange"
+              >
                 Browse all colleges
               </Link>
             </div>
           )}
         </div>
-
-        {step === 'results' && matches.length > 0 && (
-          <div className="mt-8">
-            <CollegeGuidanceFlow variant="compact" />
-          </div>
-        )}
       </main>
 
       <MarketingFooter />

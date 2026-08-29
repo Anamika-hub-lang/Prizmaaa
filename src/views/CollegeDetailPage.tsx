@@ -1,3 +1,5 @@
+'use client'
+
 import { Link, useParams } from 'react-router-dom'
 import { ArrowLeft, ExternalLink, MapPin } from 'lucide-react'
 import { MainNavbar } from '../components/layout/MainNavbar'
@@ -6,13 +8,15 @@ import { useColleges } from '../hooks/useColleges'
 import { collegeTypeLabel, formatFees, formatPackage } from '../lib/colleges/repository'
 import { AdmissionPathTrail } from '../components/colleges/AdmissionPathTrail'
 import { CollegeGuidanceFlow } from '../components/colleges/CollegeGuidanceFlow'
+import { UniversityLeadCtas } from '../components/universities/UniversityLeadCtas'
+import type { College } from '../lib/colleges/types'
 
-export function CollegeDetailPage() {
+export function CollegeDetailPage({ initialCollege }: { initialCollege?: College }) {
   const { slug = '' } = useParams()
   const { colleges, loading } = useColleges()
-  const college = colleges.find((c) => c.slug === slug)
+  const college = colleges.find((c) => c.slug === slug) ?? initialCollege
 
-  if (loading) {
+  if (loading && !college) {
     return (
       <div className="min-h-screen flex flex-col bg-[#fdf8f0]">
         <MainNavbar />
@@ -60,23 +64,23 @@ export function CollegeDetailPage() {
               {college.city}, {college.state}
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
+              <UniversityLeadCtas
+                universityId={college.slug}
+                universityName={college.name}
+                locationHint={`${college.city}, ${college.state}`}
+                courseOptions={[...college.courses, 'Undecided / need counselling']}
+              />
               <Link
                 to="#guidance"
-                className="px-5 py-2 rounded-full bg-educture-orange text-white text-sm font-semibold"
+                className="px-5 py-2.5 rounded-full border border-white/20 text-sm font-semibold hover:border-educture-orange"
               >
-                Get guided on next steps
-              </Link>
-              <Link
-                to="/colleges/find"
-                className="px-5 py-2 rounded-full border border-white/20 text-sm font-semibold hover:border-educture-orange"
-              >
-                Find similar
+                See path
               </Link>
               <a
                 href={college.website}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-5 py-2 rounded-full border border-white/20 text-sm font-semibold"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-white/20 text-sm font-semibold"
               >
                 <ExternalLink className="w-4 h-4" />
                 Official website
