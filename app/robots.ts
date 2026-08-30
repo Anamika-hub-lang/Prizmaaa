@@ -22,6 +22,7 @@ export default function robots(): MetadataRoute.Robots {
           '/auth',
           '/api',
           '/counselling/payment',
+          '/pay',
           '/library',
           '/blog',
           '/colleges/compare',

@@ -31,7 +31,7 @@ import {
   type CounsellingTimeSlot,
 } from '../data/counsellingSchedule'
 import { createCounsellingOrder } from '../lib/counsellingPayment'
-import { openCashfreeCheckout, isCashfreeClientEnabled } from '../lib/cashfreeCheckout'
+import { openCashfreeCheckout, isCashfreeClientEnabled, useResumeCashfreeCheckout } from '../lib/cashfreeCheckout'
 import { stashCashfreeOrderId } from '../lib/cashfreeOrderId'
 import { sanitizeIndianPhoneInput, validateIndianPhone } from '../lib/phoneValidation'
 import { counsellingGroupHeadings } from '../lib/seo'
@@ -70,6 +70,7 @@ export function CounsellingCategoryPage() {
 
   const cashfreeOn = isCashfreeClientEnabled()
   const timeSlots = useMemo(() => availableSlotsForDate(scheduledDate), [scheduledDate])
+  useResumeCashfreeCheckout()
 
   useEffect(() => {
     if (preselected) setTopicId(preselected)

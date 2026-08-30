@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth, useUser } from '@clerk/nextjs'
 import { createCashfreeOrder } from '../../lib/cashfreeApi'
-import { openCashfreeCheckout } from '../../lib/cashfreeCheckout'
+import { openCashfreeCheckout, useResumeCashfreeCheckout } from '../../lib/cashfreeCheckout'
 import { stashCashfreeOrderId } from '../../lib/cashfreeOrderId'
 import { fetchUserProfile } from '../../lib/saveProfileDetails'
 import { sanitizeIndianPhoneInput, toIndianMobileDigits, validateIndianPhone } from '../../lib/phoneValidation'
@@ -16,6 +16,7 @@ type Props = {
 }
 
 export function CashfreePayButton({ classId, purpose, planTier, label, className }: Props) {
+  useResumeCashfreeCheckout()
   const { getToken } = useAuth()
   const { user } = useUser()
   const [loading, setLoading] = useState(false)

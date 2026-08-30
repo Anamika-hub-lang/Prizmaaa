@@ -6,7 +6,10 @@ export type CashfreeServerConfig = {
 
 import { normalizeCashfreeOrderNoteRaw } from './cashfreeOrderNote'
 
-/** Stable production origin Cashfree must whitelist (not per-deploy *.vercel.app URLs). */
+/**
+ * Origin Cashfree has already approved for JS checkout + return_url.
+ * Keep this on vercel.app until merchant.cashfree.com whitelists https://prizma.guru.
+ */
 export const CASHFREE_PRODUCTION_ORIGIN = 'https://prizma-guru.vercel.app'
 
 export function parseCashfreeMode(

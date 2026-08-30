@@ -97,31 +97,15 @@ function requestOrigin(req: IncomingMessage): string {
   return `${proto}://${host}`
 }
 
-function isEphemeralVercelOrigin(origin: string): boolean {
-  try {
-    const host = new URL(origin).hostname
-    return (
-      host.endsWith('.vercel.app') &&
-      (host.includes('anamika-hub-langs-projects') || /-[a-z0-9]{8,}-/i.test(host))
-    )
-  } catch {
-    return false
-  }
-}
-
-/** Cashfree return_url must be the whitelisted https origin, not a per-deploy Vercel URL. */
+/** Cashfree return_url must be the merchant-whitelisted https origin. */
 function paymentReturnBase(env: DevApiEnv, req: IncomingMessage): string {
   const origin = requestOrigin(req)
   const configured = env.publicAppUrl?.trim().replace(/\/$/, '')
   const mode = parseCashfreeMode(env.cashfreeMode, env.cashfreeClientSecret)
-  const canonical =
-    configured?.startsWith('https://') ? configured : CASHFREE_PRODUCTION_ORIGIN
 
   if (mode === 'production') {
-    if (isEphemeralVercelOrigin(origin) || !origin.startsWith('https://')) {
-      return canonical
-    }
-    return origin
+    // JS checkout + return_url stay on vercel.app until prizma.guru is approved in Cashfree.
+    return CASHFREE_PRODUCTION_ORIGIN
   }
 
   if (origin.startsWith('https://')) {

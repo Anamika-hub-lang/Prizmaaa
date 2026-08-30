@@ -36,11 +36,20 @@ const HOSTS_TO_CANONICAL = new Set([
   'education-six-amber.vercel.app',
 ])
 
+function isCashfreeCheckoutPath(pathname: string, search: URLSearchParams): boolean {
+  if (pathname.startsWith('/pay/cashfree')) return true
+  return search.get('cf_host') === '1'
+}
+
 function canonicalHostRedirect(req: { headers: Headers; nextUrl: URL }): NextResponse | null {
   const host = req.headers.get('host')?.split(':')[0]?.toLowerCase() ?? ''
   if (!HOSTS_TO_CANONICAL.has(host)) return null
-  // Keep /api on *.vercel.app so Cashfree/Clerk callbacks are not 308'd.
-  if (host.endsWith('.vercel.app') && req.nextUrl.pathname.startsWith('/api')) {
+  // Keep API + Cashfree checkout on the Vercel host Cashfree has already approved.
+  if (
+    host.endsWith('.vercel.app') &&
+    (req.nextUrl.pathname.startsWith('/api') ||
+      isCashfreeCheckoutPath(req.nextUrl.pathname, req.nextUrl.searchParams))
+  ) {
     return null
   }
   const dest = new URL(req.nextUrl.pathname + req.nextUrl.search, `https://${CANONICAL_HOST}`)
