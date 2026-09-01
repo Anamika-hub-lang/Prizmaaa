@@ -40,7 +40,7 @@ export function AdminDashboardPage() {
       const [users, bookings, enrollments, uploadsRes, mentors, leads, partners] = await Promise.all([
         fetchAdminUsers(getToken).catch(() => []),
         fetchAdminCounsellingBookings(getToken).catch(() => []),
-        fetchAdminEnrollments(getToken).catch(() => []),
+        fetchAdminEnrollments(getToken).catch(() => ({ enrollments: [], classes: [] })),
         fetchAdminUploads(getToken).catch(() => ({ uploads: [] })),
         fetchMentorApplications(getToken).catch(() => []),
         fetchStaffLeads(getToken, false).catch(() => []),
@@ -57,7 +57,7 @@ export function AdminDashboardPage() {
         {
           to: '/admin/enrollments',
           label: 'Enrollments',
-          value: enrollments.length,
+          value: enrollments.enrollments.length,
           icon: GraduationCap,
           tint: 1,
         },

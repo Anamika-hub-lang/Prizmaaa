@@ -1,7 +1,14 @@
 /** Sync Clerk user → Supabase profiles via dev/server API (no service key in browser). */
-export async function syncUserProfile(getToken: () => Promise<string | null>): Promise<void> {
+export type ProfileSyncResult = {
+  ok: boolean
+  roleUpdated: boolean
+}
+
+export async function syncUserProfile(
+  getToken: () => Promise<string | null>,
+): Promise<ProfileSyncResult> {
   const token = await getToken()
-  if (!token) return
+  if (!token) return { ok: false, roleUpdated: false }
 
   const res = await fetch('/api/user/profile-sync', {
     method: 'POST',
@@ -10,14 +17,16 @@ export async function syncUserProfile(getToken: () => Promise<string | null>): P
     },
   })
 
-  if (!res.ok) {
-    let message = 'Profile sync failed'
-    try {
-      const data = (await res.json()) as { error?: string }
-      if (data.error) message = data.error
-    } catch {
-      /* ignore */
-    }
-    throw new Error(message)
+  let data: { error?: string; roleUpdated?: boolean } = {}
+  try {
+    data = (await res.json()) as typeof data
+  } catch {
+    /* ignore */
   }
+
+  if (!res.ok) {
+    throw new Error(data.error ?? 'Profile sync failed')
+  }
+
+  return { ok: true, roleUpdated: Boolean(data.roleUpdated) }
 }

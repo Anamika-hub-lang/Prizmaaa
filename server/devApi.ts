@@ -44,6 +44,11 @@ import { tryHandleCategoryPricingApi } from './categoryPricingApi'
 import { counsellingPriceInr } from './lib/counsellingPricing'
 import { isMentorEmailAllowed, isMissingTableError, normalizeMentorEmail } from './lib/mentorAllowlist'
 import {
+  applyOfflineEnrollmentGrants,
+  findClerkUserByEmail,
+  type OfflinePlanTier,
+} from './lib/offlineEnrollment'
+import {
   generateGeminiParts,
   generateGeminiText,
   parseOpportunityMatchPayload,
@@ -191,6 +196,19 @@ function clerkPrimaryEmail(user: {
 }): string {
   const primary = user.emailAddresses.find((item) => item.id === user.primaryEmailAddressId)
   return (primary?.emailAddress ?? user.emailAddresses[0]?.emailAddress ?? '').trim()
+}
+
+async function applyOfflineGrantsForClerkId(
+  clerkId: string,
+  env: DevApiEnv,
+  supabase: NonNullable<ReturnType<typeof requireSupabaseAdmin>>,
+) {
+  if (!env.clerkSecretKey) {
+    return { matched: false, roleUpdated: false, enrolledClassIds: [] as string[], classMissing: false }
+  }
+  const clerk = createClerkClient({ secretKey: env.clerkSecretKey })
+  const user = await clerk.users.getUser(clerkId)
+  return applyOfflineEnrollmentGrants({ supabase, clerk, user })
 }
 
 async function requireAdminApi(
@@ -394,6 +412,15 @@ async function handleSetRole(
     await syncClerkUserIdToSupabase(userId, env)
   } catch (err) {
     console.error('[dev-api] profile sync after role', err)
+  }
+
+  const supabaseAfterRole = requireSupabaseAdmin(env)
+  if (supabaseAfterRole) {
+    try {
+      await applyOfflineGrantsForClerkId(userId, env, supabaseAfterRole)
+    } catch (err) {
+      console.warn('[dev-api] offline enrollment after role', err)
+    }
   }
 
   json(res, 200, { ok: true })
@@ -613,6 +640,12 @@ async function handleGetEnrollments(
     return
   }
 
+  try {
+    await applyOfflineGrantsForClerkId(userId, env, supabase)
+  } catch (err) {
+    console.warn('[dev-api] offline enrollment before list', err)
+  }
+
   const { data, error } = await supabase
     .from('student_enrollments')
     .select('*')
@@ -661,7 +694,14 @@ async function handleProfileSync(
 
   try {
     await syncClerkUserIdToSupabase(userId, env)
-    json(res, 200, { ok: true })
+    let roleUpdated = false
+    try {
+      const applied = await applyOfflineGrantsForClerkId(userId, env, supabase)
+      roleUpdated = applied.roleUpdated
+    } catch (err) {
+      console.warn('[dev-api] offline enrollment during profile-sync', err)
+    }
+    json(res, 200, { ok: true, roleUpdated })
   } catch (err) {
     console.error('[dev-api] profile-sync', err)
     json(res, 500, { error: 'Could not sync profile' })
@@ -705,6 +745,13 @@ async function handleClerkWebhook(
       const data = evt.data as unknown as Record<string, unknown>
       const row = profileRowFromClerkWebhook(data)
       await upsertProfile(supabase, row)
+      if (row.clerk_id) {
+        try {
+          await applyOfflineGrantsForClerkId(row.clerk_id, env, supabase)
+        } catch (err) {
+          console.warn('[dev-api] offline enrollment from clerk webhook', err)
+        }
+      }
     }
 
     json(res, 200, { ok: true })
@@ -1488,14 +1535,99 @@ async function handleAdminEnrollments(
   res: ServerResponse,
   env: DevApiEnv,
 ): Promise<void> {
+  const ctx = await requireAdminApi(req, res, env)
+  if (!ctx) return
+  const { supabase } = ctx
+
+  if (req.method === 'POST') {
+    if (!env.clerkSecretKey) {
+      json(res, 503, { error: 'Server missing CLERK_SECRET_KEY.' })
+      return
+    }
+    let body: { email?: string; classId?: string; classTitleQuery?: string; planTier?: string }
+    try {
+      body = (await readBodyJson(req)) as typeof body
+    } catch {
+      json(res, 400, { error: 'Invalid JSON' })
+      return
+    }
+    const email = normalizeMentorEmail(body.email ?? '')
+    if (!email || !email.includes('@')) {
+      json(res, 400, { error: 'A valid student email is required' })
+      return
+    }
+    const classId = String(body.classId ?? '').trim()
+    const classTitleQuery =
+      String(body.classTitleQuery ?? '').trim() || (classId ? undefined : 'full stack')
+    const planRaw = String(body.planTier ?? 'monthly').trim()
+    const planTier: OfflinePlanTier =
+      planRaw === 'three-month' || planRaw === 'six-month' ? planRaw : 'monthly'
+
+    let user = await findClerkUserByEmail(env.clerkSecretKey, email)
+    if (!user) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('clerk_id')
+        .ilike('email', email)
+        .maybeSingle()
+      if (profile?.clerk_id) {
+        const clerkLookup = createClerkClient({ secretKey: env.clerkSecretKey })
+        try {
+          user = await clerkLookup.users.getUser(String(profile.clerk_id))
+        } catch {
+          user = null
+        }
+      }
+    }
+    if (!user) {
+      json(res, 404, {
+        error:
+          'This email has not signed up yet. Ask them to sign in with this Gmail — student dashboard and Full Stack will unlock automatically.',
+      })
+      return
+    }
+
+    const clerk = createClerkClient({ secretKey: env.clerkSecretKey })
+    try {
+      const result = await applyOfflineEnrollmentGrants({
+        supabase,
+        clerk,
+        user,
+        extraGrants: [
+          {
+            email,
+            classId: classId || undefined,
+            classTitleQuery,
+            planTier,
+            paymentLabel: 'Offline / personal payment',
+          },
+        ],
+      })
+      if (result.classMissing) {
+        json(res, 404, {
+          error: classId
+            ? 'That class was not found.'
+            : 'No live class matching Full Stack was found. Pick the class from the list.',
+        })
+        return
+      }
+      json(res, 200, {
+        ok: true,
+        roleUpdated: result.roleUpdated,
+        enrolledClassIds: result.enrolledClassIds,
+      })
+    } catch (err) {
+      console.error('[dev-api] admin offline enroll', err)
+      json(res, 500, { error: err instanceof Error ? err.message : 'Could not grant enrollment' })
+    }
+    return
+  }
+
   if (req.method !== 'GET') {
     res.statusCode = 405
     res.end()
     return
   }
-  const ctx = await requireAdminApi(req, res, env)
-  if (!ctx) return
-  const { supabase } = ctx
 
   const { data: rows, error } = await supabase
     .from('student_enrollments')
@@ -1573,7 +1705,21 @@ async function handleAdminEnrollments(
     }
   })
 
-  json(res, 200, { enrollments })
+  const { data: allClasses } = await supabase
+    .from('classes')
+    .select('id, title, category_id, published')
+    .order('title', { ascending: true })
+    .limit(200)
+
+  json(res, 200, {
+    enrollments,
+    classes: (allClasses ?? []).map((item) => ({
+      id: String(item.id),
+      title: String(item.title ?? item.id),
+      categoryId: String(item.category_id ?? ''),
+      published: Boolean(item.published),
+    })),
+  })
 }
 
 async function handleAdminMentorAllowlist(

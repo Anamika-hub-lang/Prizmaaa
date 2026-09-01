@@ -28,9 +28,15 @@ export function UserProfileSync() {
     if (lastKeyRef.current === syncKey) return
     lastKeyRef.current = syncKey
 
-    void syncUserProfile(getToken).catch((err) => {
-      console.warn('[UserProfileSync]', err)
-    })
+    void syncUserProfile(getToken)
+      .then(async (result) => {
+        if (result.roleUpdated) {
+          await user.reload()
+        }
+      })
+      .catch((err) => {
+        console.warn('[UserProfileSync]', err)
+      })
   }, [
     isSignedIn,
     getToken,

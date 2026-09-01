@@ -112,3 +112,54 @@ export async function upsertEnrollmentAfterPayment(
     if (error) throw enrollmentWriteError(error)
   }
 }
+
+/** Idempotent paid enrollment for offline / personal payments (does not throw if already active). */
+export async function ensurePaidClassEnrollment(
+  supabase: SupabaseClient,
+  input: {
+    clerkId: string
+    classId: string
+    planTier: 'monthly' | 'three-month' | 'six-month'
+    paymentLabel: string
+  },
+): Promise<'created' | 'already_active'> {
+  const { data: existing, error: existingError } = await supabase
+    .from('student_enrollments')
+    .select('id, progress, billing_status, status, plan_tier')
+    .eq('clerk_id', input.clerkId)
+    .eq('class_id', input.classId)
+    .maybeSingle()
+
+  if (existingError) throw enrollmentWriteError(existingError)
+
+  if (
+    existing &&
+    isActiveEnrollmentRow(existing) &&
+    existing.billing_status === 'active' &&
+    existing.plan_tier !== 'trial'
+  ) {
+    return 'already_active'
+  }
+
+  const row = {
+    clerk_id: input.clerkId,
+    class_id: input.classId,
+    kind: 'online',
+    progress: existing?.progress ?? 0,
+    status: 'ongoing',
+    plan_tier: input.planTier,
+    billing_status: 'active',
+    trial_ends_at: null,
+    payment_method_type: 'upi',
+    payment_method_label: input.paymentLabel,
+    auto_renew: false,
+  }
+  if (existing?.id) {
+    const { error } = await supabase.from('student_enrollments').update(row).eq('id', existing.id)
+    if (error) throw enrollmentWriteError(error)
+  } else {
+    const { error } = await supabase.from('student_enrollments').insert(row)
+    if (error) throw enrollmentWriteError(error)
+  }
+  return 'created'
+}

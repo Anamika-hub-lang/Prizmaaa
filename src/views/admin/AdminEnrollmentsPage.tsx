@@ -2,20 +2,33 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useAuth } from '@clerk/nextjs'
 import { BookOpen, RefreshCw, Search } from 'lucide-react'
 import { dashboardCardBorder } from '../../components/ui/dashboardCardStyles'
-import { fetchAdminEnrollments, type AdminClassEnrollment } from '../../lib/adminEnrollments'
+import {
+  fetchAdminEnrollments,
+  grantOfflineEnrollment,
+  type AdminClassEnrollment,
+  type AdminEnrollmentClassOption,
+} from '../../lib/adminEnrollments'
 
 export function AdminEnrollmentsPage() {
   const { getToken } = useAuth()
   const [query, setQuery] = useState('')
   const [rows, setRows] = useState<AdminClassEnrollment[]>([])
+  const [classes, setClasses] = useState<AdminEnrollmentClassOption[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [grantEmail, setGrantEmail] = useState('')
+  const [grantClassId, setGrantClassId] = useState('')
+  const [granting, setGranting] = useState(false)
+  const [grantMessage, setGrantMessage] = useState<string | null>(null)
+  const [grantError, setGrantError] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
     setError(null)
     try {
-      setRows(await fetchAdminEnrollments(getToken))
+      const data = await fetchAdminEnrollments(getToken)
+      setRows(data.enrollments)
+      setClasses(data.classes)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not load enrollments')
       setRows([])
@@ -39,8 +52,71 @@ export function AdminEnrollmentsPage() {
     )
   }, [rows, query])
 
+  async function handleGrant(e: React.FormEvent) {
+    e.preventDefault()
+    setGranting(true)
+    setGrantError(null)
+    setGrantMessage(null)
+    try {
+      await grantOfflineEnrollment(getToken, {
+        email: grantEmail,
+        classId: grantClassId || undefined,
+        classTitleQuery: grantClassId ? undefined : 'full stack',
+      })
+      setGrantMessage(`Enrolled ${grantEmail.trim()} as a student. Class updates will reach them like other students.`)
+      setGrantEmail('')
+      await load()
+    } catch (err) {
+      setGrantError(err instanceof Error ? err.message : 'Could not grant enrollment')
+    } finally {
+      setGranting(false)
+    }
+  }
+
   return (
     <div className="space-y-5">
+        <form
+          onSubmit={(e) => void handleGrant(e)}
+          className={`${dashboardCardBorder} border-orange-100 bg-white rounded-2xl p-4 space-y-3`}
+        >
+          <p className="text-sm font-semibold text-[#1d1d1d]">Offline / personal payment</p>
+          <p className="text-xs text-gray-500">
+            Grant student dashboard + class access when payment was taken outside the website.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <input
+              type="email"
+              required
+              value={grantEmail}
+              onChange={(e) => setGrantEmail(e.target.value)}
+              placeholder="student@email.com"
+              className="flex-1 rounded-xl border border-orange-100 px-3 py-2 text-sm outline-none focus:border-educture-orange"
+            />
+            <select
+              value={grantClassId}
+              onChange={(e) => setGrantClassId(e.target.value)}
+              className="sm:w-64 rounded-xl border border-orange-100 px-3 py-2 text-sm outline-none bg-white"
+            >
+              <option value="">Match Full Stack by name</option>
+              {classes.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.title}
+                  {item.published ? '' : ' (draft)'}
+                </option>
+              ))}
+            </select>
+            <button
+              type="submit"
+              disabled={granting}
+              className="rounded-full bg-educture-orange px-4 py-2 text-xs font-semibold text-white disabled:opacity-50"
+            >
+              {granting ? 'Granting…' : 'Grant access'}
+            </button>
+          </div>
+          {grantMessage && <p className="text-sm text-emerald-700">{grantMessage}</p>}
+          {grantError && <p className="text-sm text-rose-700">{grantError}</p>}
+        </form>
+
         <div className="flex items-center gap-2">
           <label className={`${dashboardCardBorder} border-orange-100 bg-white rounded-2xl px-4 py-3 flex items-center gap-3 flex-1`}>
             <Search className="w-4 h-4 text-gray-400 shrink-0" />
