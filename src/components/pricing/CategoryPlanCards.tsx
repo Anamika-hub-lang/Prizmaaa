@@ -24,57 +24,43 @@ import { useCategoryPricing } from '../../context/CategoryPricingContext'
 
 const MARKETING_BROWSE_PATH = '/student/browse'
 
-const categoryImages: Record<PricingCategoryId, string[]> = {
-  skills: [
-    'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=600&q=80',
-    'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=600&q=80',
-    'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=600&q=80',
-  ],
-  professional: [
-    'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600&q=80',
-    'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=600&q=80',
-    'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=600&q=80',
-  ],
-  academic: [
-    'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=600&q=80',
-    'https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=600&q=80',
-    'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=600&q=80',
-  ],
-}
-
 const tierMeta: Record<
   PricingPaymentTier,
   {
-    imageTag: string
-    imageTagClass: string
+    badge: string
+    badgeClass: string
     icon: LucideIcon
     iconBg: string
     iconColor: string
+    cardBg: string
     priceNote: string
   }
 > = {
   monthly: {
-    imageTag: 'Crash / Revision',
-    imageTagClass: 'bg-sky-600',
+    badge: 'Crash / Revision',
+    badgeClass: 'bg-sky-100 text-sky-800 border-sky-200',
     icon: Paperclip,
     iconBg: 'bg-sky-100 border-sky-200',
     iconColor: 'text-sky-600',
+    cardBg: 'bg-sky-50/80',
     priceNote: 'per month',
   },
   'three-month': {
-    imageTag: 'Learn & Build',
-    imageTagClass: 'bg-educture-orange',
+    badge: 'Learn & Build',
+    badgeClass: 'bg-orange-100 text-educture-orange border-orange-200',
     icon: Gem,
     iconBg: 'bg-[#fff4eb] border-orange-200',
     iconColor: 'text-educture-orange',
+    cardBg: 'bg-[#fff9f3]',
     priceNote: '3 months',
   },
   'six-month': {
-    imageTag: 'Master & Apply',
-    imageTagClass: 'bg-violet-600',
+    badge: 'Master & Apply',
+    badgeClass: 'bg-violet-100 text-violet-800 border-violet-200',
     icon: Building2,
     iconBg: 'bg-violet-50 border-violet-200',
     iconColor: 'text-violet-700',
+    cardBg: 'bg-violet-50/70',
     priceNote: '6 months',
   },
 }
@@ -248,15 +234,14 @@ export function CategoryPlanCards({
 }: Props) {
   const { pricing } = useCategoryPricing()
   const config = pricing[categoryId]
-  const images = categoryImages[categoryId]
   const [openTier, setOpenTier] = useState<PricingPaymentTier | null>(null)
 
   const openBlueprint = openTier ? coursePlanBlueprints[openTier] : null
 
   return (
     <>
-      <div className="grid md:grid-cols-3 gap-6 lg:gap-8 items-stretch pricing-card-grid">
-        {coursePlanBlueprintOrder.map((tier, index) => {
+      <div className="grid md:grid-cols-3 gap-5 lg:gap-6 items-stretch pricing-card-grid">
+        {coursePlanBlueprintOrder.map((tier) => {
           const blueprint = coursePlanBlueprints[tier]
           const meta = tierMeta[tier]
           const Icon = meta.icon
@@ -275,67 +260,59 @@ export function CategoryPlanCards({
                   setOpenTier(tier)
                 }
               }}
-              className="pricing-card gsap-card-in group rounded-3xl overflow-hidden text-left flex flex-col border-[3px] border-orange-100 bg-white shadow-[0_12px_32px_rgba(15,23,42,0.06)] transition-all duration-300 hover:-translate-y-2 hover:border-educture-orange hover:bg-[#fff4eb] hover:scale-[1.02] lg:hover:scale-[1.04] hover:shadow-[0_20px_48px_rgba(243,112,33,0.18)] cursor-pointer"
+              className={`pricing-card gsap-card-in group rounded-3xl text-left flex flex-col border-2 border-orange-100/90 ${meta.cardBg} p-6 sm:p-7 shadow-[0_8px_28px_rgba(15,23,42,0.05)] transition-all duration-300 hover:-translate-y-1.5 hover:border-educture-orange hover:shadow-[0_16px_40px_rgba(243,112,33,0.14)] cursor-pointer`}
             >
-              <div className="relative h-36 overflow-hidden border-b-[3px] border-orange-50 group-hover:border-educture-orange/30 transition-colors">
-                <img
-                  src={images[index] ?? images[0]}
-                  alt=""
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
-                <span
-                  className={`absolute top-3 left-3 text-[10px] font-bold uppercase tracking-widest text-white px-3 py-1 rounded-full shadow-sm ${meta.imageTagClass}`}
+              <div className="flex items-start justify-between gap-3 mb-5">
+                <div
+                  className={`w-11 h-11 shrink-0 rounded-2xl border-2 flex items-center justify-center ${meta.iconBg}`}
                 >
-                  {meta.imageTag}
+                  <Icon className={`w-5 h-5 ${meta.iconColor}`} />
+                </div>
+                <span
+                  className={`text-[10px] font-bold uppercase tracking-[0.14em] px-2.5 py-1 rounded-full border ${meta.badgeClass}`}
+                >
+                  {meta.badge}
                 </span>
               </div>
-              <div className="p-6 sm:p-7 flex flex-col flex-1">
-                <div className="flex items-center gap-3 sm:gap-4 mb-4">
-                  <div
-                    className={`w-12 h-12 shrink-0 rounded-2xl border-[3px] flex items-center justify-center transition-transform group-hover:scale-110 ${meta.iconBg}`}
-                  >
-                    <Icon className={`w-5 h-5 ${meta.iconColor}`} />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="font-display text-xl sm:text-2xl text-[#1a1a1a] leading-tight">
-                      {blueprint.name}
-                    </p>
-                    <p className="text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.16em] text-educture-orange mt-1">
-                      {blueprint.type}
-                    </p>
-                  </div>
-                </div>
-                <p className="font-display text-4xl sm:text-[2.75rem] text-[#1a1a1a] leading-none">
-                  {price}
-                </p>
-                <p className="text-xs font-semibold text-educture-orange mt-1">{meta.priceNote}</p>
-                <p className="text-sm text-gray-600 mt-3 mb-4 leading-relaxed line-clamp-3">
-                  {blueprint.motive}
-                </p>
-                <p className="text-[11px] font-semibold text-gray-500 mb-2">
-                  {blueprint.depthLabel} · {blueprint.mainPurpose}
-                </p>
-                <ul className="space-y-2 mb-5 flex-1">
-                  {blueprint.cardHighlights.map((f) => (
-                    <li key={f} className="flex items-center gap-2 text-sm text-gray-700">
-                      <span className="w-1.5 h-1.5 rounded-full bg-educture-orange shrink-0" />
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setOpenTier(tier)
-                  }}
-                  className="inline-flex w-full items-center justify-center gap-2 py-3.5 rounded-full text-sm font-semibold transition-all border-[3px] border-sky-200 text-[#1a1a1a] bg-white group-hover:bg-educture-orange group-hover:text-white group-hover:border-educture-orange group-hover:shadow-[0_10px_28px_rgba(243,112,33,0.4)]"
-                >
-                  {isCheckout ? 'See what you’ll learn' : 'See plan syllabus'}
-                  <ArrowUpRight className="w-4 h-4" />
-                </button>
-              </div>
+
+              <p className="font-display text-xl sm:text-2xl text-[#1a1a1a] leading-tight">
+                {blueprint.name}
+              </p>
+              <p className="text-[11px] font-semibold text-gray-500 mt-1.5">{blueprint.type}</p>
+
+              <p className="font-display text-3xl sm:text-4xl text-[#1a1a1a] leading-none mt-5">
+                {price}
+              </p>
+              <p className="text-xs font-semibold text-educture-orange mt-1">{meta.priceNote}</p>
+
+              <p className="text-sm text-gray-600 mt-4 leading-relaxed line-clamp-3">
+                {blueprint.motive}
+              </p>
+
+              <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-gray-400 mt-4 mb-2">
+                {blueprint.depthLabel} · {blueprint.mainPurpose}
+              </p>
+
+              <ul className="space-y-2 mb-6 flex-1">
+                {blueprint.cardHighlights.map((f) => (
+                  <li key={f} className="flex items-start gap-2 text-sm text-gray-700">
+                    <Check className="w-4 h-4 text-educture-orange shrink-0 mt-0.5" />
+                    <span>{f}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setOpenTier(tier)
+                }}
+                className="inline-flex w-full items-center justify-center gap-2 py-3 rounded-full text-sm font-semibold transition-all border-2 border-orange-200/80 bg-white text-[#1a1a1a] group-hover:bg-educture-orange group-hover:text-white group-hover:border-educture-orange"
+              >
+                {isCheckout ? 'See what you’ll learn' : 'See plan syllabus'}
+                <ArrowUpRight className="w-4 h-4" />
+              </button>
             </article>
           )
         })}

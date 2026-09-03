@@ -3,6 +3,11 @@ import { StudentPageHeader } from '../components/layout/StudentLayout'
 import { tintedSurfaceKey } from '../components/ui/dashboardCardStyles'
 import { useMentorContent } from '../context/MentorContentContext'
 import { useStudentEnrollments } from '../hooks/useStudentEnrollments'
+import {
+  formatSessionLabel,
+  isSessionUpcomingOrLive,
+  parseSessionInstant,
+} from '../lib/sessionSchedule'
 
 type CalendarEvent = {
   id: string
@@ -25,13 +30,16 @@ export function StudentCalendarPage() {
       const cls = classes.find((c) => c.id === en.classId)
       if (!cls) continue
       const label = cls.nextSessionLabel?.trim()
-      if (!label) continue
+      if (!label || !isSessionUpcomingOrLive(label)) continue
+      const at = parseSessionInstant(label)
       list.push({
         id: `live-${en.id}`,
-        day: '—',
-        month: 'Live',
+        day: at ? String(at.getDate()) : '—',
+        month: at
+          ? at.toLocaleString('en-IN', { month: 'short' })
+          : 'Live',
         title: cls.title,
-        time: label,
+        time: formatSessionLabel(label),
         type: 'Google Meet',
       })
     }

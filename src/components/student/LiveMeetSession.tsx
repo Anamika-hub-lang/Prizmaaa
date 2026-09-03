@@ -21,12 +21,20 @@ import {
   type MeetSessionState,
 } from '../../lib/classAttendanceApi'
 import { ENROLLMENTS_REFRESH_EVENT } from '../../lib/enrollmentRefresh'
+import { markSessionJoined } from '../../lib/sessionSchedule'
 
 type LiveMeetContextValue = {
   activeSession: MeetSessionState | null
   lastProgress: AttendanceProgress | null
   startingClassId: string | null
-  joinMeet: (input: { classId: string; meetLink?: string; classTitle?: string }) => Promise<void>
+  /** Bumps when a meet is joined so dashboards can hide that session. */
+  joinEpoch: number
+  joinMeet: (input: {
+    classId: string
+    meetLink?: string
+    classTitle?: string
+    sessionLabel?: string
+  }) => Promise<void>
   dismiss: () => void
 }
 
@@ -47,6 +55,7 @@ export function LiveMeetSessionProvider({ children }: { children: ReactNode }) {
   const [startingClassId, setStartingClassId] = useState<string | null>(null)
   const [bannerMessage, setBannerMessage] = useState<string | null>(null)
   const [dismissed, setDismissed] = useState(false)
+  const [joinEpoch, setJoinEpoch] = useState(0)
   const heartbeatBusy = useRef(false)
 
   useEffect(() => {
@@ -99,9 +108,18 @@ export function LiveMeetSessionProvider({ children }: { children: ReactNode }) {
   }, [activeSession?.id, activeSession?.completed, getToken])
 
   const joinMeet = useCallback(
-    async (input: { classId: string; meetLink?: string; classTitle?: string }) => {
+    async (input: {
+      classId: string
+      meetLink?: string
+      classTitle?: string
+      sessionLabel?: string
+    }) => {
       const link = input.meetLink?.trim() || 'https://meet.google.com/'
       window.open(link, '_blank', 'noopener,noreferrer')
+      if (input.sessionLabel?.trim()) {
+        markSessionJoined(input.classId, input.sessionLabel)
+        setJoinEpoch((n) => n + 1)
+      }
       setStartingClassId(input.classId)
       setBannerMessage(null)
       setDismissed(false)
@@ -138,8 +156,8 @@ export function LiveMeetSessionProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const value = useMemo(
-    () => ({ activeSession, lastProgress, startingClassId, joinMeet, dismiss }),
-    [activeSession, lastProgress, startingClassId, joinMeet, dismiss],
+    () => ({ activeSession, lastProgress, startingClassId, joinEpoch, joinMeet, dismiss }),
+    [activeSession, lastProgress, startingClassId, joinEpoch, joinMeet, dismiss],
   )
 
   const showPanel = !dismissed && (activeSession || bannerMessage)

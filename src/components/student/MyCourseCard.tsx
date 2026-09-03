@@ -13,6 +13,8 @@ export type EnrolledCourse = {
   progress: number
   status: 'ongoing' | 'completed' | 'draft'
   nextSession?: string
+  /** Raw schedule label (ISO) used to mark join / hide banner. */
+  nextSessionRaw?: string
   category: string
   type: 'online' | 'free'
   billingStatus?: 'trial' | 'active' | 'cancelled' | null
@@ -83,14 +85,10 @@ export function MyCourseCard({
                 style={{ width: `${course.progress}%` }}
               />
             </div>
-            {course.status === 'completed' || course.progress >= 100 ? (
+            {(course.status === 'completed' || course.progress >= 100) && (
               <p className="mt-2 text-xs font-semibold text-emerald-700 inline-flex items-center gap-1">
                 <Award className="w-3.5 h-3.5" />
                 Certificate unlocked
-              </p>
-            ) : (
-              <p className="mt-1.5 text-[11px] text-gray-500">
-                Attend live Meet (~40 min) each session to fill progress.
               </p>
             )}
           </div>
@@ -113,6 +111,7 @@ export function MyCourseCard({
                   classId: course.id,
                   meetLink,
                   classTitle: course.title,
+                  sessionLabel: course.nextSessionRaw ?? course.nextSession,
                 })
               }
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-educture-orange text-white text-sm font-semibold hover:bg-educture-orange-dark transition-colors disabled:opacity-60"

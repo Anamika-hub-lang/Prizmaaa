@@ -13,13 +13,14 @@ import { CounsellingBookingsPanel } from '../components/student/CounsellingBooki
 import { enrollmentToEnrolledCourse, daysSinceFirstEnrollment } from '../lib/enrolledCourses'
 import { isActiveClassEnrollment } from '../lib/classEnrollmentPolicy'
 import { useLiveMeetSession } from '../components/student/LiveMeetSession'
+import { formatSessionLabel, pickNextLiveSession, shouldShowNextSession } from '../lib/sessionSchedule'
 
 export function StudentDashboard() {
   const [searchParams] = useSearchParams()
   const [activeFilter, setActiveFilter] = useState('all')
   const { assignments, classes, freeCourses } = useMentorContent()
   const { enrollments, refresh } = useStudentEnrollments()
-  const { joinMeet, startingClassId } = useLiveMeetSession()
+  const { joinMeet, startingClassId, joinEpoch } = useLiveMeetSession()
   const {
     bookings: counsellingBookings,
     loading: counsellingLoading,
@@ -72,7 +73,10 @@ export function StudentDashboard() {
   const filtered =
     activeFilter === 'all' ? myCourses : myCourses.filter((c) => c.status === activeFilter)
 
-  const nextLive = myCourses.find((c) => c.status === 'ongoing' && c.type === 'online' && c.nextSession)
+  const nextLive = useMemo(
+    () => pickNextLiveSession(myCourses),
+    [myCourses, joinEpoch],
+  )
 
   const hasCounselling =
     counsellingBooked || counsellingBookings.length > 0 || counsellingLoading || counsellingError
@@ -95,7 +99,7 @@ export function StudentDashboard() {
             <p className="font-semibold text-gray-900 mt-1 truncate">{nextLive.title}</p>
             <p className="text-sm text-gray-500 mt-1 flex items-center gap-1.5">
               <Clock className="w-4 h-4 shrink-0" />
-              {nextLive.nextSession}
+              {nextLive.nextSessionDisplay}
             </p>
           </div>
           <button
@@ -106,6 +110,7 @@ export function StudentDashboard() {
                 classId: nextLive.id,
                 meetLink: meetForCourse(nextLive.id),
                 classTitle: nextLive.title,
+                sessionLabel: nextLive.nextSession,
               })
             }
             className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-educture-orange text-white text-sm font-semibold hover:bg-educture-orange-dark transition-colors shrink-0 disabled:opacity-60"
@@ -170,7 +175,18 @@ export function StudentDashboard() {
             </div>
           ) : (
             filtered.map((c) => (
-              <MyCourseCard key={c.enrollmentId} course={c} meetLink={meetForCourse(c.id)} />
+              <MyCourseCard
+                key={c.enrollmentId}
+                course={{
+                  ...c,
+                  nextSession:
+                    c.nextSession && shouldShowNextSession(c.id, c.nextSession)
+                      ? formatSessionLabel(c.nextSession)
+                      : undefined,
+                  nextSessionRaw: c.nextSession,
+                }}
+                meetLink={meetForCourse(c.id)}
+              />
             ))
           )}
         </div>

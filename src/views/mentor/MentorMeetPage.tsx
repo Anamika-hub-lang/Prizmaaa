@@ -7,6 +7,7 @@ import { useMentorContent } from '../../context/MentorContentContext'
 import { MentorPageHeader } from '../../components/layout/TeacherLayout'
 import { AppButton } from '../../components/ui/AppButton'
 import { createClassNotification } from '../../lib/classNotificationsApi'
+import { formatSessionLabel } from '../../lib/sessionSchedule'
 
 function toDatetimeLocalValue(label: string): string {
   if (!label || label === 'Set in Meet tab') return ''
@@ -15,18 +16,6 @@ function toDatetimeLocalValue(label: string): string {
   const d = new Date(parsed)
   const pad = (n: number) => String(n).padStart(2, '0')
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
-}
-
-function formatSessionLabel(datetimeLocal: string): string {
-  const d = new Date(datetimeLocal)
-  if (Number.isNaN(d.getTime())) return datetimeLocal.trim()
-  return d.toLocaleString('en-IN', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-  })
 }
 
 function isScheduledLabel(label: string): boolean {
@@ -78,8 +67,14 @@ export function MentorMeetPage() {
       setError('Pick the session date and time.')
       return
     }
-    const label = formatSessionLabel(sessionAt)
-    setMeetForClass(selectedId, link, label)
+    const when = new Date(sessionAt)
+    if (Number.isNaN(when.getTime())) {
+      setError('Pick a valid session date and time.')
+      return
+    }
+    const iso = when.toISOString()
+    const label = formatSessionLabel(when)
+    setMeetForClass(selectedId, link, iso)
     setSaved(true)
     setError(null)
     void createClassNotification(getToken, {
@@ -185,7 +180,7 @@ export function MentorMeetPage() {
                 >
                   <p className="font-semibold text-sm text-[#1d1d1d]">{c.title}</p>
                   <p className="mt-1 text-sm text-gray-600">
-                    {scheduled ? c.nextSessionLabel : 'Not scheduled yet'}
+                    {scheduled ? formatSessionLabel(c.nextSessionLabel) : 'Not scheduled yet'}
                   </p>
                   <p className="mt-1 text-xs text-gray-400 flex items-center gap-1 truncate">
                     <Video className="w-3.5 h-3.5 shrink-0" />
