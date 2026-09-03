@@ -3,7 +3,7 @@
 
 insert into public.mentor_allowlist (email, note)
 values (
-  'anu99sgt@gmail.com',
+  'anusgt99@gmail.com',
   'Primary mentor — created original courses'
 )
 on conflict (email) do update

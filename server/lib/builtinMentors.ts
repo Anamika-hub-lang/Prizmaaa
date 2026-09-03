@@ -40,12 +40,12 @@ export type BuiltinMentorGrant = {
  */
 export const BUILTIN_MENTOR_GRANTS: BuiltinMentorGrant[] = [
   {
-    email: 'anu99sgt@gmail.com',
+    email: 'anusgt99@gmail.com',
     note: 'Primary mentor — created original courses',
     reclaimOrphanedContent: true,
   },
   {
-    email: 'anu99sgt',
+    email: 'anusgt99',
     note: 'Primary mentor (any domain)',
     reclaimOrphanedContent: true,
   },
@@ -166,7 +166,7 @@ export async function ensureBuiltinMentorAccess(input: {
     return { matched: false, roleUpdated: false, claimedContent: 0 }
   }
 
-  const allowlistEmail = email.includes('@') ? email : 'anu99sgt@gmail.com'
+  const allowlistEmail = email.includes('@') ? email : 'anusgt99@gmail.com'
 
   try {
     const { error } = await input.supabase.from('mentor_allowlist').upsert(
