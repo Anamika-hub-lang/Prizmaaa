@@ -9,6 +9,7 @@ import { ActiveEnrollmentBlock } from '../../components/checkout/ActiveEnrollmen
 import { MentorAvatar } from '../../components/ui/MentorAvatar'
 import { getCategoryById } from '../../data/classCatalog'
 import { useLiveMeetSession } from '../../components/student/LiveMeetSession'
+import { StudentTeachingPlanPanel } from '../../components/student/StudentTeachingPlanPanel'
 import { isRealGoogleMeetLink } from '../../lib/meetLink'
 import { formatSessionLabel } from '../../lib/sessionSchedule'
 
@@ -136,6 +137,10 @@ export function StudentClassDetailPage() {
             </p>
           )}
           <ActiveEnrollmentBlock enrollment={activeEnrollment} />
+          <StudentTeachingPlanPanel
+            classId={item.id}
+            preferredTier={activeEnrollment.planTier}
+          />
         </div>
       ) : (
         <div className="flex flex-wrap items-center gap-4">
