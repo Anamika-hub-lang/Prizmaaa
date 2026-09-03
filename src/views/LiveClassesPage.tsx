@@ -13,7 +13,6 @@ import {
   type ClassCategoryId,
 } from '../data/classCatalog'
 import { tintedSurfaceKey } from '../components/ui/dashboardCardStyles'
-import { MentorAvatar } from '../components/ui/MentorAvatar'
 import { FaqSection } from '../components/seo/FaqSection'
 import { SeoCoverImage } from '../components/seo/SeoCoverImage'
 import { classesFaqs } from '../data/seoFaqs'
@@ -186,8 +185,7 @@ export function LiveClassesPage({ initialClasses = [] }: { initialClasses?: Arra
                       <p className="text-xs text-gray-600 mt-1.5">
                         {item.duration} · {item.sessions}
                       </p>
-                      <p className="text-xs text-educture-orange font-semibold mt-1.5 truncate flex items-center gap-2">
-                        <MentorAvatar src={item.mentorImage} name={item.mentor} size="sm" />
+                      <p className="text-xs text-educture-orange font-semibold mt-1.5 truncate">
                         {item.mentor}
                       </p>
                       <button

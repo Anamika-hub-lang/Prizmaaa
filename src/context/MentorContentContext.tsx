@@ -12,7 +12,7 @@ import {
 } from 'react'
 import { useUser, useAuth } from '@clerk/nextjs'
 import { getUserRole } from '../lib/userRole'
-import { resolveMentorImage } from '../lib/mentorAvatar'
+import { resolveMentorImage, isClerkHostedImage } from '../lib/mentorAvatar'
 import {
   classCategories,
   formatBrowsePricingSummary,
@@ -385,26 +385,23 @@ export function MentorContentProvider({ children }: { children: ReactNode }) {
   const myPublishedClasses = useMemo(() => myClasses.filter((c) => c.published), [myClasses])
 
   const syncedPhotoRef = useRef<string | null>(null)
-  const mentorPhoto = user?.hasImage ? user.imageUrl?.trim() ?? '' : ''
 
+  // Strip Clerk letter-avatars (e.g. purple “A”) saved on classes — never show email initials.
   useEffect(() => {
     if (loading || usingLocalData) return
-    if (getUserRole(user) !== 'teacher' || !mentorClerkId || !mentorPhoto) return
-    const key = `${mentorClerkId}:${mentorPhoto}`
-    const stale = myClasses.filter((c) => c.mentorImage !== mentorPhoto)
-    if (stale.length === 0) {
-      syncedPhotoRef.current = key
-      return
-    }
+    if (getUserRole(user) !== 'teacher' || !mentorClerkId) return
+    const stale = myClasses.filter((c) => isClerkHostedImage(c.mentorImage))
+    if (stale.length === 0) return
+    const key = `clear-clerk:${mentorClerkId}:${stale.map((c) => c.id).join(',')}`
     if (syncedPhotoRef.current === key) return
     syncedPhotoRef.current = key
     for (const c of stale) {
       setClasses((prev) =>
-        prev.map((row) => (row.id === c.id ? { ...row, mentorImage: mentorPhoto } : row)),
+        prev.map((row) => (row.id === c.id ? { ...row, mentorImage: '' } : row)),
       )
-      void updateClassRow(c.id, { mentorImage: mentorPhoto })
+      void updateClassRow(c.id, { mentorImage: '' })
     }
-  }, [loading, usingLocalData, user, mentorClerkId, mentorPhoto, myClasses])
+  }, [loading, usingLocalData, user, mentorClerkId, myClasses])
 
   const value = useMemo(
     () => ({

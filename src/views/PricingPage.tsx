@@ -61,8 +61,8 @@ export function PricingPage() {
             <p className="text-sky-600 text-[11px] font-bold uppercase tracking-[0.2em]">Learn together plans</p>
             <h2 className="font-display text-2xl sm:text-3xl text-[#1a1a1a] mt-2">Skills, Professional & Academic</h2>
             <p className="text-sm text-gray-600 mt-2">
-              Monthly, 3-month, or 6-month plans per track. Join, pick a peer session, pay at checkout (Cashfree) —
-              then track progress in your student space.
+              1-month crash/revision, 3-month learn &amp; build, or 6-month professional track. Click a
+              plan to see exactly what will be taught — then join and pay at checkout.
             </p>
           </div>
           <PricingCards layout="all" />
