@@ -65,6 +65,23 @@ function titleMatchesQuery(title: string, query: string): boolean {
   return normalizedTitle.replace(/\s+/g, '').includes(normalizedQuery.replace(/\s+/g, ''))
 }
 
+function isRealGoogleMeetLink(link?: string | null): boolean {
+  const href = (link ?? '').trim()
+  if (!href) return false
+  try {
+    const u = new URL(href)
+    if (!/^meet\.google\.com$/i.test(u.hostname)) return false
+    return u.pathname.replace(/\/+$/, '').length > 1
+  } catch {
+    return false
+  }
+}
+
+function hasScheduledSession(label?: string | null): boolean {
+  const text = (label ?? '').trim()
+  return Boolean(text) && text !== 'Set in Meet tab'
+}
+
 function grantsForEmail(
   email: string,
   extra: OfflineEnrollmentGrant[] = [],
@@ -98,13 +115,25 @@ export async function resolveClassForGrant(
 
   const { data, error } = await supabase
     .from('classes')
-    .select('id, title, category_id, published, created_at')
+    .select('id, title, category_id, published, created_at, meet_link, next_session_label')
   if (error || !data?.length) return null
 
   const matches = data.filter((row) => titleMatchesQuery(String(row.title ?? ''), query))
   if (matches.length === 0) return null
 
+  // Prefer the live mentor class students actually join (real Meet + schedule).
   matches.sort((a, b) => {
+    const meet =
+      Number(isRealGoogleMeetLink(String(b.meet_link ?? ''))) -
+      Number(isRealGoogleMeetLink(String(a.meet_link ?? '')))
+    if (meet !== 0) return meet
+    const scheduled =
+      Number(hasScheduledSession(String(b.next_session_label ?? ''))) -
+      Number(hasScheduledSession(String(a.next_session_label ?? '')))
+    if (scheduled !== 0) return scheduled
+    const aWhen = Date.parse(String(a.next_session_label ?? '')) || 0
+    const bWhen = Date.parse(String(b.next_session_label ?? '')) || 0
+    if (bWhen !== aWhen) return bWhen - aWhen
     const published = Number(Boolean(b.published)) - Number(Boolean(a.published))
     if (published !== 0) return published
     const professional =
@@ -177,6 +206,31 @@ export async function applyOfflineEnrollmentGrants(input: {
     })
     if (result === 'created' || result === 'already_active') {
       enrolledClassIds.push(resolved.id)
+    }
+
+    // Also enroll into every other title-matching class that already has a real Meet link,
+    // so offline students land on the same live room mentors schedule.
+    const query = grant.classTitleQuery?.trim()
+    if (query && !grant.classId?.trim()) {
+      const { data: allClasses } = await input.supabase
+        .from('classes')
+        .select('id, title, meet_link, published')
+      for (const row of allClasses ?? []) {
+        const id = String(row.id)
+        if (id === resolved.id) continue
+        if (!row.published) continue
+        if (!titleMatchesQuery(String(row.title ?? ''), query)) continue
+        if (!isRealGoogleMeetLink(String(row.meet_link ?? ''))) continue
+        const extra = await ensurePaidClassEnrollment(input.supabase, {
+          clerkId: input.user.id,
+          classId: id,
+          planTier: grant.planTier ?? 'monthly',
+          paymentLabel: grant.paymentLabel ?? 'Offline / personal payment',
+        })
+        if (extra === 'created' || extra === 'already_active') {
+          enrolledClassIds.push(id)
+        }
+      }
     }
   }
 

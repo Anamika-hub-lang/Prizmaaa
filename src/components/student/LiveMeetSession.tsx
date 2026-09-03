@@ -21,6 +21,7 @@ import {
   type MeetSessionState,
 } from '../../lib/classAttendanceApi'
 import { ENROLLMENTS_REFRESH_EVENT } from '../../lib/enrollmentRefresh'
+import { isRealGoogleMeetLink, normalizeMeetLink } from '../../lib/meetLink'
 import { markSessionJoined } from '../../lib/sessionSchedule'
 
 type LiveMeetContextValue = {
@@ -114,8 +115,8 @@ export function LiveMeetSessionProvider({ children }: { children: ReactNode }) {
       classTitle?: string
       sessionLabel?: string
     }) => {
-      const link = input.meetLink?.trim() || 'https://meet.google.com/'
-      window.open(link, '_blank', 'noopener,noreferrer')
+      // Open immediately so popup blockers don't swallow the mentor Meet room.
+      const popup = window.open('about:blank', '_blank')
       if (input.sessionLabel?.trim()) {
         markSessionJoined(input.classId, input.sessionLabel)
         setJoinEpoch((n) => n + 1)
@@ -123,8 +124,32 @@ export function LiveMeetSessionProvider({ children }: { children: ReactNode }) {
       setStartingClassId(input.classId)
       setBannerMessage(null)
       setDismissed(false)
+
+      const fallbackClientLink = normalizeMeetLink(input.meetLink)
+      let link = fallbackClientLink
+
       try {
         const result = await startMeetSession(getToken, input.classId)
+        const serverLink =
+          normalizeMeetLink(result.meetLink) ??
+          normalizeMeetLink(result.session?.meetLink) ??
+          null
+        link = serverLink ?? fallbackClientLink
+
+        if (!link) {
+          if (popup && !popup.closed) popup.close()
+          setBannerMessage(
+            'Mentor has not saved a Google Meet link yet. Ask them to paste it in Schedule / Meet.',
+          )
+          return
+        }
+
+        if (popup && !popup.closed) {
+          popup.location.href = link
+        } else {
+          window.open(link, '_blank', 'noopener,noreferrer')
+        }
+
         if (result.alreadyCredited) {
           setBannerMessage(result.message ?? 'Today’s attendance is already marked.')
           if (result.progress) {
@@ -137,11 +162,17 @@ export function LiveMeetSessionProvider({ children }: { children: ReactNode }) {
         if (result.session) {
           setActiveSession({
             ...result.session,
-            classTitle: input.classTitle ?? result.session.classTitle,
+            classTitle: input.classTitle ?? result.classTitle ?? result.session.classTitle,
             meetLink: link,
           })
         }
       } catch (err) {
+        if (fallbackClientLink) {
+          if (popup && !popup.closed) popup.location.href = fallbackClientLink
+          else window.open(fallbackClientLink, '_blank', 'noopener,noreferrer')
+        } else if (popup && !popup.closed) {
+          popup.close()
+        }
         setBannerMessage(err instanceof Error ? err.message : 'Could not start attendance timer')
       } finally {
         setStartingClassId(null)
@@ -216,7 +247,7 @@ export function LiveMeetSessionProvider({ children }: { children: ReactNode }) {
                   Keep this tab open while you are on Google Meet. After 40 minutes, progress fills
                   for today’s class.
                 </p>
-                {activeSession.meetLink ? (
+                {isRealGoogleMeetLink(activeSession.meetLink) ? (
                   <a
                     href={activeSession.meetLink}
                     target="_blank"

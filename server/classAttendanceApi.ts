@@ -118,6 +118,34 @@ async function requireActiveEnrollment(
   return { ok: true, enrollmentId: String(data.id) }
 }
 
+function isRealGoogleMeetLink(link?: string | null): boolean {
+  const href = (link ?? '').trim()
+  if (!href) return false
+  try {
+    const u = new URL(href)
+    if (!/^meet\.google\.com$/i.test(u.hostname)) return false
+    return u.pathname.replace(/\/+$/, '').length > 1
+  } catch {
+    return false
+  }
+}
+
+async function fetchClassMeetInfo(
+  supabase: SupabaseClient,
+  classId: string,
+): Promise<{ classTitle: string; meetLink: string }> {
+  const { data } = await supabase
+    .from('classes')
+    .select('title, meet_link')
+    .eq('id', classId)
+    .maybeSingle()
+  const raw = String(data?.meet_link ?? '').trim()
+  return {
+    classTitle: String(data?.title ?? 'Class'),
+    meetLink: isRealGoogleMeetLink(raw) ? raw : '',
+  }
+}
+
 export async function recalculateEnrollmentProgress(
   supabase: SupabaseClient,
   clerkId: string,
@@ -230,6 +258,7 @@ async function handleStudentStart(
     return
   }
 
+  const meetInfo = await fetchClassMeetInfo(supabase, classId)
   const sessionDate = todayIstDate()
 
   const { data: alreadyPresent } = await supabase
@@ -246,6 +275,8 @@ async function handleStudentStart(
     helpers.json(res, 200, {
       alreadyCredited: true,
       session: null,
+      meetLink: meetInfo.meetLink,
+      classTitle: meetInfo.classTitle,
       progress,
       message: 'Today’s attendance is already marked for this class.',
     })
@@ -266,9 +297,13 @@ async function handleStudentStart(
   if (active?.id) {
     helpers.json(res, 200, {
       alreadyCredited: false,
+      meetLink: meetInfo.meetLink,
+      classTitle: meetInfo.classTitle,
       session: {
         id: String(active.id),
         classId,
+        classTitle: meetInfo.classTitle,
+        meetLink: meetInfo.meetLink,
         sessionDate,
         accumulatedSeconds: Number(active.accumulated_seconds ?? 0),
         requiredSeconds: Number(active.required_seconds ?? MEET_ATTENDANCE_REQUIRED_SECONDS),
@@ -302,9 +337,13 @@ async function handleStudentStart(
 
   helpers.json(res, 200, {
     alreadyCredited: false,
+    meetLink: meetInfo.meetLink,
+    classTitle: meetInfo.classTitle,
     session: {
       id: String(created.id),
       classId,
+      classTitle: meetInfo.classTitle,
+      meetLink: meetInfo.meetLink,
       sessionDate,
       accumulatedSeconds: 0,
       requiredSeconds: MEET_ATTENDANCE_REQUIRED_SECONDS,

@@ -88,6 +88,8 @@ export async function startMeetSession(
   alreadyCredited: boolean
   session: MeetSessionState | null
   progress: AttendanceProgress | null
+  meetLink?: string
+  classTitle?: string
   message?: string
 }> {
   const data = await authFetch('/api/student/meet-session/start', getToken, {
@@ -98,6 +100,8 @@ export async function startMeetSession(
     alreadyCredited: Boolean(data.alreadyCredited),
     session: parseSession(data.session),
     progress: parseProgress(data.progress),
+    meetLink: data.meetLink ? String(data.meetLink) : undefined,
+    classTitle: data.classTitle ? String(data.classTitle) : undefined,
     message: data.message ? String(data.message) : undefined,
   }
 }

@@ -8,6 +8,8 @@ import { tintedSurface, tintedSurfaceKey } from '../../components/ui/dashboardCa
 import { useStudentEnrollments } from '../../hooks/useStudentEnrollments'
 import { getActiveEnrollmentForClass } from '../../lib/classEnrollmentPolicy'
 import { MentorAvatar } from '../../components/ui/MentorAvatar'
+import { useLiveMeetSession } from '../../components/student/LiveMeetSession'
+import { formatSessionLabel } from '../../lib/sessionSchedule'
 
 export function StudentEnrolledPage() {
   const { classId } = useParams()
@@ -15,6 +17,7 @@ export function StudentEnrolledPage() {
   const planTier = searchParams.get('plan') ?? undefined
   const { getClassById } = useMentorContent()
   const { enrollments } = useStudentEnrollments()
+  const { joinMeet, startingClassId } = useLiveMeetSession()
   const item = classId ? getClassById(classId) : undefined
   const activeEnrollment = classId ? getActiveEnrollmentForClass(enrollments, classId) : undefined
   const enrolled = Boolean(activeEnrollment)
@@ -27,7 +30,11 @@ export function StudentEnrolledPage() {
     )
   }
 
-  const meetHref = item.meetLink?.trim() || 'https://meet.google.com/'
+  const joining = startingClassId === item.id
+  const nextLabel =
+    item.nextSessionLabel?.trim() && item.nextSessionLabel !== 'Set in Meet tab'
+      ? formatSessionLabel(item.nextSessionLabel)
+      : 'Schedule coming soon'
 
   return (
     <>
@@ -74,22 +81,37 @@ export function StudentEnrolledPage() {
             Your first live session link is ready. Classes are taught live on Google Meet — open the link at
             session time from your phone or laptop.
           </p>
-          <a
-            href={meetHref}
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center justify-center w-full py-3 rounded-full bg-educture-orange text-white font-bold text-sm hover:bg-educture-orange-dark transition-colors border-2 border-orange-300"
-          >
-            Open Google Meet link
-          </a>
+          {enrolled ? (
+            <button
+              type="button"
+              disabled={joining}
+              onClick={() =>
+                void joinMeet({
+                  classId: item.id,
+                  meetLink: item.meetLink,
+                  classTitle: item.title,
+                  sessionLabel: item.nextSessionLabel,
+                })
+              }
+              className="inline-flex items-center justify-center w-full py-3 rounded-full bg-educture-orange text-white font-bold text-sm hover:bg-educture-orange-dark transition-colors border-2 border-orange-300 disabled:opacity-60"
+            >
+              {joining ? 'Starting…' : 'Open Google Meet link'}
+            </button>
+          ) : (
+            <AppButton to={`/student/checkout/${item.id}`} className="w-full justify-center">
+              Complete enrollment first
+            </AppButton>
+          )}
           <p className="text-xs text-gray-600 mt-3 flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-educture-orange" /> Next session: {item.nextSessionLabel}
+            <Calendar className="w-4 h-4 text-educture-orange" /> Next session: {nextLabel}
           </p>
         </div>
 
         <div className="flex flex-wrap gap-3">
           <AppButton to="/student">Go to Dashboard</AppButton>
-          <AppButton to="/student/calendar" variant="outline">View calendar</AppButton>
+          <AppButton to="/student/calendar" variant="outline">
+            View calendar
+          </AppButton>
         </div>
       </main>
     </>

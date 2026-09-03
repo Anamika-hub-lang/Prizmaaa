@@ -8,11 +8,9 @@ import { getActiveEnrollmentForClass } from '../../lib/classEnrollmentPolicy'
 import { ActiveEnrollmentBlock } from '../../components/checkout/ActiveEnrollmentBlock'
 import { MentorAvatar } from '../../components/ui/MentorAvatar'
 import { getCategoryById } from '../../data/classCatalog'
-
-function hasRealMeetLink(link?: string) {
-  const href = link?.trim() ?? ''
-  return href.startsWith('https://meet.google.com/') && href.length > 'https://meet.google.com/'.length
-}
+import { useLiveMeetSession } from '../../components/student/LiveMeetSession'
+import { isRealGoogleMeetLink } from '../../lib/meetLink'
+import { formatSessionLabel } from '../../lib/sessionSchedule'
 
 function hasSessionTime(label?: string) {
   const text = label?.trim() ?? ''
@@ -23,6 +21,7 @@ export function StudentClassDetailPage() {
   const { classId } = useParams()
   const { getClassById } = useMentorContent()
   const { enrollments } = useStudentEnrollments()
+  const { joinMeet, startingClassId } = useLiveMeetSession()
   const item = classId ? getClassById(classId) : undefined
   const activeEnrollment = classId ? getActiveEnrollmentForClass(enrollments, classId) : undefined
 
@@ -38,9 +37,11 @@ export function StudentClassDetailPage() {
   }
 
   const category = getCategoryById(item.categoryId)
-  const nextSession = hasSessionTime(item.nextSessionLabel) ? item.nextSessionLabel : 'Schedule coming soon'
-  const meetHref = item.meetLink?.trim() || 'https://meet.google.com/'
-  const canJoin = Boolean(activeEnrollment) && hasRealMeetLink(item.meetLink)
+  const nextSession = hasSessionTime(item.nextSessionLabel)
+    ? formatSessionLabel(item.nextSessionLabel)
+    : 'Schedule coming soon'
+  const canJoin = Boolean(activeEnrollment)
+  const joining = startingClassId === item.id
 
   return (
     <div className="text-left space-y-6">
@@ -109,15 +110,26 @@ export function StudentClassDetailPage() {
       {activeEnrollment ? (
         <div className="space-y-4">
           {canJoin ? (
-            <a
-              href={meetHref}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-educture-orange text-white text-sm font-semibold hover:bg-educture-orange-dark"
+            <button
+              type="button"
+              disabled={joining}
+              onClick={() =>
+                void joinMeet({
+                  classId: item.id,
+                  meetLink: item.meetLink,
+                  classTitle: item.title,
+                  sessionLabel: item.nextSessionLabel,
+                })
+              }
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-educture-orange text-white text-sm font-semibold hover:bg-educture-orange-dark disabled:opacity-60"
             >
               <Video className="w-4 h-4" />
-              Open class on Meet
-            </a>
+              {joining
+                ? 'Starting…'
+                : isRealGoogleMeetLink(item.meetLink)
+                  ? 'Open class on Meet'
+                  : 'Join Google Meet'}
+            </button>
           ) : (
             <p className="text-sm text-gray-500">
               Your mentor will share the Meet link before the first session.
