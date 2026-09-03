@@ -40,6 +40,7 @@ import { tryHandleRoleDashboardApi } from './roleDashboardApi'
 import { tryHandleUniversityLeadApi } from './universityLeadApi'
 import { tryHandleMentorClassShareApi } from './mentorClassShareApi'
 import { tryHandleClassNotificationsApi } from './classNotificationsApi'
+import { tryHandleClassAttendanceApi } from './classAttendanceApi'
 import { tryHandleCategoryPricingApi } from './categoryPricingApi'
 import { counsellingPriceInr } from './lib/counsellingPricing'
 import { isMentorEmailAllowed, isMissingTableError, normalizeMentorEmail } from './lib/mentorAllowlist'
@@ -2676,6 +2677,18 @@ export function handleDevApiRequest(
   if (
     path &&
     tryHandleClassNotificationsApi(path, req, res, env, {
+      json,
+      verifyClerkSession,
+      requireSupabaseAdmin,
+      readBodyJson,
+    })
+  ) {
+    return true
+  }
+
+  if (
+    path &&
+    tryHandleClassAttendanceApi(path, req, res, env, {
       json,
       verifyClerkSession,
       requireSupabaseAdmin,

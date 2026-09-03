@@ -1,10 +1,10 @@
 import { Link } from 'react-router-dom'
 import { useUser } from '@clerk/nextjs'
+import { User } from 'lucide-react'
 
 export function PortalUserAvatar({ profilePath }: { profilePath: string }) {
   const { user } = useUser()
   const src = user?.imageUrl
-  const name = user?.fullName ?? user?.primaryEmailAddress?.emailAddress ?? 'Account'
 
   return (
     <Link
@@ -20,9 +20,10 @@ export function PortalUserAvatar({ profilePath }: { profilePath: string }) {
         />
       ) : (
         <span
-          className="w-9 h-9 rounded-full bg-educture-orange/15 text-educture-orange text-sm font-bold flex items-center justify-center ring-2 ring-educture-orange/20"
+          className="w-9 h-9 rounded-full bg-educture-orange/15 text-educture-orange flex items-center justify-center ring-2 ring-educture-orange/20"
+          aria-hidden
         >
-          {name.charAt(0).toUpperCase()}
+          <User className="w-4 h-4" strokeWidth={2.25} />
         </span>
       )}
     </Link>

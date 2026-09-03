@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { tintedSurfaceKey } from '../ui/dashboardCardStyles'
-import { Calendar, Video, ExternalLink, PlayCircle } from 'lucide-react'
+import { Award, Calendar, Video, ExternalLink, PlayCircle } from 'lucide-react'
+import { useLiveMeetSession } from './LiveMeetSession'
 
 export type EnrolledCourse = {
   id: string
@@ -28,6 +29,7 @@ export function MyCourseCard({
   course: EnrolledCourse
   meetLink?: string
 }) {
+  const { joinMeet, startingClassId } = useLiveMeetSession()
   const statusLabel = {
     ongoing: 'In progress',
     completed: 'Completed',
@@ -39,6 +41,8 @@ export function MyCourseCard({
     completed: 'bg-green-50 text-green-600',
     draft: 'bg-gray-100 text-gray-500',
   }[course.status]
+
+  const joining = startingClassId === course.id
 
   return (
     <article className={`overflow-hidden card-lift flex flex-col sm:flex-row text-left ${tintedSurfaceKey(course.id)}`}>
@@ -67,7 +71,7 @@ export function MyCourseCard({
         ) : null}
         <h3 className="font-bold text-[#1d1d1d] text-base sm:text-lg leading-snug mt-1">{course.title}</h3>
 
-        {course.status === 'ongoing' && (
+        {(course.status === 'ongoing' || course.status === 'completed') && (
           <div className="mt-4">
             <div className="flex justify-between text-xs text-gray-500 mb-1">
               <span>Progress</span>
@@ -79,6 +83,16 @@ export function MyCourseCard({
                 style={{ width: `${course.progress}%` }}
               />
             </div>
+            {course.status === 'completed' || course.progress >= 100 ? (
+              <p className="mt-2 text-xs font-semibold text-emerald-700 inline-flex items-center gap-1">
+                <Award className="w-3.5 h-3.5" />
+                Certificate unlocked
+              </p>
+            ) : (
+              <p className="mt-1.5 text-[11px] text-gray-500">
+                Attend live Meet (~40 min) each session to fill progress.
+              </p>
+            )}
           </div>
         )}
 
@@ -91,15 +105,21 @@ export function MyCourseCard({
 
         <div className="flex flex-wrap gap-2 mt-3 sm:mt-auto pt-2">
           {course.status === 'ongoing' && course.type === 'online' && (
-            <a
-              href={meetLink?.trim() || 'https://meet.google.com/'}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-educture-orange text-white text-sm font-semibold hover:bg-educture-orange-dark transition-colors"
+            <button
+              type="button"
+              disabled={joining}
+              onClick={() =>
+                void joinMeet({
+                  classId: course.id,
+                  meetLink,
+                  classTitle: course.title,
+                })
+              }
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-educture-orange text-white text-sm font-semibold hover:bg-educture-orange-dark transition-colors disabled:opacity-60"
             >
               <Video className="w-4 h-4" />
-              Join Google Meet
-            </a>
+              {joining ? 'Starting…' : 'Join Google Meet'}
+            </button>
           )}
           {course.status === 'ongoing' && course.type === 'free' && (
             <button

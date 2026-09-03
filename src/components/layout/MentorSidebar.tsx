@@ -6,6 +6,7 @@ import {
   Gift,
   LayoutDashboard,
   User,
+  Users,
 } from 'lucide-react'
 import { BrandLogo } from '../brand/BrandLogo'
 import { isPortalNavActive, type PortalNavItem } from './PortalNav'
@@ -15,6 +16,7 @@ export const mentorSidebarNav: PortalNavItem[] = [
   { to: '/teacher/classes', icon: BookOpen, label: 'Classes', match: '/teacher/classes' },
   { to: '/teacher/free-courses', icon: Gift, label: 'Courses', match: '/teacher/free-courses' },
   { to: '/teacher/meet', icon: Calendar, label: 'Schedules', match: '/teacher/meet' },
+  { to: '/teacher/attendance', icon: Users, label: 'Attendance', match: '/teacher/attendance' },
   { to: '/teacher/assignments', icon: ClipboardList, label: 'Assignments', match: '/teacher/assignments' },
   { to: '/teacher/profile', icon: User, label: 'Profile', match: '/teacher/profile' },
 ]

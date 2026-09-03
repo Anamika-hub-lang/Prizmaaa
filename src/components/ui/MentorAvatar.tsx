@@ -1,16 +1,24 @@
 import { useState } from 'react'
+import { User } from 'lucide-react'
 import { isGenericMentorImage } from '../../lib/mentorAvatar'
 
 const sizeClass = {
-  sm: 'w-8 h-8 text-xs',
-  md: 'w-10 h-10 text-sm',
-  lg: 'w-12 h-12 text-sm',
-  xl: 'w-16 h-16 text-lg',
+  sm: 'w-8 h-8',
+  md: 'w-10 h-10',
+  lg: 'w-12 h-12',
+  xl: 'w-16 h-16',
+} as const
+
+const iconClass = {
+  sm: 'w-3.5 h-3.5',
+  md: 'w-4 h-4',
+  lg: 'w-5 h-5',
+  xl: 'w-7 h-7',
 } as const
 
 export function MentorAvatar({
   src,
-  name,
+  name: _name,
   size = 'md',
 }: {
   src?: string | null
@@ -19,7 +27,6 @@ export function MentorAvatar({
 }) {
   const [failed, setFailed] = useState(false)
   const showImg = Boolean(src?.trim()) && !failed && !isGenericMentorImage(src)
-  const initial = (name.trim() || 'M').charAt(0).toUpperCase()
 
   if (showImg) {
     return (
@@ -34,9 +41,10 @@ export function MentorAvatar({
 
   return (
     <span
-      className={`${sizeClass[size]} rounded-full bg-educture-orange/10 text-educture-orange font-bold flex items-center justify-center shrink-0 ring-2 ring-orange-100`}
+      className={`${sizeClass[size]} rounded-full bg-educture-orange/10 text-educture-orange flex items-center justify-center shrink-0 ring-2 ring-orange-100`}
+      aria-hidden
     >
-      {initial}
+      <User className={iconClass[size]} strokeWidth={2.25} />
     </span>
   )
 }

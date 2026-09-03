@@ -12,12 +12,14 @@ import { useStudentCounsellingBookings } from '../hooks/useStudentCounsellingBoo
 import { CounsellingBookingsPanel } from '../components/student/CounsellingBookingsPanel'
 import { enrollmentToEnrolledCourse, daysSinceFirstEnrollment } from '../lib/enrolledCourses'
 import { isActiveClassEnrollment } from '../lib/classEnrollmentPolicy'
+import { useLiveMeetSession } from '../components/student/LiveMeetSession'
 
 export function StudentDashboard() {
   const [searchParams] = useSearchParams()
   const [activeFilter, setActiveFilter] = useState('all')
   const { assignments, classes, freeCourses } = useMentorContent()
   const { enrollments, refresh } = useStudentEnrollments()
+  const { joinMeet, startingClassId } = useLiveMeetSession()
   const {
     bookings: counsellingBookings,
     loading: counsellingLoading,
@@ -96,15 +98,21 @@ export function StudentDashboard() {
               {nextLive.nextSession}
             </p>
           </div>
-          <a
-            href={meetForCourse(nextLive.id) || 'https://meet.google.com/'}
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-educture-orange text-white text-sm font-semibold hover:bg-educture-orange-dark transition-colors shrink-0"
+          <button
+            type="button"
+            disabled={startingClassId === nextLive.id}
+            onClick={() =>
+              void joinMeet({
+                classId: nextLive.id,
+                meetLink: meetForCourse(nextLive.id),
+                classTitle: nextLive.title,
+              })
+            }
+            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-educture-orange text-white text-sm font-semibold hover:bg-educture-orange-dark transition-colors shrink-0 disabled:opacity-60"
           >
             <Video className="w-4 h-4" />
-            Join Meet
-          </a>
+            {startingClassId === nextLive.id ? 'Starting…' : 'Join Meet'}
+          </button>
         </div>
       )}
 

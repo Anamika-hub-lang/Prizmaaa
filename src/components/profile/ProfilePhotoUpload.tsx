@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import { Camera } from 'lucide-react'
+import { Camera, User } from 'lucide-react'
 import { useUser } from '@clerk/nextjs'
 
 const ACCEPT = 'image/jpeg,image/png,image/webp,image/gif'
@@ -19,7 +19,6 @@ export function ProfilePhotoUpload({
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const name = user?.fullName ?? user?.firstName ?? 'U'
   const src = user?.imageUrl
   const hasCustomPhoto = Boolean(user?.hasImage)
 
@@ -70,8 +69,8 @@ export function ProfilePhotoUpload({
         {src ? (
           <img src={src} alt="" className="w-full h-full object-cover" />
         ) : (
-          <span className="w-full h-full bg-educture-orange/10 flex items-center justify-center text-3xl font-bold text-educture-orange">
-            {name.charAt(0)}
+          <span className="w-full h-full bg-educture-orange/10 flex items-center justify-center text-educture-orange">
+            <User className="w-8 h-8" strokeWidth={2} />
           </span>
         )}
         <span className="absolute inset-0 hidden sm:flex bg-black/0 group-hover:bg-black/45 group-focus-visible:bg-black/45 transition-colors flex-col items-center justify-center text-white">
