@@ -1,6 +1,10 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { isActiveEnrollmentRow } from './lib/enrollmentPolicy'
+import {
+  ensureBuiltinOfflineStudentsOnClass,
+  offlineDisplayNameForEmail,
+} from './lib/offlineEnrollment'
 
 type Env = {
   clerkSecretKey?: string
@@ -650,6 +654,19 @@ async function handleMentorRoster(
     return
   }
 
+  if (env.clerkSecretKey) {
+    try {
+      await ensureBuiltinOfflineStudentsOnClass({
+        supabase,
+        clerkSecretKey: env.clerkSecretKey,
+        classId,
+        classTitle: access.title,
+      })
+    } catch (err) {
+      console.warn('[attendance] offline student sync on roster', err)
+    }
+  }
+
   const { data: enrollments, error } = await supabase
     .from('student_enrollments')
     .select('id, clerk_id, progress, status, billing_status, plan_tier, enrolled_at')
@@ -710,11 +727,13 @@ async function handleMentorRoster(
       const id = String(e.clerk_id)
       const profile = profilesByClerk.get(id)
       const att = attendanceByClerk.get(id)
+      const email = profile?.email ?? ''
+      const offlineName = offlineDisplayNameForEmail(email)
       return {
         clerkId: id,
         enrollmentId: String(e.id),
-        fullName: profile?.fullName ?? 'Student',
-        email: profile?.email ?? '',
+        fullName: offlineName || profile?.fullName || 'Student',
+        email,
         progress: Number(e.progress ?? 0),
         status: String(e.status ?? 'ongoing'),
         planTier: e.plan_tier ? String(e.plan_tier) : null,

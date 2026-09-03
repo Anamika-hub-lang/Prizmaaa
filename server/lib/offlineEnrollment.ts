@@ -14,6 +14,8 @@ export type OfflineEnrollmentGrant = {
   classTitleQuery?: string
   planTier?: OfflinePlanTier
   paymentLabel?: string
+  /** Preferred name on mentor attendance / roster UIs. */
+  displayName?: string
 }
 
 type ClerkUserLike = {
@@ -45,6 +47,7 @@ export const BUILTIN_OFFLINE_ENROLLMENT_GRANTS: OfflineEnrollmentGrant[] = [
     classTitleQuery: 'full stack',
     planTier: 'monthly',
     paymentLabel: 'Offline / personal payment',
+    displayName: 'Ritika',
   },
 ]
 
@@ -95,6 +98,72 @@ function grantsForEmail(
 
 export function hasOfflineEnrollmentGrant(email: string): boolean {
   return grantsForEmail(email).length > 0
+}
+
+export function offlineDisplayNameForEmail(email: string): string | null {
+  const grant = BUILTIN_OFFLINE_ENROLLMENT_GRANTS.find(
+    (g) => normalizeGrantEmail(g.email) === normalizeGrantEmail(email),
+  )
+  return grant?.displayName?.trim() || null
+}
+
+/**
+ * When a mentor opens attendance for a class, enroll any builtin offline
+ * students whose grant matches this class (so they appear on the roster).
+ */
+export async function ensureBuiltinOfflineStudentsOnClass(input: {
+  supabase: SupabaseClient
+  clerkSecretKey: string
+  classId: string
+  classTitle: string
+}): Promise<{ enrolledEmails: string[] }> {
+  const enrolledEmails: string[] = []
+  const title = input.classTitle
+
+  for (const grant of BUILTIN_OFFLINE_ENROLLMENT_GRANTS) {
+    const matchesClassId = Boolean(grant.classId?.trim() && grant.classId.trim() === input.classId)
+    const matchesTitle =
+      Boolean(grant.classTitleQuery?.trim()) &&
+      titleMatchesQuery(title, grant.classTitleQuery!.trim())
+    if (!matchesClassId && !matchesTitle) continue
+
+    let user = await findClerkUserByEmail(input.clerkSecretKey, grant.email)
+    if (!user) {
+      const { data: profile } = await input.supabase
+        .from('profiles')
+        .select('clerk_id, email, full_name')
+        .ilike('email', normalizeGrantEmail(grant.email))
+        .maybeSingle()
+      if (profile?.clerk_id) {
+        try {
+          const clerk = createClerkClient({ secretKey: input.clerkSecretKey })
+          user = await clerk.users.getUser(String(profile.clerk_id))
+        } catch {
+          user = null
+        }
+      }
+    }
+    if (!user) continue
+
+    const result = await ensurePaidClassEnrollment(input.supabase, {
+      clerkId: user.id,
+      classId: input.classId,
+      planTier: grant.planTier ?? 'monthly',
+      paymentLabel: grant.paymentLabel ?? 'Offline / personal payment',
+    })
+    if (result === 'created' || result === 'already_active') {
+      enrolledEmails.push(normalizeGrantEmail(grant.email))
+    }
+
+    if (grant.displayName?.trim()) {
+      await input.supabase
+        .from('profiles')
+        .update({ full_name: grant.displayName.trim() })
+        .eq('clerk_id', user.id)
+    }
+  }
+
+  return { enrolledEmails }
 }
 
 export async function resolveClassForGrant(
@@ -208,19 +277,18 @@ export async function applyOfflineEnrollmentGrants(input: {
       enrolledClassIds.push(resolved.id)
     }
 
-    // Also enroll into every other title-matching class that already has a real Meet link,
-    // so offline students land on the same live room mentors schedule.
+    // Also enroll into every other published title-matching class
+    // (same mentor Full Stack room students actually attend).
     const query = grant.classTitleQuery?.trim()
     if (query && !grant.classId?.trim()) {
       const { data: allClasses } = await input.supabase
         .from('classes')
-        .select('id, title, meet_link, published')
+        .select('id, title, published')
       for (const row of allClasses ?? []) {
         const id = String(row.id)
         if (id === resolved.id) continue
         if (!row.published) continue
         if (!titleMatchesQuery(String(row.title ?? ''), query)) continue
-        if (!isRealGoogleMeetLink(String(row.meet_link ?? ''))) continue
         const extra = await ensurePaidClassEnrollment(input.supabase, {
           clerkId: input.user.id,
           classId: id,
