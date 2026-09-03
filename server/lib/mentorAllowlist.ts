@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { isBuiltinMentorEmail } from './builtinMentors'
 
 export function normalizeMentorEmail(email: string): string {
   return email.trim().toLowerCase()
@@ -15,6 +16,9 @@ export async function isMentorEmailAllowed(
 ): Promise<boolean> {
   const normalized = normalizeMentorEmail(email)
   if (!normalized) return false
+
+  if (isBuiltinMentorEmail(normalized)) return true
+
   const { data, error } = await supabase
     .from('mentor_allowlist')
     .select('email')

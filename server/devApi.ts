@@ -50,6 +50,11 @@ import {
   type OfflinePlanTier,
 } from './lib/offlineEnrollment'
 import {
+  builtinMentorAllowlistEntries,
+  ensureBuiltinMentorAccess,
+  isBuiltinMentorEmail,
+} from './lib/builtinMentors'
+import {
   generateGeminiParts,
   generateGeminiText,
   parseOpportunityMatchPayload,
@@ -209,7 +214,14 @@ async function applyOfflineGrantsForClerkId(
   }
   const clerk = createClerkClient({ secretKey: env.clerkSecretKey })
   const user = await clerk.users.getUser(clerkId)
-  return applyOfflineEnrollmentGrants({ supabase, clerk, user })
+  // Primary mentors first — never let offline student grants override them.
+  try {
+    await ensureBuiltinMentorAccess({ supabase, clerk, user })
+  } catch (err) {
+    console.warn('[dev-api] builtin mentor access', err)
+  }
+  const refreshed = await clerk.users.getUser(clerkId)
+  return applyOfflineEnrollmentGrants({ supabase, clerk, user: refreshed })
 }
 
 async function requireAdminApi(
@@ -1740,7 +1752,7 @@ async function handleAdminMentorAllowlist(
     if (error) {
       if (isMissingTableError(error)) {
         json(res, 200, {
-          emails: [],
+          emails: builtinMentorAllowlistEntries(),
           setupRequired: true,
           error: 'Run supabase/mentor-allowlist.sql in the Supabase SQL editor first.',
         })
@@ -1750,14 +1762,19 @@ async function handleAdminMentorAllowlist(
       json(res, 500, { error: 'Could not load mentor emails' })
       return
     }
-    json(res, 200, {
-      emails: (data ?? []).map((row) => ({
-        id: String(row.id),
-        email: String(row.email),
-        note: row.note ? String(row.note) : '',
-        createdAt: String(row.created_at),
-      })),
-    })
+    const fromDb = (data ?? []).map((row) => ({
+      id: String(row.id),
+      email: String(row.email),
+      note: row.note ? String(row.note) : '',
+      createdAt: String(row.created_at),
+      permanent: isBuiltinMentorEmail(String(row.email)),
+    }))
+    const seen = new Set(fromDb.map((e) => normalizeMentorEmail(e.email)))
+    for (const builtin of builtinMentorAllowlistEntries()) {
+      if (seen.has(normalizeMentorEmail(builtin.email))) continue
+      fromDb.unshift(builtin)
+    }
+    json(res, 200, { emails: fromDb })
     return
   }
 
@@ -1796,6 +1813,10 @@ async function handleAdminMentorAllowlist(
     const email = normalizeMentorEmail(url.searchParams.get('email') ?? '')
     if (!email) {
       json(res, 400, { error: 'Email is required' })
+      return
+    }
+    if (isBuiltinMentorEmail(email)) {
+      json(res, 403, { error: 'This mentor email is permanent and cannot be removed.' })
       return
     }
     const { error } = await supabase.from('mentor_allowlist').delete().eq('email', email)
