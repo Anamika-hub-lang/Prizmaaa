@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { CheckCircle2, Clock, User } from 'lucide-react'
+import { CheckCircle2, Clock, ExternalLink, Link2, Paperclip, User } from 'lucide-react'
 import { useAuth } from '@clerk/nextjs'
 import { useMentorContent } from '../../context/MentorContentContext'
 import { MentorPageHeader } from '../../components/layout/TeacherLayout'
@@ -232,6 +232,30 @@ export function MentorAssignmentsPage() {
                           </p>
                         ) : (
                           <p className="text-xs text-gray-600 mt-2">No extra note — student marked assignment as submitted.</p>
+                        )}
+                        {a.submissionType === 'file' && a.submissionFileUrl && (
+                          <a
+                            href={a.submissionFileUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 text-sm font-semibold text-educture-orange mt-3 hover:underline"
+                          >
+                            <Paperclip className="w-4 h-4" />
+                            Open file{a.submissionFileName ? ` · ${a.submissionFileName}` : ''}
+                            <ExternalLink className="w-3.5 h-3.5" />
+                          </a>
+                        )}
+                        {a.submissionType === 'link' && a.submissionLink && (
+                          <a
+                            href={a.submissionLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 text-sm font-semibold text-educture-orange mt-3 hover:underline break-all"
+                          >
+                            <Link2 className="w-4 h-4 shrink-0" />
+                            {a.submissionLink}
+                            <ExternalLink className="w-3.5 h-3.5 shrink-0" />
+                          </a>
                         )}
                       </div>
                     )}

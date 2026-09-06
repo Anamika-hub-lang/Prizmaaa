@@ -43,6 +43,7 @@ import { tryHandleClassNotificationsApi } from './classNotificationsApi'
 import { tryHandleClassAttendanceApi } from './classAttendanceApi'
 import { tryHandleClassTeachingPlanApi } from './classTeachingPlanApi'
 import { tryHandleCategoryPricingApi } from './categoryPricingApi'
+import { tryHandleStudentAssignmentSubmitApi } from './studentAssignmentSubmitApi'
 import { counsellingPriceInr } from './lib/counsellingPricing'
 import { isMentorEmailAllowed, isMissingTableError, normalizeMentorEmail } from './lib/mentorAllowlist'
 import {
@@ -2739,6 +2740,18 @@ export function handleDevApiRequest(
       verifyClerkSession,
       requireSupabaseAdmin,
       isAdminClerkUser,
+      readBodyJson,
+    })
+  ) {
+    return true
+  }
+
+  if (
+    path &&
+    tryHandleStudentAssignmentSubmitApi(path, req, res, env, {
+      json,
+      verifyClerkSession,
+      requireSupabaseAdmin,
       readBodyJson,
     })
   ) {

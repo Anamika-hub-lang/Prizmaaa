@@ -28,7 +28,7 @@ export function CheckoutStepper({
         return (
           <li
             key={s.n}
-            className={`flex items-center gap-3 flex-1 rounded-2xl border-2 px-4 py-3 ${
+            className={`flex items-center gap-3 flex-1 min-w-0 rounded-2xl border-2 px-3 sm:px-4 py-3 ${
               active
                 ? 'border-educture-orange bg-orange-50'
                 : done
@@ -47,7 +47,7 @@ export function CheckoutStepper({
             >
               {s.n}
             </span>
-            <span className={`text-sm font-semibold ${active ? 'text-[#1d1d1d]' : 'text-gray-600'}`}>
+            <span className={`text-sm font-semibold min-w-0 break-words ${active ? 'text-[#1d1d1d]' : 'text-gray-600'}`}>
               {s.label}
             </span>
           </li>

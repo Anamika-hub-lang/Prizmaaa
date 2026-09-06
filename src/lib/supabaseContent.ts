@@ -151,22 +151,33 @@ export async function insertAssignment(
   return id
 }
 
-export async function submitAssignmentRow(id: string, studentNote?: string) {
+export async function submitAssignmentRow(
+  id: string,
+  patch?: {
+    studentNote?: string
+    submissionType?: 'file' | 'link' | null
+    submissionFileUrl?: string | null
+    submissionFileName?: string | null
+    submissionLink?: string | null
+  },
+) {
   if (!supabase) return
   const submittedAt = new Date().toLocaleDateString('en-IN', {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
   })
-  const { error } = await supabase
-    .from('assignments')
-    .update({
-      status: 'submitted',
-      submitted_at: submittedAt,
-      student_note: studentNote?.trim() || null,
-      submitted_by: 'Student',
-    })
-    .eq('id', id)
+  const payload: Record<string, unknown> = {
+    status: 'submitted',
+    submitted_at: submittedAt,
+    student_note: patch?.studentNote?.trim() || null,
+    submitted_by: 'Student',
+  }
+  if (patch?.submissionType !== undefined) payload.submission_type = patch.submissionType
+  if (patch?.submissionFileUrl !== undefined) payload.submission_file_url = patch.submissionFileUrl
+  if (patch?.submissionFileName !== undefined) payload.submission_file_name = patch.submissionFileName
+  if (patch?.submissionLink !== undefined) payload.submission_link = patch.submissionLink
+  const { error } = await supabase.from('assignments').update(payload).eq('id', id)
   if (error) throw error
 }
 

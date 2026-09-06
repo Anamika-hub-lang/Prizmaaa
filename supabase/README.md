@@ -119,7 +119,13 @@ This adds `planner_pdf_url` / `planner_pdf_name` on `class_teaching_plans` and c
 
 Mentors download a blank template PDF, fill topics, then enter the same topics (optional description + logo) in the class form. Students see logos, descriptions, and a download link on the class page.
 
-## 12. Security note
+## 12. Student assignment files
+
+Run `supabase/assignments-storage.sql` in the SQL Editor (after `schema.sql`).
+
+This adds `submission_type`, `submission_file_url`, `submission_file_name`, and `submission_link` on `assignments`, plus a public `assignments` bucket. Students upload a file or paste a link on `/student/assignments`. Mentors open the file or URL from Assignments → Student submitted.
+
+## 13. Security note
 
 Current policies allow anyone with the anon key to read/write content tables. Privileged tables (uploads, counsellor profiles) deny anon select; use the service role from the API. Before launch, tighten RLS further.
 

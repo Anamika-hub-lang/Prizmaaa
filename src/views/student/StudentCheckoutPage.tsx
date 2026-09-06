@@ -69,7 +69,7 @@ export function StudentCheckoutPage() {
           title="Choose your plan"
           subtitle={`${item.title} · ${categoryTitle} — pay monthly, 3 months, or 6 months.`}
         />
-        <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+        <div className="min-w-0">
           <CheckoutStepper current={1} path="paid" />
           {activeEnrollment && (
             <div className="mb-8">
@@ -77,11 +77,11 @@ export function StudentCheckoutPage() {
             </div>
           )}
 
-          <div className={`${tintedSurfaceKey(item.id)} p-4 sm:p-5 mb-8 flex gap-4 items-center text-left`}>
-            <img src={item.image} alt="" className="w-20 h-20 rounded-xl object-cover shrink-0" />
-            <div>
-              <p className="font-bold text-[#1d1d1d]">{item.title}</p>
-              <p className="text-sm text-gray-500 mt-0.5">Mentor: {item.mentor}</p>
+          <div className={`${tintedSurfaceKey(item.id)} p-4 sm:p-5 mb-8 flex gap-3 sm:gap-4 items-center text-left min-w-0`}>
+            <img src={item.image} alt="" className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl object-cover shrink-0" />
+            <div className="min-w-0">
+              <p className="font-bold text-[#1d1d1d] break-words">{item.title}</p>
+              <p className="text-sm text-gray-500 mt-0.5 truncate">Mentor: {item.mentor}</p>
               <p className="text-xs text-educture-orange font-semibold mt-1 capitalize">{item.categoryId} track</p>
             </div>
           </div>
@@ -100,7 +100,7 @@ export function StudentCheckoutPage() {
               ← Back to class details
             </Link>
           </p>
-        </main>
+        </div>
       </>
     )
   }
@@ -109,9 +109,9 @@ export function StudentCheckoutPage() {
     return (
       <>
         <StudentPageHeader title="Choose your plan" subtitle={item.title} />
-        <main className="max-w-lg mx-auto px-4 py-8">
+        <div className="max-w-lg mx-auto min-w-0">
           <ActiveEnrollmentBlock enrollment={activeEnrollment} />
-        </main>
+        </div>
       </>
     )
   }
@@ -139,19 +139,19 @@ export function StudentCheckoutPage() {
         title="Payment"
         subtitle={item.title}
       />
-      <main className="max-w-lg mx-auto px-4 sm:px-6 py-8">
+      <div className="max-w-lg mx-auto min-w-0">
         <CheckoutStepper current={2} path="paid" />
 
         <div className={`${tintedSurfaceKey(item.id)} overflow-hidden mb-6`}>
-          <img src={item.image} alt="" className="w-full h-40 object-cover" />
-          <div className="p-5 text-left">
-            <p className="font-bold text-lg">{item.title}</p>
+          <img src={item.image} alt="" className="w-full h-36 sm:h-40 object-cover" />
+          <div className="p-4 sm:p-5 text-left min-w-0">
+            <p className="font-bold text-lg break-words">{item.title}</p>
             <p className="text-2xl font-bold text-educture-orange mt-4">{formatInr(amount)}</p>
             <p className="text-xs text-gray-500 mt-1">{durationCaption[tier]}</p>
           </div>
         </div>
 
-        <div className={`${tintedSurface(2)} p-6`}>
+        <div className={`${tintedSurface(2)} p-4 sm:p-6`}>
           {cashfreeOn ? (
             <>
               <CashfreePayButton
@@ -190,7 +190,7 @@ export function StudentCheckoutPage() {
             Back to class details
           </Link>
         </div>
-      </main>
+      </div>
     </>
   )
 }

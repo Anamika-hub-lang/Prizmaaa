@@ -240,7 +240,7 @@ export function CategoryPlanCards({
 
   return (
     <>
-      <div className="grid md:grid-cols-3 gap-5 lg:gap-6 items-stretch pricing-card-grid">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6 items-stretch pricing-card-grid">
         {coursePlanBlueprintOrder.map((tier) => {
           const blueprint = coursePlanBlueprints[tier]
           const meta = tierMeta[tier]
@@ -260,7 +260,7 @@ export function CategoryPlanCards({
                   setOpenTier(tier)
                 }
               }}
-              className={`pricing-card gsap-card-in group rounded-3xl text-left flex flex-col border-2 border-orange-100/90 ${meta.cardBg} p-6 sm:p-7 shadow-[0_8px_28px_rgba(15,23,42,0.05)] transition-all duration-300 hover:-translate-y-1.5 hover:border-educture-orange hover:shadow-[0_16px_40px_rgba(243,112,33,0.14)] cursor-pointer`}
+              className={`pricing-card gsap-card-in group rounded-3xl text-left flex flex-col min-w-0 border-2 border-orange-100/90 ${meta.cardBg} p-4 sm:p-7 shadow-[0_8px_28px_rgba(15,23,42,0.05)] transition-all duration-300 hover:-translate-y-1.5 hover:border-educture-orange hover:shadow-[0_16px_40px_rgba(243,112,33,0.14)] cursor-pointer`}
             >
               <div className="flex items-start justify-between gap-3 mb-5">
                 <div
@@ -269,7 +269,7 @@ export function CategoryPlanCards({
                   <Icon className={`w-5 h-5 ${meta.iconColor}`} />
                 </div>
                 <span
-                  className={`text-[10px] font-bold uppercase tracking-[0.14em] px-2.5 py-1 rounded-full border ${meta.badgeClass}`}
+                  className={`text-[10px] font-bold uppercase tracking-[0.08em] sm:tracking-[0.14em] px-2 py-1 rounded-full border text-right leading-tight ${meta.badgeClass}`}
                 >
                   {meta.badge}
                 </span>

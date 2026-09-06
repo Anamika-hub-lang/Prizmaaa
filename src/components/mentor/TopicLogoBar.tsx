@@ -70,7 +70,7 @@ export function TopicLogoBar({
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-1">
+    <div className="flex flex-wrap items-center gap-1 min-w-0">
       {TOPIC_LOGO_KEYS.map((key) => {
         const Icon = topicLogoIcons[key]
         const selected = !customSrc && logoKey === key

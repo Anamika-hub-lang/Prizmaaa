@@ -194,7 +194,7 @@ export function MentorClassesPage() {
         {showForm && (
           <form
             onSubmit={(e) => void handleSubmit(e)}
-            className={`${tintedSurface(0)} p-6 mb-8 grid sm:grid-cols-2 gap-4`}
+            className={`${tintedSurface(0)} p-4 sm:p-6 mb-8 grid sm:grid-cols-2 gap-4 min-w-0`}
           >
             <p className="sm:col-span-2 font-bold text-[#1d1d1d]">
               {editingId ? 'Edit class' : 'New class'}

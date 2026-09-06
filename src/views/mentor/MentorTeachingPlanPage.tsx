@@ -101,7 +101,7 @@ export function MentorTeachingPlanPage() {
         subtitle="Same 1 / 3 / 6 month planners as class create — template PDF, topics with optional description and logo, then save for enrolled students."
       />
 
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 space-y-5">
+      <div className="max-w-3xl mx-auto px-3 sm:px-6 py-4 sm:py-6 space-y-5 min-w-0">
         <div
           className={`${dashboardCardBorder} border-orange-100 bg-white rounded-2xl p-4 flex flex-col sm:flex-row gap-3`}
         >

@@ -56,7 +56,7 @@ export function StudentLayout({ children }: { children: ReactNode }) {
 
         <CashfreePendingConfirm />
 
-        <main className="flex-1 px-4 sm:px-6 py-6 pb-24 md:pb-8 max-w-5xl w-full mx-auto">{children}</main>
+        <main className="flex-1 px-4 sm:px-6 py-6 pb-24 md:pb-8 max-w-5xl w-full mx-auto min-w-0 overflow-x-hidden">{children}</main>
 
         <StudentMobileNav items={mobileNav} />
       </div>
@@ -76,14 +76,14 @@ export function StudentPageHeader({
   backLabel?: string
 }) {
   return (
-    <div className="mb-6 text-left">
+    <div className="mb-6 text-left min-w-0">
       {backTo && (
         <Link to={backTo} className="text-sm font-medium text-educture-orange hover:underline mb-2 inline-block">
           ← {backLabel}
         </Link>
       )}
-      <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">{title}</h1>
-      {subtitle && <p className="text-sm text-gray-500 mt-1 max-w-2xl">{subtitle}</p>}
+      <h1 className="text-xl sm:text-2xl font-semibold text-gray-900 break-words">{title}</h1>
+      {subtitle && <p className="text-sm text-gray-500 mt-1 max-w-2xl break-words">{subtitle}</p>}
     </div>
   )
 }

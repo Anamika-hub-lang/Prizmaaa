@@ -1,5 +1,5 @@
 import type { FreeCourse } from '../data/classCatalog'
-import type { ManagedClass, MentorAssignment } from '../types/mentorContent'
+import type { ManagedClass, MentorAssignment, AssignmentSubmissionType } from '../types/mentorContent'
 import { pickClassCoverImage } from './classCoverImages'
 export type ClassRow = {
   id: string
@@ -40,6 +40,10 @@ export type AssignmentRow = {
   student_note: string | null
   submitted_by: string | null
   mentor_clerk_id?: string | null
+  submission_type?: AssignmentSubmissionType | null
+  submission_file_url?: string | null
+  submission_file_name?: string | null
+  submission_link?: string | null
 }
 
 export function classFromRow(row: ClassRow): ManagedClass {
@@ -112,6 +116,7 @@ export function freeCourseToRow(c: FreeCourse): FreeCourseRow {
 }
 
 export function assignmentFromRow(row: AssignmentRow): MentorAssignment {
+  const submissionType = row.submission_type === 'file' || row.submission_type === 'link' ? row.submission_type : undefined
   return {
     id: row.id,
     title: row.title,
@@ -123,6 +128,10 @@ export function assignmentFromRow(row: AssignmentRow): MentorAssignment {
     studentNote: row.student_note ?? undefined,
     submittedBy: row.submitted_by ?? undefined,
     mentorClerkId: row.mentor_clerk_id ?? null,
+    submissionType,
+    submissionFileUrl: row.submission_file_url ?? undefined,
+    submissionFileName: row.submission_file_name ?? undefined,
+    submissionLink: row.submission_link ?? undefined,
   }
 }
 

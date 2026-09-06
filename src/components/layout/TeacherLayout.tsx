@@ -46,7 +46,7 @@ export function TeacherLayout({ children }: { children: ReactNode }) {
           <PortalUserAvatar profilePath="/teacher/profile" />
         </div>
 
-        <div className="flex-1 min-w-0 pb-24 md:pb-0">{children}</div>
+        <div className="flex-1 min-w-0 overflow-x-hidden pb-24 md:pb-0">{children}</div>
 
         <MentorMobileNav items={mobileNav} />
       </div>
@@ -62,9 +62,9 @@ export function MentorPageHeader({
   subtitle?: string
 }) {
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-8 pb-2 text-left">
-      <h1 className="font-display text-2xl sm:text-3xl text-[#1d1d1d]">{title}</h1>
-      {subtitle && <p className="text-sm text-gray-500 mt-2 max-w-2xl">{subtitle}</p>}
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-8 pb-2 text-left min-w-0">
+      <h1 className="font-display text-2xl sm:text-3xl text-[#1d1d1d] break-words">{title}</h1>
+      {subtitle && <p className="text-sm text-gray-500 mt-2 max-w-2xl break-words">{subtitle}</p>}
     </div>
   )
 }

@@ -46,6 +46,7 @@ import {
   mentorDisplayName,
 } from '../lib/mentorContentOwnership'
 import { fetchSharedClassIds } from '../lib/classCoMentorsApi'
+import { submitStudentAssignment } from '../lib/studentAssignmentSubmitApi'
 
 export type { ManagedClass, MentorAssignment }
 
@@ -73,7 +74,10 @@ type MentorContentContextValue = {
   removeFreeCourse: (id: string) => void
   addAssignment: (input: Omit<MentorAssignment, 'id' | 'status'>) => void
   updateAssignment: (id: string, patch: Partial<MentorAssignment>) => void
-  submitAssignment: (id: string, studentNote?: string) => void
+  submitAssignment: (
+    id: string,
+    input?: { note?: string; file?: File | null; link?: string },
+  ) => Promise<void>
   getClassById: (id: string) => ManagedClass | undefined
   getClassesByCategory: (categoryId: ClassCategoryId) => ManagedClass[]
   publishedClasses: ManagedClass[]
@@ -312,12 +316,17 @@ export function MentorContentProvider({ children }: { children: ReactNode }) {
   )
 
   const submitAssignment = useCallback(
-    (id: string, studentNote?: string) => {
+    async (id: string, input?: { note?: string; file?: File | null; link?: string }) => {
+      const note = input?.note?.trim() || undefined
+      const link = input?.link?.trim() || undefined
+      const file = input?.file ?? null
       const submittedAt = new Date().toLocaleDateString('en-IN', {
         day: 'numeric',
         month: 'short',
         year: 'numeric',
       })
+      const submissionType: MentorAssignment['submissionType'] = file ? 'file' : link ? 'link' : undefined
+      const localFileUrl = file ? URL.createObjectURL(file) : undefined
       setAssignments((prev) =>
         prev.map((a) =>
           a.id === id
@@ -325,18 +334,50 @@ export function MentorContentProvider({ children }: { children: ReactNode }) {
                 ...a,
                 status: 'submitted',
                 submittedAt,
-                studentNote: studentNote?.trim() || a.studentNote,
+                studentNote: note || a.studentNote,
                 submittedBy: 'Student',
+                submissionType,
+                submissionFileUrl: file ? localFileUrl : undefined,
+                submissionFileName: file?.name,
+                submissionLink: link,
               }
             : a,
         ),
       )
-      submitAssignmentRow(id, studentNote).catch((e) => {
+
+      if (usingLocalData || !isSupabaseConfigured) {
+        if (!file && link) {
+          await submitAssignmentRow(id, {
+            studentNote: note,
+            submissionType: 'link',
+            submissionLink: link,
+            submissionFileUrl: null,
+            submissionFileName: null,
+          }).catch((e) => {
+            setSyncError(e instanceof Error ? e.message : 'Could not submit assignment')
+            refresh()
+          })
+        }
+        return
+      }
+
+      try {
+        await submitStudentAssignment(getToken, {
+          assignmentId: id,
+          studentNote: note,
+          file,
+          submissionLink: link,
+        })
+        await refresh()
+      } catch (e) {
         setSyncError(e instanceof Error ? e.message : 'Could not submit assignment')
-        refresh()
-      })
+        await refresh()
+        throw e
+      } finally {
+        if (localFileUrl) URL.revokeObjectURL(localFileUrl)
+      }
     },
-    [refresh],
+    [getToken, refresh, usingLocalData],
   )
 
   const getClassById = useCallback(

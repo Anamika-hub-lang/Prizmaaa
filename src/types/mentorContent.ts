@@ -1,5 +1,7 @@
 import type { OnlineClass } from '../data/classCatalog'
 
+export type AssignmentSubmissionType = 'file' | 'link'
+
 export type MentorAssignment = {
   id: string
   title: string
@@ -11,6 +13,10 @@ export type MentorAssignment = {
   studentNote?: string
   submittedBy?: string
   mentorClerkId?: string | null
+  submissionType?: AssignmentSubmissionType
+  submissionFileUrl?: string
+  submissionFileName?: string
+  submissionLink?: string
 }
 
 export type ManagedClass = OnlineClass & {

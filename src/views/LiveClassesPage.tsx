@@ -52,12 +52,12 @@ export function LiveClassesPage({ initialClasses = [] }: { initialClasses?: List
   }, [catalog, filter])
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#fdf8f0]">
+    <div className="min-h-screen flex flex-col overflow-x-hidden bg-[#fdf8f0]">
       <MainNavbar />
 
-      <main className="flex-1">
+      <main className="flex-1 min-w-0">
         <section className="bg-[#0f0f12] text-white border-b border-white/10">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-10 text-left">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-10 text-left">
             <Link
               to="/"
               className="inline-flex items-center gap-1.5 text-sm font-semibold text-educture-orange hover:underline"
@@ -66,12 +66,12 @@ export function LiveClassesPage({ initialClasses = [] }: { initialClasses?: List
               Back to home
             </Link>
             <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mt-5">
-              <div>
-                <p className="text-educture-orange font-bold text-xs uppercase tracking-[0.2em] flex items-center gap-2">
-                  <Video className="w-4 h-4" />
+              <div className="min-w-0">
+                <p className="text-educture-orange font-bold text-[10px] sm:text-xs uppercase tracking-[0.16em] sm:tracking-[0.2em] flex items-center gap-2">
+                  <Video className="w-4 h-4 shrink-0" />
                   Online learning platform
                 </p>
-                <h1 className="font-display text-2xl sm:text-3xl lg:text-4xl mt-1 leading-tight">
+                <h1 className="font-display text-2xl sm:text-3xl lg:text-4xl mt-1 leading-tight break-words">
                   Online classes and live{' '}
                   <span className="font-script text-educture-orange text-3xl sm:text-4xl">courses</span>
                 </h1>
@@ -87,7 +87,7 @@ export function LiveClassesPage({ initialClasses = [] }: { initialClasses?: List
               {!isSignedIn && (
                 <Link
                   to="/sign-up"
-                  className="inline-flex items-center gap-2 shrink-0 px-5 py-2.5 rounded-full bg-educture-orange text-white text-sm font-semibold hover:bg-educture-orange-dark transition-colors"
+                  className="inline-flex w-full sm:w-auto items-center justify-center gap-2 shrink-0 px-5 py-2.5 rounded-full bg-educture-orange text-white text-sm font-semibold hover:bg-educture-orange-dark transition-colors"
                 >
                   Join to enroll
                   <ArrowRight className="w-4 h-4" />
@@ -97,9 +97,9 @@ export function LiveClassesPage({ initialClasses = [] }: { initialClasses?: List
           </div>
         </section>
 
-        <section className="py-8 sm:py-10">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6">
-            <div className="flex gap-2 overflow-x-auto pb-2 mb-6 scrollbar-hide">
+        <section className="py-6 sm:py-10">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 min-w-0">
+            <div className="-mx-4 px-4 sm:mx-0 sm:px-0 flex gap-2 overflow-x-auto pb-2 mb-6 scrollbar-hide">
               <button
                 type="button"
                 onClick={() => setFilter(ALL)}
@@ -139,7 +139,7 @@ export function LiveClassesPage({ initialClasses = [] }: { initialClasses?: List
                 <h2 className="font-display text-xl text-[#1a1a1a] mb-4">
                   {filter === ALL ? 'All live online classes' : 'Online classes in this track'}
                 </h2>
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5 items-stretch">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 items-stretch">
                 {classes.map((item) => {
                   const plans = pricing[item.categoryId]
                   const topic =
@@ -147,7 +147,7 @@ export function LiveClassesPage({ initialClasses = [] }: { initialClasses?: List
                   return (
                   <article
                     key={item.id}
-                    className={`flex h-full flex-col overflow-hidden rounded-2xl text-left ${tintedSurfaceKey(item.id)}`}
+                    className={`flex h-full min-w-0 flex-col overflow-hidden rounded-2xl text-left ${tintedSurfaceKey(item.id)}`}
                   >
                     <div className="relative h-40 sm:h-44 shrink-0 border-b-2 border-white/70">
                       <Link to={classPublicPath(item)} className="absolute inset-0">
@@ -155,7 +155,7 @@ export function LiveClassesPage({ initialClasses = [] }: { initialClasses?: List
                           src={item.image}
                           alt={`${item.title} online class`}
                           sizes="(max-width: 640px) 100vw, (max-width: 1280px) 33vw, 280px"
-                          className="object-cover"
+                          className="absolute inset-0 h-full w-full object-cover"
                         />
                       </Link>
                       <span className="absolute top-2 left-2 bg-educture-orange text-white text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full border-2 border-orange-200">
@@ -182,7 +182,7 @@ export function LiveClassesPage({ initialClasses = [] }: { initialClasses?: List
                           </p>
                         </div>
                       ) : null}
-                      <p className="text-[11px] text-gray-600 mt-2 leading-snug">
+                      <p className="text-[11px] text-gray-600 mt-2 leading-snug break-words">
                         {formatInr(plans.monthlyInr)}/mo · {formatInr(plans.threeMonthInr)} / 3 mo ·{' '}
                         {formatInr(plans.sixMonthInr)} / 6 mo
                       </p>

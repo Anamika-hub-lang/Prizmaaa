@@ -45,7 +45,7 @@ export function StudentClassDetailPage() {
   const joining = startingClassId === item.id
 
   return (
-    <div className="text-left space-y-6">
+    <div className="text-left space-y-6 min-w-0">
       <StudentPageHeader title={item.title} backTo="/student/browse" backLabel="Back to classes" />
 
       <section className="rounded-2xl border border-orange-100 bg-[#fff8f3] p-5 sm:p-6">
