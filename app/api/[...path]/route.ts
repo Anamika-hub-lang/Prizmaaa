@@ -1,12 +1,10 @@
 import { NextRequest } from 'next/server'
 import { handleNextApiRequest } from '../../../server/nextApiAdapter'
 
-type Ctx = { params: Promise<{ path: string[] }> }
-
 export const maxDuration = 60
 export const dynamic = 'force-dynamic'
 
-async function handle(req: NextRequest, _ctx: Ctx) {
+async function handle(req: NextRequest) {
   return handleNextApiRequest(req)
 }
 

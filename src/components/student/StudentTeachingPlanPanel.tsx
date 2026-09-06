@@ -2,12 +2,13 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { useAuth } from '@clerk/nextjs'
-import { ListTree } from 'lucide-react'
+import { Download, ListTree } from 'lucide-react'
 import {
   coursePlanBlueprintOrder,
   coursePlanBlueprints,
 } from '../../data/coursePlanBlueprint'
 import type { PricingPaymentTier } from '../../data/pricingPlans'
+import { TopicLogoIcon } from '../../components/mentor/TopicLogoBar'
 import {
   fetchStudentTeachingPlans,
   type TeachingPlanRow,
@@ -115,13 +116,38 @@ export function StudentTeachingPlanPanel({
         })}
       </div>
 
-      <ul className="space-y-2">
-        {activePlan.topics.map((topic) => (
-          <li
-            key={topic}
-            className="text-sm text-gray-700 flex gap-2 leading-snug before:content-[''] before:mt-2 before:h-1.5 before:w-1.5 before:rounded-full before:bg-educture-orange before:shrink-0"
-          >
-            {topic}
+      {activePlan.plannerPdfUrl ? (
+        <a
+          href={activePlan.plannerPdfUrl}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-educture-orange hover:underline"
+        >
+          <Download className="w-3.5 h-3.5" />
+          Download {activePlan.plannerPdfName || 'planner PDF'}
+        </a>
+      ) : null}
+
+      <ul className="space-y-3">
+        {activePlan.topics.map((topic, index) => (
+          <li key={`${topic.title}-${index}`} className="flex gap-3 items-start">
+            <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-orange-50 text-educture-orange shrink-0 overflow-hidden">
+              {topic.logoUrl || topic.logoKey ? (
+                <TopicLogoIcon
+                  logoKey={topic.logoKey}
+                  logoUrl={topic.logoUrl}
+                  className="w-4 h-4"
+                />
+              ) : (
+                <span className="h-1.5 w-1.5 rounded-full bg-educture-orange" />
+              )}
+            </span>
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-gray-800 leading-snug">{topic.title}</p>
+              {topic.description ? (
+                <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">{topic.description}</p>
+              ) : null}
+            </div>
           </li>
         ))}
       </ul>

@@ -11,7 +11,7 @@ create table if not exists public.classes (
   duration text not null default '',
   sessions text not null default '',
   description text not null default '',
-  price integer not null default 999,
+  price integer not null default 1000,
   meet_link text not null default 'https://meet.google.com/',
   next_session_label text not null default 'Set schedule in Meet tab',
   published boolean not null default true,

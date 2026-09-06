@@ -1,28 +1,30 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { useAuth } from '@clerk/nextjs'
 import { ArrowLeft, ArrowRight, Video } from 'lucide-react'
 import { MainNavbar } from '../components/layout/MainNavbar'
 import { MarketingFooter } from '../components/marketing/MarketingSections'
 import { useMentorContent } from '../context/MentorContentContext'
+import { useCategoryPricing } from '../context/CategoryPricingContext'
 import {
   classCategories,
   formatBrowsePricingSummary,
   type ClassCategoryId,
 } from '../data/classCatalog'
+import { formatInr } from '../data/pricingPlans'
 import { tintedSurfaceKey } from '../components/ui/dashboardCardStyles'
 import { FaqSection } from '../components/seo/FaqSection'
 import { SeoCoverImage } from '../components/seo/SeoCoverImage'
+import { MentorAvatar } from '../components/ui/MentorAvatar'
 import { classesFaqs } from '../data/seoFaqs'
 import { COUNSELLING_PRICE_INR } from '../data/counsellingServices'
 import { attachClassSlugs, classPublicPath } from '../lib/classSlug'
 
 const ALL: 'all' = 'all'
-const AUTH_RETURN_KEY = 'educture_auth_return'
 
-export function LiveClassesPage({ initialClasses = [] }: { initialClasses?: Array<{
+type ListedClass = {
   id: string
   title: string
   slug?: string
@@ -32,42 +34,22 @@ export function LiveClassesPage({ initialClasses = [] }: { initialClasses?: Arra
   mentorImage: string
   duration: string
   sessions: string
-}> }) {
-  const navigate = useNavigate()
+}
+
+export function LiveClassesPage({ initialClasses = [] }: { initialClasses?: ListedClass[] }) {
   const { publishedClasses } = useMentorContent()
+  const { pricing } = useCategoryPricing()
   const { isSignedIn } = useAuth()
   const [filter, setFilter] = useState<ClassCategoryId | typeof ALL>(ALL)
   const pricingLine = formatBrowsePricingSummary()
-  const listingSource: Array<{
-    id: string
-    title: string
-    categoryId: ClassCategoryId
-    image: string
-    mentor: string
-    mentorImage: string
-    duration: string
-    sessions: string
-  }> = publishedClasses.length > 0 ? publishedClasses : initialClasses
+  const listingSource: ListedClass[] =
+    publishedClasses.length > 0 ? publishedClasses : initialClasses
   const catalog = attachClassSlugs(listingSource)
 
   const classes = useMemo(() => {
     if (filter === ALL) return catalog
     return catalog.filter((c) => c.categoryId === filter)
   }, [catalog, filter])
-
-  function handleEnroll(classId: string) {
-    const next = `/student/class/${classId}`
-    if (isSignedIn) {
-      navigate(next)
-      return
-    }
-    try {
-      sessionStorage.setItem(AUTH_RETURN_KEY, next)
-    } catch {
-      /* ignore */
-    }
-    navigate('/sign-up', { state: { from: next } })
-  }
 
   return (
     <div className="min-h-screen flex flex-col bg-[#fdf8f0]">
@@ -157,13 +139,17 @@ export function LiveClassesPage({ initialClasses = [] }: { initialClasses?: Arra
                 <h2 className="font-display text-xl text-[#1a1a1a] mb-4">
                   {filter === ALL ? 'All live online classes' : 'Online classes in this track'}
                 </h2>
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
-                {classes.map((item) => (
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5 items-stretch">
+                {classes.map((item) => {
+                  const plans = pricing[item.categoryId]
+                  const topic =
+                    classCategories.find((c) => c.id === item.categoryId)?.title ?? item.categoryId
+                  return (
                   <article
                     key={item.id}
-                    className={`overflow-hidden rounded-2xl text-left ${tintedSurfaceKey(item.id)}`}
+                    className={`flex h-full flex-col overflow-hidden rounded-2xl text-left ${tintedSurfaceKey(item.id)}`}
                   >
-                    <div className="relative h-40 sm:h-44 border-b-2 border-white/70">
+                    <div className="relative h-40 sm:h-44 shrink-0 border-b-2 border-white/70">
                       <Link to={classPublicPath(item)} className="absolute inset-0">
                         <SeoCoverImage
                           src={item.image}
@@ -172,12 +158,15 @@ export function LiveClassesPage({ initialClasses = [] }: { initialClasses?: Arra
                           className="object-cover"
                         />
                       </Link>
+                      <span className="absolute top-2 left-2 bg-educture-orange text-white text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full border-2 border-orange-200">
+                        Paid
+                      </span>
                     </div>
-                    <div className="p-4 sm:p-5">
+                    <div className="p-4 sm:p-5 flex flex-1 flex-col min-h-0">
                       <p className="text-[10px] font-bold uppercase tracking-wide text-educture-orange">
-                        {classCategories.find((c) => c.id === item.categoryId)?.title ?? item.categoryId}
+                        {topic}
                       </p>
-                      <h3 className="font-bold text-[#1d1d1d] text-sm sm:text-base mt-1 leading-snug">
+                      <h3 className="font-bold text-[#1d1d1d] text-sm sm:text-base mt-1 leading-snug line-clamp-2 min-h-[2.5rem]">
                         <Link to={classPublicPath(item)} className="hover:text-educture-orange">
                           {item.title}
                         </Link>
@@ -185,20 +174,31 @@ export function LiveClassesPage({ initialClasses = [] }: { initialClasses?: Arra
                       <p className="text-xs text-gray-600 mt-1.5">
                         {item.duration} · {item.sessions}
                       </p>
-                      <p className="text-xs text-educture-orange font-semibold mt-1.5 truncate">
-                        {item.mentor}
+                      {item.mentor ? (
+                        <div className="flex items-center gap-2 mt-1.5 min-w-0">
+                          <MentorAvatar src={item.mentorImage} name={item.mentor} size="sm" />
+                          <p className="text-xs text-educture-orange font-semibold truncate">
+                            {item.mentor}
+                          </p>
+                        </div>
+                      ) : null}
+                      <p className="text-[11px] text-gray-600 mt-2 leading-snug">
+                        {formatInr(plans.monthlyInr)}/mo · {formatInr(plans.threeMonthInr)} / 3 mo ·{' '}
+                        {formatInr(plans.sixMonthInr)} / 6 mo
                       </p>
-                      <button
-                        type="button"
-                        onClick={() => handleEnroll(item.id)}
-                        className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full bg-educture-orange px-4 py-2.5 text-sm font-semibold text-white hover:bg-educture-orange-dark transition-colors"
-                      >
-                        {isSignedIn ? 'View & enroll' : 'Join to take this session'}
-                        <ArrowRight className="w-4 h-4" />
-                      </button>
+                      <div className="mt-auto pt-4">
+                        <Link
+                          to={classPublicPath(item)}
+                          className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-educture-orange px-4 py-2.5 text-sm font-semibold text-white hover:bg-educture-orange-dark transition-colors"
+                        >
+                          Explore
+                          <ArrowRight className="w-4 h-4" />
+                        </Link>
+                      </div>
                     </div>
                   </article>
-                ))}
+                  )
+                })}
               </div>
               </>
             )}

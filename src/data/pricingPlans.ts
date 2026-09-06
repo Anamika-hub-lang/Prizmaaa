@@ -25,23 +25,23 @@ export type CategoryPricingMap = Record<PricingCategoryId, CategoryPricing>
 export const defaultCategoryPricing: CategoryPricingMap = {
   skills: {
     title: 'Skills Sessions',
-    monthlyInr: 999,
-    threeMonthInr: 2499,
-    sixMonthInr: 4999,
+    monthlyInr: 1000,
+    threeMonthInr: 2500,
+    sixMonthInr: 5000,
     image: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=600&q=80',
   },
   professional: {
     title: 'Professional Sessions',
-    monthlyInr: 1499,
-    threeMonthInr: 3899,
-    sixMonthInr: 7499,
+    monthlyInr: 1000,
+    threeMonthInr: 2500,
+    sixMonthInr: 5000,
     image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600&q=80',
   },
   academic: {
     title: 'Academic Sessions',
-    monthlyInr: 599,
-    threeMonthInr: 1599,
-    sixMonthInr: 2999,
+    monthlyInr: 1000,
+    threeMonthInr: 2500,
+    sixMonthInr: 5000,
     image: 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=600&q=80',
   },
 }

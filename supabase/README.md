@@ -106,7 +106,20 @@ Run `supabase/category-pricing.sql` in the SQL Editor.
 
 Seeds Skills / Professional / Academic monthly, 3-month, and 6-month amounts. Admins edit them at `/admin/pricing`. Checkout charges use the database values (falls back to defaults if the table is missing).
 
-## 11. Security note
+## 11. Class planner PDFs and topic logos
+
+Run `supabase/class-teaching-plans.sql` first (if you have not already), then:
+
+`supabase/class-planner-assets.sql`
+
+This adds `planner_pdf_url` / `planner_pdf_name` on `class_teaching_plans` and creates public buckets:
+
+- `class-planners` — filled 1 / 3 / 6 month planner PDFs uploaded from `/teacher/classes`
+- `topic-logos` — optional custom images per topic
+
+Mentors download a blank template PDF, fill topics, then enter the same topics (optional description + logo) in the class form. Students see logos, descriptions, and a download link on the class page.
+
+## 12. Security note
 
 Current policies allow anyone with the anon key to read/write content tables. Privileged tables (uploads, counsellor profiles) deny anon select; use the service role from the API. Before launch, tighten RLS further.
 

@@ -1,18 +1,29 @@
 'use client'
 
 import { useAuth } from '@clerk/nextjs'
-import { ArrowLeft, ArrowRight, Clock, Users, Video } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Check, Video } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { MainNavbar } from '../components/layout/MainNavbar'
 import { MarketingFooter } from '../components/marketing/MarketingSections'
 import { MentorAvatar } from '../components/ui/MentorAvatar'
-import { formatBrowsePricingSummary, getCategoryById } from '../data/classCatalog'
+import { getCategoryById } from '../data/classCatalog'
+import {
+  coursePlanBlueprintOrder,
+  coursePlanBlueprints,
+} from '../data/coursePlanBlueprint'
+import { formatInr, getPaymentAmount } from '../data/pricingPlans'
+import { useCategoryPricing } from '../context/CategoryPricingContext'
 import { SeoCoverImage } from '../components/seo/SeoCoverImage'
 import { classPublicPath } from '../lib/classSlug'
-import { classPublicDescription } from '../lib/seo'
 import type { PublishedClass } from '../lib/publishedClasses'
 
 const AUTH_RETURN_KEY = 'educture_auth_return'
+
+const planCardClass: Record<(typeof coursePlanBlueprintOrder)[number], string> = {
+  monthly: 'bg-sky-50/80 border-sky-100',
+  'three-month': 'bg-[#fff9f3] border-orange-100',
+  'six-month': 'bg-violet-50/70 border-violet-100',
+}
 
 export function PublicClassDetailPage({
   initialClass,
@@ -23,8 +34,10 @@ export function PublicClassDetailPage({
 }) {
   const navigate = useNavigate()
   const { isSignedIn } = useAuth()
+  const { pricing } = useCategoryPricing()
   const category = getCategoryById(initialClass.categoryId)
-  const pricingLine = formatBrowsePricingSummary()
+  const description = initialClass.description.trim()
+    || `${initialClass.title} is a live online class on PRIZMA.`
 
   function handleEnroll() {
     const next = `/student/class/${initialClass.id}`
@@ -61,110 +74,177 @@ export function PublicClassDetailPage({
             <h1 className="font-display text-2xl sm:text-3xl lg:text-4xl mt-2 leading-tight">
               {initialClass.title}
             </h1>
-            <p className="text-sm text-gray-400 mt-3 max-w-2xl leading-relaxed">
-              {classPublicDescription(initialClass)} {pricingLine}.
-            </p>
+            {initialClass.mentor ? (
+              <p className="text-sm text-gray-400 mt-3">
+                With {initialClass.mentor} · Paid live class
+              </p>
+            ) : (
+              <p className="text-sm text-gray-400 mt-3">Paid live class</p>
+            )}
           </div>
         </section>
 
         <section className="py-8 sm:py-10">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 grid lg:grid-cols-12 gap-8 items-start">
-            <div className="lg:col-span-7">
-              <div className="relative w-full aspect-video rounded-2xl overflow-hidden border-2 border-orange-100">
-                <SeoCoverImage
-                  src={initialClass.image}
-                  alt={`${initialClass.title} online class`}
-                  sizes="(max-width: 1024px) 100vw, 640px"
-                  priority
-                  className="object-cover"
-                />
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 space-y-6">
+            <div className="grid lg:grid-cols-12 gap-6 items-stretch">
+              <div className="lg:col-span-7 min-h-0">
+                <div className="relative w-full h-full min-h-[220px] aspect-video lg:aspect-auto rounded-2xl overflow-hidden border-2 border-orange-100">
+                  <SeoCoverImage
+                    src={initialClass.image}
+                    alt={`${initialClass.title} online class`}
+                    sizes="(max-width: 1024px) 100vw, 640px"
+                    priority
+                    className="absolute inset-0 h-full w-full object-cover"
+                  />
+                </div>
               </div>
-              <div className="mt-6 grid sm:grid-cols-3 gap-3">
-                <div className="rounded-xl bg-white border border-orange-100 px-4 py-3">
-                  <p className="text-xs text-gray-500 inline-flex items-center gap-1.5">
-                    <Clock className="w-3.5 h-3.5 text-educture-orange" />
-                    Duration
-                  </p>
-                  <p className="mt-1 text-sm font-semibold text-gray-900">
-                    {initialClass.duration || 'Shared in class'}
-                  </p>
+
+              <aside className="lg:col-span-5">
+                <div className="h-full bg-white rounded-2xl border-2 border-orange-100 p-5 sm:p-6 flex flex-col">
+                  {initialClass.mentor ? (
+                    <div className="flex items-center gap-3 min-w-0">
+                      <MentorAvatar src={initialClass.mentorImage} name={initialClass.mentor} size="md" />
+                      <div className="min-w-0">
+                        <p className="text-xs uppercase tracking-wide text-gray-500">Mentor</p>
+                        <p className="font-semibold text-sm text-gray-900 truncate">{initialClass.mentor}</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-xs font-bold uppercase tracking-wide text-educture-orange">
+                      Paid live class
+                    </p>
+                  )}
+
+                  <dl className="mt-4 grid grid-cols-3 gap-2 text-left">
+                    <div>
+                      <dt className="text-[10px] uppercase tracking-wide text-gray-500">Duration</dt>
+                      <dd className="mt-0.5 text-xs font-semibold text-gray-900 leading-snug">
+                        {initialClass.duration || '1 / 3 / 6 month plans'}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-[10px] uppercase tracking-wide text-gray-500">Sessions</dt>
+                      <dd className="mt-0.5 text-xs font-semibold text-gray-900 leading-snug">
+                        {initialClass.sessions || 'Live on Google Meet'}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-[10px] uppercase tracking-wide text-gray-500">Format</dt>
+                      <dd className="mt-0.5 text-xs font-semibold text-gray-900 leading-snug">Live peer class</dd>
+                    </div>
+                  </dl>
+
+                  <p className="text-sm font-semibold text-[#1a1a1a] mt-4">Plans</p>
+                  <ul className="mt-2 space-y-2">
+                    {coursePlanBlueprintOrder.map((tier) => {
+                      const blueprint = coursePlanBlueprints[tier]
+                      const amount = getPaymentAmount(
+                        { categoryId: initialClass.categoryId, tier },
+                        pricing,
+                      )
+                      return (
+                        <li
+                          key={tier}
+                          className="flex items-center justify-between gap-3 rounded-xl border border-orange-100 bg-[#fff9f3] px-3 py-2.5"
+                        >
+                          <span className="text-sm text-gray-700">{blueprint.durationLabel}</span>
+                          <span className="text-sm font-semibold text-[#1a1a1a]">{formatInr(amount)}</span>
+                        </li>
+                      )
+                    })}
+                  </ul>
+
+                  <button
+                    type="button"
+                    onClick={handleEnroll}
+                    className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-full bg-educture-orange px-4 py-3 text-sm font-semibold text-white hover:bg-educture-orange-dark transition-colors"
+                  >
+                    {isSignedIn ? 'View & enroll' : 'Join to take this class'}
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                  <Link
+                    to="/classes"
+                    className="mt-3 inline-flex w-full items-center justify-center text-sm font-semibold text-educture-orange hover:underline"
+                  >
+                    Browse all online classes
+                  </Link>
+                  <Link
+                    to="/counselling"
+                    className="mt-2 inline-flex w-full items-center justify-center text-sm font-semibold text-gray-600 hover:text-educture-orange"
+                  >
+                    Need career counselling first?
+                  </Link>
                 </div>
-                <div className="rounded-xl bg-white border border-orange-100 px-4 py-3">
-                  <p className="text-xs text-gray-500 inline-flex items-center gap-1.5">
-                    <Users className="w-3.5 h-3.5 text-educture-orange" />
-                    Sessions
-                  </p>
-                  <p className="mt-1 text-sm font-semibold text-gray-900">
-                    {initialClass.sessions || 'Live on Google Meet'}
-                  </p>
-                </div>
-                <div className="rounded-xl bg-white border border-orange-100 px-4 py-3">
-                  <p className="text-xs text-gray-500 inline-flex items-center gap-1.5">
-                    <Video className="w-3.5 h-3.5 text-educture-orange" />
-                    Format
-                  </p>
-                  <p className="mt-1 text-sm font-semibold text-gray-900">Live peer class</p>
-                </div>
+              </aside>
+            </div>
+
+            <div className="text-left">
+              <h2 className="font-display text-xl text-[#1a1a1a]">About this class</h2>
+              <p className="text-sm text-gray-700 mt-3 leading-relaxed whitespace-pre-wrap max-w-3xl">
+                {description}
+              </p>
+            </div>
+
+            <div>
+              <h2 className="font-display text-xl text-[#1a1a1a]">What you’ll learn</h2>
+              <p className="text-sm text-gray-600 mt-1">
+                Topics covered in the 1, 3, and 6 month plans.
+              </p>
+              <div className="mt-5 grid md:grid-cols-3 gap-4 sm:gap-5 items-stretch">
+                {coursePlanBlueprintOrder.map((tier) => {
+                  const blueprint = coursePlanBlueprints[tier]
+                  const amount = getPaymentAmount(
+                    { categoryId: initialClass.categoryId, tier },
+                    pricing,
+                  )
+                  return (
+                    <article
+                      key={tier}
+                      className={`rounded-2xl border-2 p-5 text-left flex flex-col ${planCardClass[tier]}`}
+                    >
+                      <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-educture-orange">
+                        {blueprint.type}
+                      </p>
+                      <h3 className="font-display text-lg text-[#1a1a1a] mt-1">{blueprint.name}</h3>
+                      <p className="font-display text-2xl text-[#1a1a1a] mt-2">{formatInr(amount)}</p>
+                      <p className="text-xs font-semibold text-educture-orange mt-0.5">
+                        {blueprint.durationLabel}
+                      </p>
+                      <ul className="mt-4 space-y-2 flex-1">
+                        {blueprint.syllabusDepth.map((topic) => (
+                          <li key={topic} className="flex items-start gap-2 text-sm text-gray-700">
+                            <Check className="w-4 h-4 text-educture-orange shrink-0 mt-0.5" />
+                            <span>{topic}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </article>
+                  )
+                })}
               </div>
             </div>
 
-            <aside className="lg:col-span-5">
-              <div className="bg-white rounded-2xl border-2 border-orange-100 p-5 sm:p-6 lg:sticky lg:top-24">
-                {initialClass.mentor ? (
-                  <div className="flex items-center gap-3 min-w-0">
-                    <MentorAvatar src={initialClass.mentorImage} name={initialClass.mentor} size="md" />
-                    <div className="min-w-0">
-                      <p className="text-xs uppercase tracking-wide text-gray-500">Mentor</p>
-                      <p className="font-semibold text-sm text-gray-900 truncate">{initialClass.mentor}</p>
-                    </div>
-                  </div>
-                ) : null}
-                <p className="text-sm text-gray-600 mt-4 leading-relaxed">
-                  Browsing is free. Enrol to get your session schedule and Google Meet link. {pricingLine}.
-                </p>
-                <button
-                  type="button"
-                  onClick={handleEnroll}
-                  className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-full bg-educture-orange px-4 py-3 text-sm font-semibold text-white hover:bg-educture-orange-dark transition-colors"
-                >
-                  {isSignedIn ? 'View & enroll' : 'Join to take this class'}
-                  <ArrowRight className="w-4 h-4" />
-                </button>
-                <Link
-                  to="/classes"
-                  className="mt-3 inline-flex w-full items-center justify-center text-sm font-semibold text-educture-orange hover:underline"
-                >
-                  Browse all online classes
-                </Link>
-                <Link
-                  to="/counselling"
-                  className="mt-2 inline-flex w-full items-center justify-center text-sm font-semibold text-gray-600 hover:text-educture-orange"
-                >
-                  Need career counselling first?
-                </Link>
+            {relatedClasses.length > 0 ? (
+              <div className="pb-4">
+                <h2 className="font-display text-xl text-[#1a1a1a]">Related online classes</h2>
+                <ul className="mt-4 grid sm:grid-cols-3 gap-3">
+                  {relatedClasses.map((item) => (
+                    <li key={item.id}>
+                      <Link
+                        to={classPublicPath(item)}
+                        className="block rounded-2xl border-2 border-orange-100 bg-white p-4 hover:border-educture-orange/50"
+                      >
+                        <p className="text-xs font-bold uppercase tracking-wide text-educture-orange">
+                          {getCategoryById(item.categoryId)?.title ?? item.categoryId}
+                        </p>
+                        <p className="font-semibold text-sm text-[#1a1a1a] mt-1">{item.title}</p>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
               </div>
-            </aside>
+            ) : null}
           </div>
-          {relatedClasses.length > 0 ? (
-            <div className="max-w-6xl mx-auto px-4 sm:px-6 mt-10 pb-4">
-              <h2 className="font-display text-xl text-[#1a1a1a]">Related online classes</h2>
-              <ul className="mt-4 grid sm:grid-cols-3 gap-3">
-                {relatedClasses.map((item) => (
-                  <li key={item.id}>
-                    <Link
-                      to={classPublicPath(item)}
-                      className="block rounded-2xl border-2 border-orange-100 bg-white p-4 hover:border-educture-orange/50"
-                    >
-                      <p className="text-xs font-bold uppercase tracking-wide text-educture-orange">
-                        {getCategoryById(item.categoryId)?.title ?? item.categoryId}
-                      </p>
-                      <p className="font-semibold text-sm text-[#1a1a1a] mt-1">{item.title}</p>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ) : null}
         </section>
       </main>
 

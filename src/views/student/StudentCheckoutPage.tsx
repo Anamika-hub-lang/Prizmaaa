@@ -13,14 +13,20 @@ import { CategoryPlanCards } from '../../components/pricing/CategoryPlanCards'
 import { ActiveEnrollmentBlock } from '../../components/checkout/ActiveEnrollmentBlock'
 import { getActiveEnrollmentForClass } from '../../lib/classEnrollmentPolicy'
 import {
+  formatInr,
   getPaymentAmount,
-  getPaymentLabel,
   type PricingPaymentTier,
 } from '../../data/pricingPlans'
 import { useCategoryPricing } from '../../context/CategoryPricingContext'
 
 function isPaymentTier(value: string | null): value is PricingPaymentTier {
   return value === 'monthly' || value === 'three-month' || value === 'six-month'
+}
+
+const durationCaption: Record<PricingPaymentTier, string> = {
+  monthly: '1 month',
+  'three-month': '3 months',
+  'six-month': '6 months',
 }
 
 export function StudentCheckoutPage() {
@@ -110,8 +116,7 @@ export function StudentCheckoutPage() {
     )
   }
 
-  const amount = paymentSelection ? getPaymentAmount(paymentSelection) : 0
-  const planLabel = paymentSelection ? getPaymentLabel(paymentSelection) : ''
+  const amount = paymentSelection ? getPaymentAmount(paymentSelection, categoryPricing) : 0
   const tier = selectedTier as PricingPaymentTier
 
   async function handlePaidSubmit(type: import('../../types/enrollment').PaymentMethodType, raw: string) {
@@ -141,11 +146,8 @@ export function StudentCheckoutPage() {
           <img src={item.image} alt="" className="w-full h-40 object-cover" />
           <div className="p-5 text-left">
             <p className="font-bold text-lg">{item.title}</p>
-            <p className="text-sm text-gray-500 mt-1">{planLabel}</p>
-            <p className="text-2xl font-bold text-educture-orange mt-4">₹{amount.toLocaleString('en-IN')}</p>
-            {tier === 'monthly' && <p className="text-xs text-gray-500 mt-1">1 month</p>}
-            {tier === 'three-month' && <p className="text-xs text-gray-500 mt-1">3 months</p>}
-            {tier === 'six-month' && <p className="text-xs text-gray-500 mt-1">6 months</p>}
+            <p className="text-2xl font-bold text-educture-orange mt-4">{formatInr(amount)}</p>
+            <p className="text-xs text-gray-500 mt-1">{durationCaption[tier]}</p>
           </div>
         </div>
 
@@ -156,13 +158,13 @@ export function StudentCheckoutPage() {
                 classId={item.id}
                 purpose="paid"
                 planTier={tier}
-                label={`Pay ₹${amount.toLocaleString('en-IN')}`}
+                label={`Pay ${formatInr(amount)}`}
               />
             </>
           ) : (
             <>
               <PaymentMethodForm
-                submitLabel={`Pay ₹${amount.toLocaleString('en-IN')} & enroll`}
+                submitLabel={`Pay ${formatInr(amount)} & enroll`}
                 saving={saving}
                 note="Demo checkout — add Cashfree keys to .env for real payments."
                 onSubmit={handlePaidSubmit}

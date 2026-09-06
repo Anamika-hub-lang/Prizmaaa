@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useUser } from '@clerk/nextjs'
+import { useAuth, useUser } from '@clerk/nextjs'
 import { useMentorContent } from '../../context/MentorContentContext'
 import type { ClassCategoryId } from '../../data/classCatalog'
 import { getCategoryById, getDefaultPriceForCategory } from '../../data/classCatalog'
@@ -11,24 +11,32 @@ import { pickClassCoverImage, isGenericClassCover } from '../../lib/classCoverIm
 import { resolveMentorImage } from '../../lib/mentorAvatar'
 import { ClassSharePanel } from '../../components/mentor/ClassSharePanel'
 import { ClassNotifyPanel } from '../../components/mentor/ClassNotifyPanel'
+import { ClassPlannerFields } from '../../components/mentor/ClassPlannerFields'
+import {
+  draftsFromTeachingPlans,
+  emptyPlannerDrafts,
+  fetchMentorTeachingPlans,
+  persistPlannerDrafts,
+  type PlannerCardDraft,
+  type TeachingPlanTier,
+} from '../../lib/classTeachingPlanApi'
 
 type ClassFormState = {
   title: string
   categoryId: ClassCategoryId
   image: string
-  duration: string
-  sessions: string
   description: string
   mentor: string
   published: boolean
 }
 
+const DEFAULT_CLASS_DURATION = '1 / 3 / 6 month plans'
+const DEFAULT_CLASS_SESSIONS = 'Live sessions'
+
 const emptyForm = (): ClassFormState => ({
   title: '',
   categoryId: 'skills',
   image: '',
-  duration: '6 weeks',
-  sessions: '12 live sessions',
   description: '',
   mentor: 'Your name',
   published: true,
@@ -39,8 +47,6 @@ function classToForm(c: ManagedClass): ClassFormState {
     title: c.title,
     categoryId: c.categoryId,
     image: c.image,
-    duration: c.duration,
-    sessions: c.sessions,
     description: c.description,
     mentor: c.mentor,
     published: c.published,
@@ -49,32 +55,61 @@ function classToForm(c: ManagedClass): ClassFormState {
 
 export function MentorClassesPage() {
   const { user } = useUser()
+  const { getToken } = useAuth()
   const { myClasses, addClass, updateClass, removeClass, categories, isOwnerOfClass, refreshSharedClasses } =
     useMentorContent()
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [form, setForm] = useState<ClassFormState>(emptyForm)
+  const [planners, setPlanners] = useState(emptyPlannerDrafts)
+  const [saving, setSaving] = useState(false)
+  const [formError, setFormError] = useState<string | null>(null)
 
   const resetForm = () => {
     setForm(emptyForm())
+    setPlanners(emptyPlannerDrafts())
     setEditingId(null)
     setShowForm(false)
+    setFormError(null)
   }
 
   const openCreate = () => {
     setForm(emptyForm())
+    setPlanners(emptyPlannerDrafts())
     setEditingId(null)
+    setFormError(null)
     setShowForm(true)
+  }
+
+  const patchPlanner = (tier: TeachingPlanTier, patch: Partial<PlannerCardDraft>) => {
+    setPlanners((prev) => ({
+      ...prev,
+      [tier]: { ...prev[tier], ...patch },
+    }))
+  }
+
+  const loadPlanners = async (classId: string) => {
+    try {
+      const data = await fetchMentorTeachingPlans(getToken, classId)
+      setPlanners(draftsFromTeachingPlans(data.plans))
+      if (data.setupRequired && data.error) setFormError(data.error)
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : 'Could not load planners')
+    }
   }
 
   const openEdit = (c: ManagedClass) => {
     setForm(classToForm(c))
+    setPlanners(emptyPlannerDrafts())
     setEditingId(c.id)
+    setFormError(null)
     setShowForm(true)
+    void loadPlanners(c.id)
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (saving) return
     const seed = editingId ?? `new-${form.title.trim().toLowerCase()}`
     const coverImage = isGenericClassCover(form.image)
       ? pickClassCoverImage({
@@ -91,25 +126,46 @@ export function MentorClassesPage() {
       image: coverImage,
       mentor: form.mentor.trim(),
       mentorImage: resolveMentorImage(undefined, user?.hasImage ? user.imageUrl : null),
-      duration: form.duration.trim(),
-      sessions: form.sessions.trim(),
+      duration: DEFAULT_CLASS_DURATION,
+      sessions: DEFAULT_CLASS_SESSIONS,
       description: form.description.trim(),
       meetLink: 'https://meet.google.com/',
       nextSessionLabel: '',
       published: form.published,
     }
 
-    if (editingId) {
-      const existing = myClasses.find((c) => c.id === editingId)
-      const price =
-        existing?.categoryId === form.categoryId
-          ? existing.price
-          : getDefaultPriceForCategory(form.categoryId)
-      updateClass(editingId, { ...payload, price })
-    } else {
-      addClass(payload)
+    setSaving(true)
+    setFormError(null)
+    try {
+      let classId = editingId
+      if (editingId) {
+        const existing = myClasses.find((c) => c.id === editingId)
+        const price =
+          existing?.categoryId === form.categoryId
+            ? existing.price
+            : getDefaultPriceForCategory(form.categoryId)
+        updateClass(editingId, {
+          ...payload,
+          price,
+          duration: existing?.duration || DEFAULT_CLASS_DURATION,
+          sessions: existing?.sessions || DEFAULT_CLASS_SESSIONS,
+        })
+      } else {
+        classId = await addClass(payload)
+      }
+      if (!classId) throw new Error('Could not save class')
+      try {
+        await persistPlannerDrafts(getToken, classId, planners)
+        resetForm()
+      } catch (err) {
+        setEditingId(classId)
+        setFormError(err instanceof Error ? err.message : 'Class saved, but planners could not be saved.')
+      }
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : 'Could not save class')
+    } finally {
+      setSaving(false)
     }
-    resetForm()
   }
 
   const handleRemove = (c: ManagedClass) => {
@@ -137,7 +193,7 @@ export function MentorClassesPage() {
 
         {showForm && (
           <form
-            onSubmit={handleSubmit}
+            onSubmit={(e) => void handleSubmit(e)}
             className={`${tintedSurface(0)} p-6 mb-8 grid sm:grid-cols-2 gap-4`}
           >
             <p className="sm:col-span-2 font-bold text-[#1d1d1d]">
@@ -195,22 +251,6 @@ export function MentorClassesPage() {
                 className="mt-2 w-full max-h-40 object-cover rounded-xl"
               />
             </div>
-            <div>
-              <label className="text-xs font-semibold text-gray-600">Duration</label>
-              <input
-                value={form.duration}
-                onChange={(e) => setForm((f) => ({ ...f, duration: e.target.value }))}
-                className="w-full mt-1 px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none"
-              />
-            </div>
-            <div>
-              <label className="text-xs font-semibold text-gray-600">Sessions</label>
-              <input
-                value={form.sessions}
-                onChange={(e) => setForm((f) => ({ ...f, sessions: e.target.value }))}
-                className="w-full mt-1 px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none"
-              />
-            </div>
             <div className="sm:col-span-2">
               <label className="text-xs font-semibold text-gray-600">Description</label>
               <textarea
@@ -220,6 +260,16 @@ export function MentorClassesPage() {
                 className="w-full mt-1 px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none resize-none"
               />
             </div>
+            <ClassPlannerFields
+              classTitle={form.title}
+              drafts={planners}
+              onChange={patchPlanner}
+            />
+            {formError ? (
+              <p className="sm:col-span-2 text-sm text-rose-700 bg-rose-50 border border-rose-100 rounded-xl px-3 py-2">
+                {formError}
+              </p>
+            ) : null}
             <div className="sm:col-span-2 flex flex-wrap items-center gap-4">
               <label className="inline-flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer">
                 <input
@@ -232,7 +282,9 @@ export function MentorClassesPage() {
               </label>
             </div>
             <div className="sm:col-span-2 flex flex-wrap gap-3">
-              <AppButton type="submit">{editingId ? 'Save changes' : 'Publish class'}</AppButton>
+              <AppButton type="submit">
+                {saving ? 'Saving…' : editingId ? 'Save changes' : 'Publish class'}
+              </AppButton>
               {editingId && (
                 <button
                   type="button"
@@ -259,7 +311,7 @@ export function MentorClassesPage() {
                 <div className="p-4">
                   <p className="font-bold">{c.title}</p>
                   <p className="text-xs text-gray-500 mt-1">
-                    {getCategoryById(c.categoryId)?.title ?? c.categoryId} · {c.sessions}
+                    {getCategoryById(c.categoryId)?.title ?? c.categoryId} · {c.duration}
                   </p>
                   <p className="text-xs mt-1">
                     <span

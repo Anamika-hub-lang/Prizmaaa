@@ -64,7 +64,7 @@ type MentorContentContextValue = {
   usingLocalData: boolean
   sharedClassIds: string[]
   isOwnerOfClass: (classId: string) => boolean
-  addClass: (input: Omit<ManagedClass, 'id' | 'price'>) => void
+  addClass: (input: Omit<ManagedClass, 'id' | 'price'>) => Promise<string>
   updateClass: (id: string, patch: Partial<ManagedClass>) => void
   removeClass: (id: string) => void
   setMeetForClass: (id: string, meetLink: string, nextSessionLabel: string) => void
@@ -188,7 +188,7 @@ export function MentorContentProvider({ children }: { children: ReactNode }) {
   }, [classes, freeCourses, assignments, mentorClerkId, mentorName, usingLocalData])
 
   const addClass = useCallback(
-    (input: Omit<ManagedClass, 'id' | 'price'>) => {
+    async (input: Omit<ManagedClass, 'id' | 'price'>) => {
       const id = `class-${Date.now()}`
       const mentorImage = resolveMentorImage(
         input.mentorImage,
@@ -203,13 +203,17 @@ export function MentorContentProvider({ children }: { children: ReactNode }) {
         mentorClerkId: mentorClerkId ?? input.mentorClerkId ?? null,
       }
       setClasses((prev) => [...prev, optimistic])
-      insertClass(
-        { ...input, mentorImage, mentorClerkId: mentorClerkId ?? undefined },
-        id,
-      ).catch((e) => {
+      try {
+        await insertClass(
+          { ...input, mentorImage, mentorClerkId: mentorClerkId ?? undefined },
+          id,
+        )
+        return id
+      } catch (e) {
         setSyncError(e instanceof Error ? e.message : 'Could not add class')
         setClasses((prev) => prev.filter((c) => c.id !== id))
-      })
+        throw e
+      }
     },
     [mentorClerkId, user?.hasImage, user?.imageUrl],
   )

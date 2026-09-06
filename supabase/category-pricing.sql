@@ -19,28 +19,32 @@ insert into public.category_pricing (
   (
     'skills',
     'Skills Sessions',
-    999,
-    2499,
-    4999,
+    1000,
+    2500,
+    5000,
     'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=600&q=80'
   ),
   (
     'professional',
     'Professional Sessions',
-    1499,
-    3899,
-    7499,
+    1000,
+    2500,
+    5000,
     'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600&q=80'
   ),
   (
     'academic',
     'Academic Sessions',
-    599,
-    1599,
-    2999,
+    1000,
+    2500,
+    5000,
     'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=600&q=80'
   )
-on conflict (category_id) do nothing;
+on conflict (category_id) do update set
+  monthly_inr = excluded.monthly_inr,
+  three_month_inr = excluded.three_month_inr,
+  six_month_inr = excluded.six_month_inr,
+  updated_at = now();
 
 alter table public.category_pricing enable row level security;
 -- Service-role APIs only (no anon policies).

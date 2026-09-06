@@ -48,7 +48,7 @@ export function CourseDetailPage() {
                 className="w-full rounded-xl object-cover aspect-video mb-6"
               />
               <p className="text-3xl font-bold text-[#1d1d1d]">
-                ₹999<span className="text-base font-normal text-gray-500">/month</span>
+                ₹1000<span className="text-base font-normal text-gray-500">/month</span>
               </p>
               <p className="text-xs text-educture-orange font-semibold mt-1">No-cost EMI available</p>
               <AppButton to="/sign-in" className="w-full justify-center mt-6" size="lg">
