@@ -35,6 +35,8 @@ export type AssignmentRow = {
   course: string
   due: string
   img: string
+  description?: string | null
+  reference_images?: unknown
   status: 'pending' | 'submitted'
   submitted_at: string | null
   student_note: string | null
@@ -44,6 +46,19 @@ export type AssignmentRow = {
   submission_file_url?: string | null
   submission_file_name?: string | null
   submission_link?: string | null
+}
+
+function parseReferenceImages(value: unknown): string[] {
+  let raw = value
+  if (typeof raw === 'string') {
+    try {
+      raw = JSON.parse(raw) as unknown
+    } catch {
+      return []
+    }
+  }
+  if (!Array.isArray(raw)) return []
+  return raw.filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
 }
 
 export function classFromRow(row: ClassRow): ManagedClass {
@@ -123,6 +138,8 @@ export function assignmentFromRow(row: AssignmentRow): MentorAssignment {
     course: row.course,
     due: row.due,
     img: row.img,
+    description: row.description ?? '',
+    referenceImages: parseReferenceImages(row.reference_images),
     status: row.status,
     submittedAt: row.submitted_at ?? undefined,
     studentNote: row.student_note ?? undefined,
@@ -142,6 +159,8 @@ export function assignmentToRow(a: MentorAssignment): AssignmentRow {
     course: a.course,
     due: a.due,
     img: a.img,
+    description: a.description ?? '',
+    reference_images: a.referenceImages ?? [],
     status: a.status,
     submitted_at: a.submittedAt ?? null,
     student_note: a.studentNote ?? null,

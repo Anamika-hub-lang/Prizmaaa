@@ -46,12 +46,15 @@ export function StudentCalendarPage() {
 
     for (const a of assignments) {
       if (a.status !== 'pending') continue
+      const at = parseSessionInstant(a.due)
       list.push({
         id: `asg-${a.id}`,
-        day: '—',
-        month: 'Due',
+        day: at ? String(at.getDate()) : '—',
+        month: at
+          ? at.toLocaleString('en-IN', { month: 'short' })
+          : 'Due',
         title: a.title,
-        time: a.due,
+        time: at ? formatSessionLabel(at) : a.due,
         type: a.course || 'Assignment',
       })
     }

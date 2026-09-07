@@ -1,54 +1,164 @@
-import { useState } from 'react'
-import { CheckCircle2, Clock, ExternalLink, Link2, Paperclip, User } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { CheckCircle2, Clock, ExternalLink, ImagePlus, Link2, Paperclip, User, X } from 'lucide-react'
 import { useAuth } from '@clerk/nextjs'
 import { useMentorContent } from '../../context/MentorContentContext'
 import { MentorPageHeader } from '../../components/layout/TeacherLayout'
 import { AppButton } from '../../components/ui/AppButton'
 import { dashboardCardBorder, dashboardTint } from '../../components/ui/dashboardCardStyles'
+import { AssignmentReferenceImages } from '../../components/assignments/AssignmentReferenceImages'
 import { createClassNotification } from '../../lib/classNotificationsApi'
+import {
+  ASSIGNMENT_IMAGE_ACCEPT,
+  DEFAULT_ASSIGNMENT_THUMBNAIL,
+  isAllowedAssignmentImage,
+  MAX_ASSIGNMENT_IMAGE_BYTES,
+  MAX_ASSIGNMENT_REFERENCE_IMAGES,
+  uploadMentorAssignmentReferenceImages,
+} from '../../lib/mentorAssignmentAssetsApi'
+import { formatSessionLabel } from '../../lib/sessionSchedule'
 
 type MentorTab = 'all' | 'awaiting' | 'submitted'
 
+const fieldClass =
+  'w-full px-4 py-3 rounded-xl border-2 border-orange-200 bg-white/80 text-sm outline-none focus:border-educture-orange'
+
+function toDatetimeLocalValue(value: string): string {
+  if (!value.trim()) return ''
+  const parsed = Date.parse(value)
+  if (Number.isNaN(parsed)) return ''
+  const d = new Date(parsed)
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+
+function dueToIso(value: string): string | null {
+  if (!value.trim()) return null
+  const when = new Date(value)
+  if (Number.isNaN(when.getTime())) return null
+  return when.toISOString()
+}
+
 export function MentorAssignmentsPage() {
-  const { myAssignments, myClasses, addAssignment, updateAssignment } = useMentorContent()
+  const { myAssignments, myClasses, addAssignment, updateAssignment, usingLocalData } = useMentorContent()
   const { getToken } = useAuth()
   const [tab, setTab] = useState<MentorTab>('all')
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editTitle, setEditTitle] = useState('')
   const [editCourse, setEditCourse] = useState('')
   const [editDue, setEditDue] = useState('')
+  const [editDescription, setEditDescription] = useState('')
   const [title, setTitle] = useState('')
   const [classId, setClassId] = useState('')
   const [due, setDue] = useState('')
-  const [img, setImg] = useState('https://images.unsplash.com/photo-1561070791-2526d30994b5?w=400&q=80')
+  const [description, setDescription] = useState('')
+  const [imageFiles, setImageFiles] = useState<File[]>([])
+  const [imagePreviews, setImagePreviews] = useState<string[]>([])
   const [notifyError, setNotifyError] = useState<string | null>(null)
+  const [publishing, setPublishing] = useState(false)
+  const imageInputRef = useRef<HTMLInputElement>(null)
 
   const awaiting = myAssignments.filter((a) => a.status === 'pending')
   const submitted = myAssignments.filter((a) => a.status === 'submitted')
 
-  const visible =
-    tab === 'all' ? myAssignments : tab === 'awaiting' ? awaiting : submitted
+  const visible = tab === 'all' ? myAssignments : tab === 'awaiting' ? awaiting : submitted
 
-  const handleAdd = (e: React.FormEvent) => {
+  useEffect(() => {
+    const urls = imageFiles.map((file) => URL.createObjectURL(file))
+    setImagePreviews(urls)
+    return () => {
+      for (const url of urls) URL.revokeObjectURL(url)
+    }
+  }, [imageFiles])
+
+  const resetCreateForm = () => {
+    setTitle('')
+    setDue('')
+    setDescription('')
+    setImageFiles([])
+    setNotifyError(null)
+    if (imageInputRef.current) imageInputRef.current.value = ''
+  }
+
+  const appendImages = (list: FileList | null) => {
+    if (!list) return
+    const next = [...imageFiles]
+    for (const file of Array.from(list)) {
+      if (next.length >= MAX_ASSIGNMENT_REFERENCE_IMAGES) {
+        setNotifyError(`Upload up to ${MAX_ASSIGNMENT_REFERENCE_IMAGES} reference images.`)
+        break
+      }
+      if (!isAllowedAssignmentImage(file)) {
+        setNotifyError('Reference images must be PNG, JPEG, or WebP.')
+        continue
+      }
+      if (file.size > MAX_ASSIGNMENT_IMAGE_BYTES) {
+        setNotifyError('Each image must be 8 MB or smaller.')
+        continue
+      }
+      next.push(file)
+    }
+    setImageFiles(next)
+    if (imageInputRef.current) imageInputRef.current.value = ''
+  }
+
+  const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault()
     const cls = myClasses.find((c) => c.id === classId)
     if (!cls) {
       setNotifyError('Choose a class so enrolled students get notified.')
       return
     }
+    const dueIso = dueToIso(due)
+    if (!dueIso) {
+      setNotifyError('Pick a valid deadline.')
+      return
+    }
+    const brief = description.trim()
+    if (!brief) {
+      setNotifyError('Add a task description.')
+      return
+    }
+
     setNotifyError(null)
-    addAssignment({ title, course: cls.title, due, img })
-    void createClassNotification(getToken, {
-      classId: cls.id,
-      type: 'assignment',
-      title: `New assignment: ${title}`,
-      body: due ? `Due ${due}` : undefined,
-      linkPath: '/student/assignments',
-    }).catch((err) => {
-      setNotifyError(err instanceof Error ? err.message : 'Assignment saved, but notify failed')
-    })
-    setTitle('')
-    setDue('')
+    setPublishing(true)
+    const id = `asg-${Date.now()}`
+    let referenceImages: string[] = []
+    try {
+      if (imageFiles.length > 0) {
+        if (usingLocalData) {
+          referenceImages = imageFiles.map((file) => URL.createObjectURL(file))
+        } else {
+          referenceImages = await uploadMentorAssignmentReferenceImages(getToken, {
+            assignmentId: id,
+            files: imageFiles,
+          })
+        }
+      }
+      const dueLabel = formatSessionLabel(dueIso)
+      addAssignment({
+        id,
+        title: title.trim(),
+        course: cls.title,
+        due: dueIso,
+        img: referenceImages[0] ?? DEFAULT_ASSIGNMENT_THUMBNAIL,
+        description: brief,
+        referenceImages,
+      })
+      void createClassNotification(getToken, {
+        classId: cls.id,
+        type: 'assignment',
+        title: `New assignment: ${title.trim()}`,
+        body: `Due ${dueLabel}${brief ? ` — ${brief.slice(0, 120)}` : ''}`,
+        linkPath: '/student/assignments',
+      }).catch((err) => {
+        setNotifyError(err instanceof Error ? err.message : 'Assignment saved, but notify failed')
+      })
+      resetCreateForm()
+    } catch (err) {
+      setNotifyError(err instanceof Error ? err.message : 'Could not publish assignment')
+    } finally {
+      setPublishing(false)
+    }
   }
 
   const tabs: { id: MentorTab; label: string; count: number }[] = [
@@ -77,45 +187,103 @@ export function MentorAssignmentsPage() {
         )}
 
         <form
-          onSubmit={handleAdd}
+          onSubmit={(e) => {
+            void handleAdd(e)
+          }}
           className={`${dashboardCardBorder} ${dashboardTint(0).bg} ${dashboardTint(0).border} rounded-2xl p-6 mb-8 space-y-4`}
         >
           <p className="font-bold">Create assignment</p>
-          <input
-            placeholder="Assignment title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            required
-            className="w-full px-4 py-3 rounded-xl border-2 border-orange-200 bg-white/80 text-sm outline-none focus:border-educture-orange"
-          />
-          <select
-            value={classId}
-            onChange={(e) => setClassId(e.target.value)}
-            required
-            className="w-full px-4 py-3 rounded-xl border-2 border-orange-200 bg-white/80 text-sm outline-none"
-          >
-            <option value="">Select class</option>
-            {myClasses.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.title}
-              </option>
-            ))}
-          </select>
-          <input
-            placeholder="Due date text"
-            value={due}
-            onChange={(e) => setDue(e.target.value)}
-            required
-            className="w-full px-4 py-3 rounded-xl border-2 border-orange-200 bg-white/80 text-sm outline-none"
-          />
-          <input
-            placeholder="Thumbnail image URL"
-            value={img}
-            onChange={(e) => setImg(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl border-2 border-orange-200 bg-white/80 text-sm outline-none"
-          />
+          <label className="block text-xs font-semibold text-gray-600">
+            Title
+            <input
+              placeholder="Assignment title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              required
+              className={`${fieldClass} mt-1.5`}
+            />
+          </label>
+          <label className="block text-xs font-semibold text-gray-600">
+            Class
+            <select
+              value={classId}
+              onChange={(e) => setClassId(e.target.value)}
+              required
+              className={`${fieldClass} mt-1.5`}
+            >
+              <option value="">Select class</option>
+              {myClasses.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.title}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="block text-xs font-semibold text-gray-600">
+            Task description
+            <textarea
+              placeholder="What should students do?"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              required
+              rows={4}
+              className={`${fieldClass} mt-1.5 resize-y min-h-[96px]`}
+            />
+          </label>
+          <label className="block text-xs font-semibold text-gray-600">
+            Deadline
+            <input
+              type="datetime-local"
+              value={due}
+              onChange={(e) => setDue(e.target.value)}
+              required
+              className={`${fieldClass} mt-1.5`}
+            />
+          </label>
+          <div>
+            <p className="text-xs font-semibold text-gray-600">Reference images (optional)</p>
+            <input
+              ref={imageInputRef}
+              type="file"
+              accept={ASSIGNMENT_IMAGE_ACCEPT}
+              multiple
+              className="sr-only"
+              onChange={(e) => appendImages(e.target.files)}
+            />
+            <div className="mt-1.5 flex flex-wrap gap-2">
+              {imagePreviews.map((src, index) => (
+                <div key={`${imageFiles[index]?.name ?? src}-${index}`} className="relative">
+                  <img src={src} alt="" className="w-16 h-16 rounded-xl object-cover border-2 border-white" />
+                  <button
+                    type="button"
+                    className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-white border border-gray-200 flex items-center justify-center"
+                    onClick={() => setImageFiles((prev) => prev.filter((_, i) => i !== index))}
+                    aria-label={`Remove image ${index + 1}`}
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              ))}
+              {imageFiles.length < MAX_ASSIGNMENT_REFERENCE_IMAGES && (
+                <AppButton
+                  type="button"
+                  size="sm"
+                  variant="outlineOrange"
+                  onClick={() => imageInputRef.current?.click()}
+                >
+                  <ImagePlus className="w-4 h-4" />
+                  {imageFiles.length === 0 ? 'Add images' : 'Add more'}
+                </AppButton>
+              )}
+            </div>
+            <p className="text-xs text-gray-500 mt-2">
+              PNG, JPEG, or WebP — up to {MAX_ASSIGNMENT_REFERENCE_IMAGES} images, 8 MB each.
+            </p>
+          </div>
           {notifyError && <p className="text-sm text-red-600">{notifyError}</p>}
-          <AppButton type="submit">Publish to students</AppButton>
+          <AppButton type="submit" className={publishing ? 'opacity-70 pointer-events-none' : ''}>
+            {publishing ? 'Publishing…' : 'Publish to students'}
+          </AppButton>
         </form>
 
         <div className="flex flex-wrap gap-2 mb-6">
@@ -168,8 +336,12 @@ export function MentorAssignmentsPage() {
                     </div>
                     <p className="text-sm text-educture-orange">{a.course}</p>
                     {!isSubmitted && editingId !== a.id && (
-                      <p className="text-xs text-gray-600 mt-1">Due {a.due}</p>
+                      <p className="text-xs text-gray-600 mt-1">Due {formatSessionLabel(a.due)}</p>
                     )}
+                    {editingId !== a.id && a.description ? (
+                      <p className="text-sm text-gray-700 mt-2 whitespace-pre-wrap">{a.description}</p>
+                    ) : null}
+                    {editingId !== a.id ? <AssignmentReferenceImages urls={a.referenceImages ?? []} /> : null}
                     {editingId === a.id && (
                       <div className="mt-3 space-y-2">
                         <input
@@ -182,7 +354,14 @@ export function MentorAssignmentsPage() {
                           onChange={(e) => setEditCourse(e.target.value)}
                           className="w-full px-3 py-2 rounded-lg border text-sm"
                         />
+                        <textarea
+                          value={editDescription}
+                          onChange={(e) => setEditDescription(e.target.value)}
+                          rows={3}
+                          className="w-full px-3 py-2 rounded-lg border text-sm resize-y"
+                        />
                         <input
+                          type="datetime-local"
                           value={editDue}
                           onChange={(e) => setEditDue(e.target.value)}
                           className="w-full px-3 py-2 rounded-lg border text-sm"
@@ -191,10 +370,12 @@ export function MentorAssignmentsPage() {
                           type="button"
                           className="text-sm font-semibold text-educture-orange"
                           onClick={() => {
+                            const nextDue = dueToIso(editDue) ?? editDue
                             updateAssignment(a.id, {
                               title: editTitle,
                               course: editCourse,
-                              due: editDue,
+                              due: nextDue,
+                              description: editDescription.trim(),
                             })
                             setEditingId(null)
                           }}
@@ -211,7 +392,8 @@ export function MentorAssignmentsPage() {
                           setEditingId(a.id)
                           setEditTitle(a.title)
                           setEditCourse(a.course)
-                          setEditDue(a.due)
+                          setEditDue(toDatetimeLocalValue(a.due))
+                          setEditDescription(a.description ?? '')
                         }}
                       >
                         Edit assignment

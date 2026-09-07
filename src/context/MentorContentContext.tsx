@@ -72,7 +72,7 @@ type MentorContentContextValue = {
   addFreeCourse: (input: Omit<FreeCourse, 'id'>) => void
   updateFreeCourse: (id: string, patch: Partial<FreeCourse>) => void
   removeFreeCourse: (id: string) => void
-  addAssignment: (input: Omit<MentorAssignment, 'id' | 'status'>) => void
+  addAssignment: (input: Omit<MentorAssignment, 'id' | 'status'> & { id?: string }) => void
   updateAssignment: (id: string, patch: Partial<MentorAssignment>) => void
   submitAssignment: (
     id: string,
@@ -293,10 +293,17 @@ export function MentorContentProvider({ children }: { children: ReactNode }) {
   )
 
   const addAssignment = useCallback(
-    (input: Omit<MentorAssignment, 'id' | 'status'>) => {
-      const optimistic: MentorAssignment = { ...input, id: `asg-${Date.now()}`, status: 'pending' }
+    (input: Omit<MentorAssignment, 'id' | 'status'> & { id?: string }) => {
+      const id = input.id?.trim() || `asg-${Date.now()}`
+      const optimistic: MentorAssignment = {
+        ...input,
+        id,
+        description: input.description ?? '',
+        referenceImages: input.referenceImages ?? [],
+        status: 'pending',
+      }
       setAssignments((prev) => [...prev, optimistic])
-      insertAssignment({ ...input, mentorClerkId: mentorClerkId ?? undefined }).catch((e) => {
+      insertAssignment({ ...input, id, mentorClerkId: mentorClerkId ?? undefined }).catch((e) => {
         setSyncError(e instanceof Error ? e.message : 'Could not add assignment')
         refresh()
       })

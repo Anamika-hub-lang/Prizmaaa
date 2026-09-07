@@ -5,11 +5,13 @@ import { StudentPageHeader } from '../components/layout/StudentLayout'
 import { AppButton } from '../components/ui/AppButton'
 import { useMentorContent } from '../context/MentorContentContext'
 import { dashboardCardBorder, dashboardTint } from '../components/ui/dashboardCardStyles'
+import { AssignmentReferenceImages } from '../components/assignments/AssignmentReferenceImages'
 import {
   ASSIGNMENT_FILE_ACCEPT,
   isAllowedAssignmentFile,
   isHttpUrl,
 } from '../lib/studentAssignmentSubmitApi'
+import { formatSessionLabel } from '../lib/sessionSchedule'
 import type { MentorAssignment } from '../types/mentorContent'
 
 type Tab = 'due' | 'submitted'
@@ -172,13 +174,17 @@ export function StudentAssignmentsPage() {
                   return (
                     <article
                       key={a.id}
-                      className={`${dashboardCardBorder} ${tint.bg} ${tint.border} flex flex-col sm:flex-row gap-4 p-4 sm:p-5 items-start sm:items-center card-lift text-left`}
+                      className={`${dashboardCardBorder} ${tint.bg} ${tint.border} flex flex-col sm:flex-row gap-4 p-4 sm:p-5 items-start card-lift text-left`}
                     >
                       <img src={a.img} alt="" className="w-20 h-20 rounded-xl object-cover shrink-0 border-2 border-white" />
                       <div className="flex-1 min-w-0">
                         <p className="font-bold text-[#1d1d1d]">{a.title}</p>
                         <p className="text-sm text-educture-orange">{a.course}</p>
-                        <p className="text-xs text-gray-600 mt-1">Due {a.due}</p>
+                        <p className="text-xs text-gray-600 mt-1">Due {formatSessionLabel(a.due)}</p>
+                        {a.description ? (
+                          <p className="text-sm text-gray-700 mt-2 whitespace-pre-wrap">{a.description}</p>
+                        ) : null}
+                        <AssignmentReferenceImages urls={a.referenceImages ?? []} />
                       </div>
                       {submittingId === a.id ? (
                         <div className="w-full sm:w-80 space-y-3">
@@ -317,8 +323,12 @@ export function StudentAssignmentsPage() {
                         </div>
                         <p className="text-sm text-educture-orange">{a.course}</p>
                         <p className="text-xs text-gray-600 mt-1">
-                          Submitted on {a.submittedAt ?? a.due.replace(/^Submitted · /, '')}
+                          Submitted on {a.submittedAt ?? formatSessionLabel(a.due)}
                         </p>
+                        {a.description ? (
+                          <p className="text-sm text-gray-700 mt-2 whitespace-pre-wrap">{a.description}</p>
+                        ) : null}
+                        <AssignmentReferenceImages urls={a.referenceImages ?? []} />
                         <SubmissionAttachment assignment={a} />
                         {a.studentNote && (
                           <p className="text-sm text-gray-700 mt-2 p-3 rounded-xl bg-white/70 border-2 border-white">

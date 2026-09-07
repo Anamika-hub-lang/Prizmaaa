@@ -8,6 +8,8 @@ export type MentorAssignment = {
   course: string
   due: string
   img: string
+  description: string
+  referenceImages: string[]
   status: 'pending' | 'submitted'
   submittedAt?: string
   studentNote?: string

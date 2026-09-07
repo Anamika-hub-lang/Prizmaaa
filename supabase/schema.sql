@@ -35,6 +35,8 @@ create table if not exists public.assignments (
   course text not null default '',
   due text not null default '',
   img text not null default '',
+  description text not null default '',
+  reference_images jsonb not null default '[]'::jsonb,
   status text not null default 'pending' check (status in ('pending', 'submitted')),
   submitted_at text,
   student_note text,

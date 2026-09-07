@@ -9,6 +9,9 @@ import {
   freeCourseToRow,
   assignmentFromRow,
   assignmentToRow,
+  type AssignmentRow,
+  type ClassRow,
+  type FreeCourseRow,
 } from './supabaseMappers'
 
 const emptyContent = (): {
@@ -49,15 +52,9 @@ export async function fetchAllContent(): Promise<{
       return emptyContent()
     }
 
-    const classes = (classesRes.data ?? []).map((r) =>
-      classFromRow(r as import('./supabaseMappers').ClassRow),
-    )
-    const freeCourses = (freeRes.data ?? []).map((r) =>
-      freeCourseFromRow(r as import('./supabaseMappers').FreeCourseRow),
-    )
-    const assignments = (asgRes.data ?? []).map((r) =>
-      assignmentFromRow(r as import('./supabaseMappers').AssignmentRow),
-    )
+    const classes = (classesRes.data ?? []).map((r) => classFromRow(r as ClassRow))
+    const freeCourses = (freeRes.data ?? []).map((r) => freeCourseFromRow(r as FreeCourseRow))
+    const assignments = (asgRes.data ?? []).map((r) => assignmentFromRow(r as AssignmentRow))
 
     return { classes, freeCourses, assignments, dataSource: 'supabase' }
   } catch (e) {
@@ -141,10 +138,17 @@ export async function deleteFreeCourseRow(id: string) {
 }
 
 export async function insertAssignment(
-  input: Omit<MentorAssignment, 'id' | 'status'> & { mentorClerkId?: string },
+  input: Omit<MentorAssignment, 'id' | 'status'> & { id?: string; mentorClerkId?: string },
 ) {
-  const id = `asg-${Date.now()}`
-  const row = assignmentToRow({ ...input, id, status: 'pending', mentorClerkId: input.mentorClerkId ?? null })
+  const id = input.id?.trim() || `asg-${Date.now()}`
+  const row = assignmentToRow({
+    ...input,
+    id,
+    description: input.description ?? '',
+    referenceImages: input.referenceImages ?? [],
+    status: 'pending',
+    mentorClerkId: input.mentorClerkId ?? null,
+  })
   if (!supabase) return id
   const { error } = await supabase.from('assignments').insert(row)
   if (error) throw error
@@ -188,6 +192,8 @@ export async function updateAssignmentRow(id: string, patch: Partial<MentorAssig
   if (patch.course !== undefined) payload.course = patch.course
   if (patch.due !== undefined) payload.due = patch.due
   if (patch.img !== undefined) payload.img = patch.img
+  if (patch.description !== undefined) payload.description = patch.description
+  if (patch.referenceImages !== undefined) payload.reference_images = patch.referenceImages
   if (patch.mentorClerkId !== undefined) payload.mentor_clerk_id = patch.mentorClerkId
   const { error } = await supabase.from('assignments').update(payload).eq('id', id)
   if (error) throw error

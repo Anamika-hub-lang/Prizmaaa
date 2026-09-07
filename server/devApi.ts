@@ -44,6 +44,7 @@ import { tryHandleClassAttendanceApi } from './classAttendanceApi'
 import { tryHandleClassTeachingPlanApi } from './classTeachingPlanApi'
 import { tryHandleCategoryPricingApi } from './categoryPricingApi'
 import { tryHandleStudentAssignmentSubmitApi } from './studentAssignmentSubmitApi'
+import { tryHandleMentorAssignmentAssetsApi } from './mentorAssignmentAssetsApi'
 import { counsellingPriceInr } from './lib/counsellingPricing'
 import { isMentorEmailAllowed, isMissingTableError, normalizeMentorEmail } from './lib/mentorAllowlist'
 import {
@@ -2749,6 +2750,18 @@ export function handleDevApiRequest(
   if (
     path &&
     tryHandleStudentAssignmentSubmitApi(path, req, res, env, {
+      json,
+      verifyClerkSession,
+      requireSupabaseAdmin,
+      readBodyJson,
+    })
+  ) {
+    return true
+  }
+
+  if (
+    path &&
+    tryHandleMentorAssignmentAssetsApi(path, req, res, env, {
       json,
       verifyClerkSession,
       requireSupabaseAdmin,
