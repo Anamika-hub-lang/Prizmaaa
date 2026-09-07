@@ -17,7 +17,7 @@ type Helpers = {
 const ASSIGNMENTS_BUCKET = 'assignments'
 const MAX_FILE_BYTES = 8 * 1024 * 1024
 const MISSING_SQL =
-  'Assignment storage is not set up. Run supabase/assignments-storage.sql in the Supabase SQL Editor.'
+  'Assignment storage is not set up. Run supabase/assignments-brief.sql (and supabase/assignments-storage.sql) in the Supabase SQL Editor.'
 
 function isBucketMissing(error: { message?: string } | null | undefined): boolean {
   const msg = (error?.message ?? '').toLowerCase()
