@@ -16,12 +16,28 @@ type Helpers = {
 
 const ASSIGNMENTS_BUCKET = 'assignments'
 const MAX_FILE_BYTES = 8 * 1024 * 1024
-const MISSING_SQL =
-  'Assignment storage is not set up. Run supabase/assignments-brief.sql (and supabase/assignments-storage.sql) in the Supabase SQL Editor.'
 
-function isBucketMissing(error: { message?: string } | null | undefined): boolean {
+function isBucketMissing(error: { message?: string; statusCode?: string | number } | null | undefined): boolean {
   const msg = (error?.message ?? '').toLowerCase()
-  return msg.includes('bucket') || msg.includes('not found')
+  const status = String(error?.statusCode ?? '')
+  return (
+    status === '404' ||
+    msg.includes('bucket not found') ||
+    (msg.includes('bucket') && (msg.includes('not found') || msg.includes('does not exist')))
+  )
+}
+
+async function ensureAssignmentsBucket(supabase: SupabaseClient): Promise<{ error?: string }> {
+  const existing = await supabase.storage.getBucket(ASSIGNMENTS_BUCKET)
+  if (existing.data) return {}
+
+  const created = await supabase.storage.createBucket(ASSIGNMENTS_BUCKET, { public: true })
+  if (created.error) {
+    const msg = created.error.message.toLowerCase()
+    if (msg.includes('already exists') || msg.includes('duplicate')) return {}
+    return { error: created.error.message || 'Could not create the assignments storage bucket' }
+  }
+  return {}
 }
 
 function sanitizeFileName(name: string, fallbackExt: string): string {
@@ -95,12 +111,24 @@ async function uploadReferenceImage(
   const safeName = sanitizeFileName(fileName || `reference${ext}`, ext)
   const path = `references/${assignmentId}/${Date.now()}-${safeName}`
 
-  const { error: upErr } = await supabase.storage.from(ASSIGNMENTS_BUCKET).upload(path, buffer, {
-    contentType,
-    upsert: false,
-  })
+  const ensured = await ensureAssignmentsBucket(supabase)
+  if (ensured.error) return { error: ensured.error }
+
+  const uploadOnce = () =>
+    supabase.storage.from(ASSIGNMENTS_BUCKET).upload(path, buffer, {
+      contentType,
+      upsert: false,
+    })
+
+  let { error: upErr } = await uploadOnce()
+  if (upErr && isBucketMissing(upErr)) {
+    const retryEnsure = await ensureAssignmentsBucket(supabase)
+    if (retryEnsure.error) return { error: retryEnsure.error }
+    const retried = await uploadOnce()
+    upErr = retried.error
+  }
   if (upErr) {
-    if (isBucketMissing(upErr)) return { error: MISSING_SQL }
+    console.error('[assignment-reference-images] upload', upErr.message)
     return { error: upErr.message || 'Upload failed' }
   }
 

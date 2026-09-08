@@ -12,6 +12,8 @@ import {
   type AssignmentRow,
   type ClassRow,
   type FreeCourseRow,
+  isMissingReferenceImagesColumn,
+  packReferenceImagesFallback,
 } from './supabaseMappers'
 
 const emptyContent = (): {
@@ -151,6 +153,19 @@ export async function insertAssignment(
   })
   if (!supabase) return id
   const { error } = await supabase.from('assignments').insert(row)
+  if (error && isMissingReferenceImagesColumn(error)) {
+    const { reference_images, ...rest } = row
+    const urls = Array.isArray(reference_images)
+      ? reference_images.filter((item): item is string => typeof item === 'string')
+      : []
+    const fallback = {
+      ...rest,
+      img: urls.length > 0 ? packReferenceImagesFallback(urls, rest.img) : rest.img,
+    }
+    const retry = await supabase.from('assignments').insert(fallback)
+    if (retry.error) throw retry.error
+    return id
+  }
   if (error) throw error
   return id
 }
@@ -196,6 +211,17 @@ export async function updateAssignmentRow(id: string, patch: Partial<MentorAssig
   if (patch.referenceImages !== undefined) payload.reference_images = patch.referenceImages
   if (patch.mentorClerkId !== undefined) payload.mentor_clerk_id = patch.mentorClerkId
   const { error } = await supabase.from('assignments').update(payload).eq('id', id)
+  if (error && isMissingReferenceImagesColumn(error) && patch.referenceImages !== undefined) {
+    const fallback = { ...payload }
+    delete fallback.reference_images
+    fallback.img = packReferenceImagesFallback(
+      patch.referenceImages,
+      String(patch.img ?? payload.img ?? ''),
+    )
+    const retry = await supabase.from('assignments').update(fallback).eq('id', id)
+    if (retry.error) throw retry.error
+    return
+  }
   if (error) throw error
 }
 

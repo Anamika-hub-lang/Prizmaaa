@@ -61,6 +61,26 @@ function parseReferenceImages(value: unknown): string[] {
   return raw.filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
 }
 
+const PACKED_REFERENCE_PREFIX = 'prizma-refs:'
+
+function unpackPackedReferenceImages(img: string): { img: string; referenceImages: string[] } | null {
+  if (!img.startsWith(PACKED_REFERENCE_PREFIX)) return null
+  const urls = parseReferenceImages(img.slice(PACKED_REFERENCE_PREFIX.length))
+  return { img: urls[0] ?? '', referenceImages: urls }
+}
+
+export function packReferenceImagesFallback(urls: string[], cover: string): string {
+  if (urls.length === 0) return cover
+  return `${PACKED_REFERENCE_PREFIX}${JSON.stringify(urls)}`
+}
+
+export function isMissingReferenceImagesColumn(
+  error: { code?: string; message?: string } | null | undefined,
+): boolean {
+  const msg = (error?.message ?? '').toLowerCase()
+  return msg.includes('reference_images')
+}
+
 export function classFromRow(row: ClassRow): ManagedClass {
   return {
     id: row.id,
@@ -132,14 +152,17 @@ export function freeCourseToRow(c: FreeCourse): FreeCourseRow {
 
 export function assignmentFromRow(row: AssignmentRow): MentorAssignment {
   const submissionType = row.submission_type === 'file' || row.submission_type === 'link' ? row.submission_type : undefined
+  const packed = unpackPackedReferenceImages(row.img)
+  const referenceImages = parseReferenceImages(row.reference_images)
+  const resolvedImages = referenceImages.length > 0 ? referenceImages : packed?.referenceImages ?? []
   return {
     id: row.id,
     title: row.title,
     course: row.course,
     due: row.due,
-    img: row.img,
+    img: packed && referenceImages.length === 0 ? packed.img : row.img,
     description: row.description ?? '',
-    referenceImages: parseReferenceImages(row.reference_images),
+    referenceImages: resolvedImages,
     status: row.status,
     submittedAt: row.submitted_at ?? undefined,
     studentNote: row.student_note ?? undefined,
