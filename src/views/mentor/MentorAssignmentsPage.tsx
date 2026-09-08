@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { CheckCircle2, Clock, ExternalLink, ImagePlus, Link2, Paperclip, User, X } from 'lucide-react'
+import { CheckCircle2, ChevronLeft, Clock, ExternalLink, FileText, ImagePlus, Link2, Paperclip, User, X } from 'lucide-react'
 import { useAuth } from '@clerk/nextjs'
 import { useMentorContent } from '../../context/MentorContentContext'
 import { MentorPageHeader } from '../../components/layout/TeacherLayout'
@@ -14,6 +14,7 @@ import {
   MAX_ASSIGNMENT_IMAGE_BYTES,
   MAX_ASSIGNMENT_REFERENCE_IMAGES,
   uploadMentorAssignmentReferenceImages,
+  fetchAssignmentSubmissions,
 } from '../../lib/mentorAssignmentAssetsApi'
 import { formatSessionLabel } from '../../lib/sessionSchedule'
 
@@ -39,7 +40,8 @@ function dueToIso(value: string): string | null {
 }
 
 export function MentorAssignmentsPage() {
-  const { myAssignments, myClasses, addAssignment, updateAssignment, usingLocalData } = useMentorContent()
+  const { myAssignments, myClasses, addAssignment, updateAssignment, usingLocalData, loading, syncError } =
+    useMentorContent()
   const { getToken } = useAuth()
   const [tab, setTab] = useState<MentorTab>('all')
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -55,7 +57,42 @@ export function MentorAssignmentsPage() {
   const [imagePreviews, setImagePreviews] = useState<string[]>([])
   const [notifyError, setNotifyError] = useState<string | null>(null)
   const [publishing, setPublishing] = useState(false)
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [submissions, setSubmissions] = useState<
+    Awaited<ReturnType<typeof fetchAssignmentSubmissions>>
+  >([])
+  const [submissionsError, setSubmissionsError] = useState<string | null>(null)
+  const [submissionsLoading, setSubmissionsLoading] = useState(false)
   const imageInputRef = useRef<HTMLInputElement>(null)
+
+  const selected = myAssignments.find((a) => a.id === selectedId) ?? null
+
+  useEffect(() => {
+    if (!selectedId) {
+      setSubmissions([])
+      setSubmissionsError(null)
+      return
+    }
+    let cancelled = false
+    setSubmissionsLoading(true)
+    setSubmissionsError(null)
+    void fetchAssignmentSubmissions(getToken, selectedId)
+      .then((rows) => {
+        if (!cancelled) setSubmissions(rows)
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setSubmissions([])
+          setSubmissionsError(err instanceof Error ? err.message : 'Could not load submissions')
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setSubmissionsLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [selectedId, getToken])
 
   const awaiting = myAssignments.filter((a) => a.status === 'pending')
   const submitted = myAssignments.filter((a) => a.status === 'submitted')
@@ -135,7 +172,7 @@ export function MentorAssignmentsPage() {
         }
       }
       const dueLabel = formatSessionLabel(dueIso)
-      addAssignment({
+      await addAssignment({
         id,
         title: title.trim(),
         course: cls.title,
@@ -143,6 +180,7 @@ export function MentorAssignmentsPage() {
         img: referenceImages[0] ?? DEFAULT_ASSIGNMENT_THUMBNAIL,
         description: brief,
         referenceImages,
+        classId: cls.id,
       })
       void createClassNotification(getToken, {
         classId: cls.id,
@@ -171,9 +209,102 @@ export function MentorAssignmentsPage() {
     <>
       <MentorPageHeader
         title="Assignments"
-        subtitle="See which students have submitted work — status updates when they click Submit on their portal."
+        subtitle="Publish a brief, then click an assignment to review student uploads."
       />
       <main className="max-w-3xl mx-auto px-4 sm:px-6 py-8 text-left">
+        {syncError && (
+          <p className="text-sm text-red-600 mb-4">{syncError}</p>
+        )}
+        {selected ? (
+          <div className="space-y-4">
+            <button
+              type="button"
+              className="inline-flex items-center gap-1 text-sm font-semibold text-educture-orange"
+              onClick={() => setSelectedId(null)}
+            >
+              <ChevronLeft className="w-4 h-4" />
+              Back to assignments
+            </button>
+            <div className={`${dashboardCardBorder} ${dashboardTint(0).bg} ${dashboardTint(0).border} rounded-2xl p-5 space-y-3`}>
+              <p className="font-bold text-lg">{selected.title}</p>
+              <p className="text-sm text-educture-orange">{selected.course}</p>
+              <p className="text-xs text-gray-600">Due {formatSessionLabel(selected.due)}</p>
+              {selected.description ? (
+                <p className="text-sm text-gray-700 whitespace-pre-wrap">{selected.description}</p>
+              ) : null}
+              <AssignmentReferenceImages urls={selected.referenceImages ?? []} />
+              {selected.pdfUrl ? (
+                <a
+                  href={selected.pdfUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-sm font-semibold text-educture-orange hover:underline"
+                >
+                  <FileText className="w-4 h-4" />
+                  {selected.pdfName || 'Open assignment PDF'}
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </a>
+              ) : null}
+            </div>
+            <div className={`${dashboardCardBorder} ${dashboardTint(2).bg} ${dashboardTint(2).border} rounded-2xl p-5`}>
+              <p className="font-bold mb-3">Student submissions</p>
+              {submissionsLoading ? (
+                <p className="text-sm text-gray-500">Loading submissions…</p>
+              ) : submissionsError ? (
+                <p className="text-sm text-red-600">{submissionsError}</p>
+              ) : submissions.length === 0 ? (
+                <p className="text-sm text-gray-500">No students have submitted work yet.</p>
+              ) : (
+                <ul className="space-y-3">
+                  {submissions.map((item) => (
+                    <li
+                      key={item.clerkId}
+                      className="p-4 rounded-xl bg-white/80 border-2 border-white space-y-2"
+                    >
+                      <p className="text-xs font-bold uppercase tracking-wide text-emerald-800 flex items-center gap-2">
+                        <User className="w-4 h-4" />
+                        {item.studentName}
+                      </p>
+                      <p className="text-sm text-gray-800">
+                        Submitted on <strong>{item.submittedAt || '—'}</strong>
+                      </p>
+                      {item.note ? (
+                        <p className="text-sm text-gray-700">
+                          <span className="font-semibold">Note:</span> {item.note}
+                        </p>
+                      ) : null}
+                      {item.type === 'file' && item.fileUrl ? (
+                        <a
+                          href={item.fileUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 text-sm font-semibold text-educture-orange hover:underline"
+                        >
+                          <Paperclip className="w-4 h-4" />
+                          Open file{item.fileName ? ` · ${item.fileName}` : ''}
+                          <ExternalLink className="w-3.5 h-3.5" />
+                        </a>
+                      ) : null}
+                      {item.type === 'link' && item.link ? (
+                        <a
+                          href={item.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 text-sm font-semibold text-educture-orange hover:underline break-all"
+                        >
+                          <Link2 className="w-4 h-4 shrink-0" />
+                          {item.link}
+                          <ExternalLink className="w-3.5 h-3.5 shrink-0" />
+                        </a>
+                      ) : null}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+        ) : (
+          <>
         {submitted.length > 0 && (
           <div className={`${dashboardCardBorder} ${dashboardTint(2).bg} ${dashboardTint(2).border} rounded-2xl p-5 mb-6`}>
             <p className="font-bold text-emerald-900 flex items-center gap-2">
@@ -181,8 +312,8 @@ export function MentorAssignmentsPage() {
               {submitted.length} assignment(s) submitted by students
             </p>
             <p className="text-sm text-gray-700 mt-2">
-              Open the <strong>Student submitted</strong> tab to read each submission, date, and student note.
-            </p>
+            Open an assignment to review each student’s file or link.
+          </p>
           </div>
         )}
 
@@ -309,7 +440,9 @@ export function MentorAssignmentsPage() {
         </div>
 
         <ul className="space-y-3">
-          {visible.length === 0 ? (
+          {loading ? (
+            <p className="text-sm text-gray-500 py-8 text-center">Loading assignments…</p>
+          ) : visible.length === 0 ? (
             <p className="text-sm text-gray-500 py-8 text-center">No assignments in this view.</p>
           ) : (
             visible.map((a, i) => {
@@ -320,7 +453,9 @@ export function MentorAssignmentsPage() {
                   key={a.id}
                   className={`flex gap-4 items-start ${dashboardCardBorder} ${tint.bg} ${tint.border} rounded-2xl p-4 sm:p-5`}
                 >
-                  <img src={a.img} alt="" className="w-16 h-16 rounded-xl object-cover hidden sm:block border-2 border-white" />
+                  {a.img ? (
+                    <img src={a.img} alt="" className="w-16 h-16 rounded-xl object-cover hidden sm:block border-2 border-white" />
+                  ) : null}
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                       <p className="font-bold">{a.title}</p>
@@ -342,6 +477,26 @@ export function MentorAssignmentsPage() {
                       <p className="text-sm text-gray-700 mt-2 whitespace-pre-wrap">{a.description}</p>
                     ) : null}
                     {editingId !== a.id ? <AssignmentReferenceImages urls={a.referenceImages ?? []} /> : null}
+                    {editingId !== a.id && a.pdfUrl ? (
+                      <a
+                        href={a.pdfUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 text-sm font-semibold text-educture-orange mt-2 hover:underline"
+                      >
+                        <FileText className="w-4 h-4" />
+                        {a.pdfName || 'Open assignment PDF'}
+                      </a>
+                    ) : null}
+                    {editingId !== a.id && (
+                      <button
+                        type="button"
+                        className="text-xs font-semibold text-educture-orange mt-2 hover:underline"
+                        onClick={() => setSelectedId(a.id)}
+                      >
+                        View student work
+                      </button>
+                    )}
                     {editingId === a.id && (
                       <div className="mt-3 space-y-2">
                         <input
@@ -447,6 +602,8 @@ export function MentorAssignmentsPage() {
             })
           )}
         </ul>
+          </>
+        )}
       </main>
     </>
   )

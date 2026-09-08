@@ -34,9 +34,12 @@ export type AssignmentRow = {
   title: string
   course: string
   due: string
-  img: string
+  img: string | null
   description?: string | null
   reference_images?: unknown
+  class_id?: string | null
+  pdf_url?: string | null
+  pdf_name?: string | null
   status: 'pending' | 'submitted'
   submitted_at: string | null
   student_note: string | null
@@ -152,7 +155,8 @@ export function freeCourseToRow(c: FreeCourse): FreeCourseRow {
 
 export function assignmentFromRow(row: AssignmentRow): MentorAssignment {
   const submissionType = row.submission_type === 'file' || row.submission_type === 'link' ? row.submission_type : undefined
-  const packed = unpackPackedReferenceImages(row.img)
+  const rawImg = row.img ?? ''
+  const packed = unpackPackedReferenceImages(rawImg)
   const referenceImages = parseReferenceImages(row.reference_images)
   const resolvedImages = referenceImages.length > 0 ? referenceImages : packed?.referenceImages ?? []
   return {
@@ -160,9 +164,12 @@ export function assignmentFromRow(row: AssignmentRow): MentorAssignment {
     title: row.title,
     course: row.course,
     due: row.due,
-    img: packed && referenceImages.length === 0 ? packed.img : row.img,
+    img: packed && referenceImages.length === 0 ? packed.img : rawImg,
     description: row.description ?? '',
     referenceImages: resolvedImages,
+    classId: row.class_id ?? null,
+    pdfUrl: row.pdf_url ?? null,
+    pdfName: row.pdf_name ?? null,
     status: row.status,
     submittedAt: row.submitted_at ?? undefined,
     studentNote: row.student_note ?? undefined,
@@ -176,6 +183,26 @@ export function assignmentFromRow(row: AssignmentRow): MentorAssignment {
 }
 
 export function assignmentToRow(a: MentorAssignment): AssignmentRow {
+  const urls = a.referenceImages ?? []
+  return {
+    id: a.id,
+    title: a.title,
+    course: a.course,
+    due: a.due,
+    img: urls.length > 0 ? packReferenceImagesFallback(urls, a.img) : a.img,
+    description: a.description ?? '',
+    class_id: a.classId ?? null,
+    pdf_url: a.pdfUrl ?? null,
+    pdf_name: a.pdfName ?? null,
+    status: a.status,
+    submitted_at: a.submittedAt ?? null,
+    student_note: a.studentNote ?? null,
+    submitted_by: a.submittedBy ?? null,
+    mentor_clerk_id: a.mentorClerkId ?? null,
+  }
+}
+
+export function assignmentInsertPayload(a: AssignmentRow): Record<string, unknown> {
   return {
     id: a.id,
     title: a.title,
@@ -183,11 +210,8 @@ export function assignmentToRow(a: MentorAssignment): AssignmentRow {
     due: a.due,
     img: a.img,
     description: a.description ?? '',
-    reference_images: a.referenceImages ?? [],
     status: a.status,
-    submitted_at: a.submittedAt ?? null,
-    student_note: a.studentNote ?? null,
-    submitted_by: a.submittedBy ?? null,
-    mentor_clerk_id: a.mentorClerkId ?? null,
+    mentor_clerk_id: a.mentor_clerk_id ?? null,
+    class_id: a.class_id ?? null,
   }
 }

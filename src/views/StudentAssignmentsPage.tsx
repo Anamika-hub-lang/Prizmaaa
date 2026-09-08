@@ -176,7 +176,9 @@ export function StudentAssignmentsPage() {
                       key={a.id}
                       className={`${dashboardCardBorder} ${tint.bg} ${tint.border} flex flex-col sm:flex-row gap-4 p-4 sm:p-5 items-start card-lift text-left`}
                     >
-                      <img src={a.img} alt="" className="w-20 h-20 rounded-xl object-cover shrink-0 border-2 border-white" />
+                      {a.img ? (
+                        <img src={a.img} alt="" className="w-20 h-20 rounded-xl object-cover shrink-0 border-2 border-white" />
+                      ) : null}
                       <div className="flex-1 min-w-0">
                         <p className="font-bold text-[#1d1d1d]">{a.title}</p>
                         <p className="text-sm text-educture-orange">{a.course}</p>
@@ -185,6 +187,16 @@ export function StudentAssignmentsPage() {
                           <p className="text-sm text-gray-700 mt-2 whitespace-pre-wrap">{a.description}</p>
                         ) : null}
                         <AssignmentReferenceImages urls={a.referenceImages ?? []} />
+                        {a.pdfUrl ? (
+                          <a
+                            href={a.pdfUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 text-sm font-semibold text-educture-orange mt-2 hover:underline"
+                          >
+                            {a.pdfName || 'Open assignment PDF'}
+                          </a>
+                        ) : null}
                       </div>
                       {submittingId === a.id ? (
                         <div className="w-full sm:w-80 space-y-3">

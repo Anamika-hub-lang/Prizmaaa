@@ -187,6 +187,117 @@ async function handleReferenceImagesPost(
   helpers.json(res, 200, { ok: true, url: uploaded.url })
 }
 
+type StoredSubmission = {
+  clerkId: string
+  studentName: string
+  submittedAt: string
+  note?: string
+  type: 'file' | 'link'
+  fileUrl?: string | null
+  fileName?: string | null
+  link?: string | null
+}
+
+async function readJsonObject(
+  supabase: SupabaseClient,
+  path: string,
+): Promise<Record<string, unknown> | null> {
+  const { data, error } = await supabase.storage.from(ASSIGNMENTS_BUCKET).download(path)
+  if (error || !data) return null
+  const text = await data.text()
+  try {
+    const parsed = JSON.parse(text) as unknown
+    return parsed && typeof parsed === 'object' ? (parsed as Record<string, unknown>) : null
+  } catch {
+    return null
+  }
+}
+
+async function handleListSubmissions(
+  req: IncomingMessage,
+  res: ServerResponse,
+  env: Env,
+  helpers: Helpers,
+): Promise<void> {
+  if (req.method !== 'GET') {
+    res.statusCode = 405
+    res.end()
+    return
+  }
+  const clerkId = await requireAuth(req, res, env, helpers)
+  if (!clerkId) return
+  const supabase = helpers.requireSupabaseAdmin(env)
+  if (!supabase) {
+    helpers.json(res, 503, { error: 'Database not configured' })
+    return
+  }
+
+  const url = new URL(req.url ?? '', 'http://localhost')
+  const assignmentId = sanitizeAssignmentId(url.searchParams.get('assignmentId') ?? '')
+  if (!assignmentId) {
+    helpers.json(res, 400, { error: 'Assignment id is required' })
+    return
+  }
+
+  const { data: assignment, error: asgErr } = await supabase
+    .from('assignments')
+    .select('id, mentor_clerk_id, class_id, submitted_by, submitted_at, student_note, status')
+    .eq('id', assignmentId)
+    .maybeSingle()
+  if (asgErr || !assignment) {
+    helpers.json(res, 404, { error: 'Assignment not found' })
+    return
+  }
+
+  const ownerId = typeof assignment.mentor_clerk_id === 'string' ? assignment.mentor_clerk_id : ''
+  const classId = typeof assignment.class_id === 'string' ? assignment.class_id : ''
+  let allowed = ownerId === clerkId || !ownerId
+  if (!allowed && classId) {
+    const { data: cls } = await supabase
+      .from('classes')
+      .select('id, mentor_clerk_id')
+      .eq('id', classId)
+      .maybeSingle()
+    allowed = Boolean(cls && cls.mentor_clerk_id === clerkId)
+  }
+  if (!allowed) {
+    helpers.json(res, 403, { error: 'You cannot view submissions for this assignment' })
+    return
+  }
+
+  const submissions: StoredSubmission[] = []
+  const listed = await supabase.storage.from(ASSIGNMENTS_BUCKET).list(`submissions/${assignmentId}`, {
+    limit: 100,
+  })
+  for (const item of listed.data ?? []) {
+    const meta = await readJsonObject(supabase, `submissions/${assignmentId}/${item.name}/meta.json`)
+    if (!meta) continue
+    const type = meta.type === 'link' ? 'link' : 'file'
+    submissions.push({
+      clerkId: String(meta.clerkId ?? item.name),
+      studentName: String(meta.studentName ?? 'Student'),
+      submittedAt: String(meta.submittedAt ?? ''),
+      note: typeof meta.note === 'string' ? meta.note : '',
+      type,
+      fileUrl: typeof meta.fileUrl === 'string' ? meta.fileUrl : null,
+      fileName: typeof meta.fileName === 'string' ? meta.fileName : null,
+      link: typeof meta.link === 'string' ? meta.link : null,
+    })
+  }
+
+  if (submissions.length === 0 && assignment.status === 'submitted') {
+    submissions.push({
+      clerkId: 'legacy',
+      studentName: String(assignment.submitted_by ?? 'Student'),
+      submittedAt: String(assignment.submitted_at ?? ''),
+      note: typeof assignment.student_note === 'string' ? assignment.student_note : '',
+      type: 'file',
+    })
+  }
+
+  helpers.json(res, 200, { ok: true, assignmentId, submissions })
+}
+
 export function tryHandleMentorAssignmentAssetsApi(
   path: string,
   req: IncomingMessage,
@@ -197,6 +308,13 @@ export function tryHandleMentorAssignmentAssetsApi(
   if (path === '/api/mentor/assignments/reference-images') {
     void handleReferenceImagesPost(req, res, env, helpers).catch((err) => {
       console.error('[assignment-reference-images]', err)
+      helpers.json(res, 500, { error: 'Internal server error' })
+    })
+    return true
+  }
+  if (path === '/api/mentor/assignments/submissions') {
+    void handleListSubmissions(req, res, env, helpers).catch((err) => {
+      console.error('[assignment-submissions]', err)
       helpers.json(res, 500, { error: 'Internal server error' })
     })
     return true

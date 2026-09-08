@@ -83,3 +83,38 @@ export async function uploadMentorAssignmentReferenceImages(
   }
   return urls
 }
+
+export async function fetchAssignmentSubmissions(
+  getToken: () => Promise<string | null>,
+  assignmentId: string,
+): Promise<
+  {
+    clerkId: string
+    studentName: string
+    submittedAt: string
+    note?: string
+    type: 'file' | 'link'
+    fileUrl?: string | null
+    fileName?: string | null
+    link?: string | null
+  }[]
+> {
+  const data = await authFetch(
+    `/api/mentor/assignments/submissions?assignmentId=${encodeURIComponent(assignmentId)}`,
+    getToken,
+  )
+  const rows = Array.isArray(data.submissions) ? data.submissions : []
+  return rows.map((row) => {
+    const item = row as Record<string, unknown>
+    return {
+      clerkId: String(item.clerkId ?? ''),
+      studentName: String(item.studentName ?? 'Student'),
+      submittedAt: String(item.submittedAt ?? ''),
+      note: typeof item.note === 'string' ? item.note : '',
+      type: item.type === 'link' ? 'link' : 'file',
+      fileUrl: typeof item.fileUrl === 'string' ? item.fileUrl : null,
+      fileName: typeof item.fileName === 'string' ? item.fileName : null,
+      link: typeof item.link === 'string' ? item.link : null,
+    }
+  })
+}

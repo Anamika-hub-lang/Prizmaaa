@@ -66,8 +66,10 @@ export function assignmentBelongsToMentor(
   item: MentorAssignment,
   mentorClerkId: string,
   _displayName: string,
+  ownedClassIds: ReadonlySet<string> = new Set(),
 ): boolean {
   if (item.mentorClerkId === mentorClerkId) return true
+  if (item.classId && ownedClassIds.has(item.classId)) return true
   if (item.mentorClerkId) return false
   // Legacy assignments without owner — show to current mentor until claimed.
   return true

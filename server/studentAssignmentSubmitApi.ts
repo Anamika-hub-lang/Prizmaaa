@@ -141,6 +141,7 @@ async function requireAuth(
 async function uploadAssignmentFile(
   supabase: SupabaseClient,
   assignmentId: string,
+  clerkId: string,
   fileBase64: string,
   fileName: string,
 ): Promise<{ url: string; name: string } | { error: string }> {
@@ -153,7 +154,7 @@ async function uploadAssignmentFile(
   }
 
   const safeName = sanitizeFileName(fileName || `assignment${detected.ext}`, detected.ext)
-  const path = `submissions/${assignmentId}/${Date.now()}-${safeName}`
+  const path = `submissions/${assignmentId}/${clerkId}/${Date.now()}-${safeName}`
 
   const { error: upErr } = await supabase.storage.from(ASSIGNMENTS_BUCKET).upload(path, buffer, {
     contentType: detected.contentType,
@@ -181,7 +182,8 @@ async function handleSubmitAssignment(
     return
   }
 
-  if (!(await requireAuth(req, res, env, helpers))) return
+  const clerkId = await requireAuth(req, res, env, helpers)
+  if (!clerkId) return
 
   const supabase = helpers.requireSupabaseAdmin(env)
   if (!supabase) {
@@ -219,7 +221,7 @@ async function handleSubmitAssignment(
   let submissionLink: string | null = null
 
   if (hasFile) {
-    const uploaded = await uploadAssignmentFile(supabase, assignmentId, fileBase64, fileName)
+    const uploaded = await uploadAssignmentFile(supabase, assignmentId, clerkId, fileBase64, fileName)
     if ('error' in uploaded) {
       helpers.json(res, 400, { error: uploaded.error })
       return
@@ -260,17 +262,43 @@ async function handleSubmitAssignment(
     year: 'numeric',
   })
 
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('full_name, email')
+    .eq('clerk_id', clerkId)
+    .maybeSingle()
+  const studentName =
+    (typeof profile?.full_name === 'string' && profile.full_name.trim()) ||
+    (typeof profile?.email === 'string' && profile.email.trim()) ||
+    'Student'
+
+  const meta = {
+    clerkId,
+    studentName,
+    submittedAt,
+    note: studentNote || '',
+    type: submissionType,
+    fileUrl: submissionFileUrl,
+    fileName: submissionFileName,
+    link: submissionLink,
+  }
+  const metaPath = `submissions/${assignmentId}/${clerkId}/meta.json`
+  const { error: metaErr } = await supabase.storage.from(ASSIGNMENTS_BUCKET).upload(
+    metaPath,
+    Buffer.from(JSON.stringify(meta)),
+    { contentType: 'application/json', upsert: true },
+  )
+  if (metaErr) {
+    console.error('[assignment-submit] meta', metaErr.message)
+  }
+
   const { error } = await supabase
     .from('assignments')
     .update({
       status: 'submitted',
       submitted_at: submittedAt,
       student_note: studentNote || null,
-      submitted_by: 'Student',
-      submission_type: submissionType,
-      submission_file_url: submissionFileUrl,
-      submission_file_name: submissionFileName,
-      submission_link: submissionLink,
+      submitted_by: studentName,
     })
     .eq('id', assignmentId)
 

@@ -5,7 +5,13 @@ alter table public.assignments
   add column if not exists description text not null default '';
 
 alter table public.assignments
-  add column if not exists reference_images jsonb not null default '[]'::jsonb;
+  add column if not exists class_id text;
+
+alter table public.assignments
+  add column if not exists pdf_url text;
+
+alter table public.assignments
+  add column if not exists pdf_name text;
 
 -- Same public bucket as student submissions. Mentor reference images are stored under
 -- references/{assignmentId}/... (student work stays under submissions/{assignmentId}/...).

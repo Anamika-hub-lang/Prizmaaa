@@ -72,7 +72,7 @@ type MentorContentContextValue = {
   addFreeCourse: (input: Omit<FreeCourse, 'id'>) => void
   updateFreeCourse: (id: string, patch: Partial<FreeCourse>) => void
   removeFreeCourse: (id: string) => void
-  addAssignment: (input: Omit<MentorAssignment, 'id' | 'status'> & { id?: string }) => void
+  addAssignment: (input: Omit<MentorAssignment, 'id' | 'status'> & { id?: string }) => Promise<void>
   updateAssignment: (id: string, patch: Partial<MentorAssignment>) => void
   submitAssignment: (
     id: string,
@@ -293,22 +293,27 @@ export function MentorContentProvider({ children }: { children: ReactNode }) {
   )
 
   const addAssignment = useCallback(
-    (input: Omit<MentorAssignment, 'id' | 'status'> & { id?: string }) => {
+    async (input: Omit<MentorAssignment, 'id' | 'status'> & { id?: string }) => {
       const id = input.id?.trim() || `asg-${Date.now()}`
       const optimistic: MentorAssignment = {
         ...input,
         id,
         description: input.description ?? '',
         referenceImages: input.referenceImages ?? [],
+        mentorClerkId: mentorClerkId ?? input.mentorClerkId ?? null,
         status: 'pending',
       }
       setAssignments((prev) => [...prev, optimistic])
-      insertAssignment({ ...input, id, mentorClerkId: mentorClerkId ?? undefined }).catch((e) => {
-        setSyncError(e instanceof Error ? e.message : 'Could not add assignment')
-        refresh()
-      })
+      try {
+        await insertAssignment({ ...optimistic, mentorClerkId: mentorClerkId ?? undefined })
+      } catch (e) {
+        setAssignments((prev) => prev.filter((a) => a.id !== id))
+        const message = e instanceof Error ? e.message : 'Could not add assignment'
+        setSyncError(message)
+        throw e instanceof Error ? e : new Error(message)
+      }
     },
-    [mentorClerkId, refresh],
+    [mentorClerkId],
   )
 
   const updateAssignment = useCallback(
@@ -431,8 +436,11 @@ export function MentorContentProvider({ children }: { children: ReactNode }) {
 
   const myAssignments = useMemo(() => {
     if (!mentorClerkId) return []
-    return assignments.filter((a) => assignmentBelongsToMentor(a, mentorClerkId, mentorName))
-  }, [assignments, mentorClerkId, mentorName])
+    const ownedClassIds = new Set(myClasses.map((c) => c.id))
+    return assignments.filter((a) =>
+      assignmentBelongsToMentor(a, mentorClerkId, mentorName, ownedClassIds),
+    )
+  }, [assignments, mentorClerkId, mentorName, myClasses])
 
   const myPublishedClasses = useMemo(() => myClasses.filter((c) => c.published), [myClasses])
 

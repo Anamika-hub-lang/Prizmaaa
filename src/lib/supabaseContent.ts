@@ -9,11 +9,11 @@ import {
   freeCourseToRow,
   assignmentFromRow,
   assignmentToRow,
+  assignmentInsertPayload,
+  packReferenceImagesFallback,
   type AssignmentRow,
   type ClassRow,
   type FreeCourseRow,
-  isMissingReferenceImagesColumn,
-  packReferenceImagesFallback,
 } from './supabaseMappers'
 
 const emptyContent = (): {
@@ -39,26 +39,28 @@ export async function fetchAllContent(): Promise<{
   }
 
   try {
-    const [classesRes, freeRes, asgRes] = await Promise.all([
-      supabase.from('classes').select('*').order('created_at', { ascending: true }),
-      supabase.from('free_courses').select('*').order('created_at', { ascending: true }),
-      supabase.from('assignments').select('*').order('created_at', { ascending: true }),
-    ])
+    const classesRes = await supabase.from('classes').select('*').order('created_at', { ascending: true })
+    const freeRes = await supabase.from('free_courses').select('*').order('created_at', { ascending: true })
+    const asgRes = await supabase.from('assignments').select('*').order('created_at', { ascending: true })
 
-    if (classesRes.error || freeRes.error || asgRes.error) {
-      console.warn('[Supabase] Could not load tables:', {
-        classes: classesRes.error?.message,
-        freeCourses: freeRes.error?.message,
-        assignments: asgRes.error?.message,
-      })
-      return emptyContent()
-    }
+    if (classesRes.error) console.warn('[Supabase] classes', classesRes.error.message)
+    if (freeRes.error) console.warn('[Supabase] free_courses', freeRes.error.message)
+    if (asgRes.error) console.warn('[Supabase] assignments', asgRes.error.message)
 
     const classes = (classesRes.data ?? []).map((r) => classFromRow(r as ClassRow))
     const freeCourses = (freeRes.data ?? []).map((r) => freeCourseFromRow(r as FreeCourseRow))
     const assignments = (asgRes.data ?? []).map((r) => assignmentFromRow(r as AssignmentRow))
 
-    return { classes, freeCourses, assignments, dataSource: 'supabase' }
+    if (classesRes.error && freeRes.error && asgRes.error) {
+      return emptyContent()
+    }
+
+    return {
+      classes,
+      freeCourses,
+      assignments,
+      dataSource: 'supabase',
+    }
   } catch (e) {
     console.warn('[Supabase] fetchAllContent failed', e)
     return emptyContent()
@@ -152,21 +154,15 @@ export async function insertAssignment(
     mentorClerkId: input.mentorClerkId ?? null,
   })
   if (!supabase) return id
-  const { error } = await supabase.from('assignments').insert(row)
-  if (error && isMissingReferenceImagesColumn(error)) {
-    const { reference_images, ...rest } = row
-    const urls = Array.isArray(reference_images)
-      ? reference_images.filter((item): item is string => typeof item === 'string')
-      : []
-    const fallback = {
-      ...rest,
-      img: urls.length > 0 ? packReferenceImagesFallback(urls, rest.img) : rest.img,
-    }
-    const retry = await supabase.from('assignments').insert(fallback)
+  const payload = assignmentInsertPayload(row)
+  const first = await supabase.from('assignments').insert(payload)
+  if (first.error && /class_id/i.test(first.error.message ?? '')) {
+    const { class_id: _omit, ...rest } = payload
+    const retry = await supabase.from('assignments').insert(rest)
     if (retry.error) throw retry.error
     return id
   }
-  if (error) throw error
+  if (first.error) throw first.error
   return id
 }
 
@@ -192,10 +188,6 @@ export async function submitAssignmentRow(
     student_note: patch?.studentNote?.trim() || null,
     submitted_by: 'Student',
   }
-  if (patch?.submissionType !== undefined) payload.submission_type = patch.submissionType
-  if (patch?.submissionFileUrl !== undefined) payload.submission_file_url = patch.submissionFileUrl
-  if (patch?.submissionFileName !== undefined) payload.submission_file_name = patch.submissionFileName
-  if (patch?.submissionLink !== undefined) payload.submission_link = patch.submissionLink
   const { error } = await supabase.from('assignments').update(payload).eq('id', id)
   if (error) throw error
 }
@@ -207,21 +199,13 @@ export async function updateAssignmentRow(id: string, patch: Partial<MentorAssig
   if (patch.course !== undefined) payload.course = patch.course
   if (patch.due !== undefined) payload.due = patch.due
   if (patch.img !== undefined) payload.img = patch.img
+  if (patch.referenceImages !== undefined) {
+    payload.img = packReferenceImagesFallback(patch.referenceImages, String(patch.img ?? payload.img ?? ''))
+  }
   if (patch.description !== undefined) payload.description = patch.description
-  if (patch.referenceImages !== undefined) payload.reference_images = patch.referenceImages
+  if (patch.classId !== undefined) payload.class_id = patch.classId
   if (patch.mentorClerkId !== undefined) payload.mentor_clerk_id = patch.mentorClerkId
   const { error } = await supabase.from('assignments').update(payload).eq('id', id)
-  if (error && isMissingReferenceImagesColumn(error) && patch.referenceImages !== undefined) {
-    const fallback = { ...payload }
-    delete fallback.reference_images
-    fallback.img = packReferenceImagesFallback(
-      patch.referenceImages,
-      String(patch.img ?? payload.img ?? ''),
-    )
-    const retry = await supabase.from('assignments').update(fallback).eq('id', id)
-    if (retry.error) throw retry.error
-    return
-  }
   if (error) throw error
 }
 
