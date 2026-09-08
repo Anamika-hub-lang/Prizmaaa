@@ -28,6 +28,8 @@ function typeLabel(type: string): string {
       return 'Schedule'
     case 'syllabus':
       return 'Syllabus'
+    case 'review':
+      return 'Feedback'
     default:
       return 'Update'
   }

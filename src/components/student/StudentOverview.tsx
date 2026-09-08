@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import type { LucideIcon } from 'lucide-react'
-import type { MentorAssignment } from '../../types/mentorContent'
+import type { AssignmentReviewStatus, MentorAssignment } from '../../types/mentorContent'
+import { ReviewStatusBadge } from '../assignments/ReviewStatusBadge'
 import {
   CheckCircle2,
   ClipboardList,
@@ -175,13 +176,17 @@ export function StudentOverviewCompact({ stats }: {
 
 export function AssignmentsDuePanel({
   assignments,
+  reviewByAssignment,
   max = 3,
 }: {
   assignments: MentorAssignment[]
+  /** This student's own submissions, so the mentor's decision shows instead of a plain tick. */
+  reviewByAssignment?: Map<string, { reviewStatus: AssignmentReviewStatus }>
   max?: number
 }) {
-  const due = assignments.filter((a) => a.status === 'pending').slice(0, max)
-  const submitted = assignments.filter((a) => a.status === 'submitted')
+  const hasOwnSubmission = (id: string) => Boolean(reviewByAssignment?.has(id))
+  const due = assignments.filter((a) => a.status === 'pending' && !hasOwnSubmission(a.id)).slice(0, max)
+  const submitted = assignments.filter((a) => a.status === 'submitted' || hasOwnSubmission(a.id))
   const tint = dashboardTint(3)
 
   return (
@@ -227,12 +232,20 @@ export function AssignmentsDuePanel({
         <>
           <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500 mt-5 mb-2">Recently submitted</p>
           <ul className="space-y-2">
-            {submitted.slice(0, 2).map((a) => (
-              <li key={a.id} className="flex gap-2 items-center text-sm">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span className="truncate font-medium text-[#1d1d1d]">{a.title}</span>
-              </li>
-            ))}
+            {submitted.slice(0, 2).map((a) => {
+              const mine = reviewByAssignment?.get(a.id)
+              return (
+                <li key={a.id} className="flex gap-2 items-center text-sm">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span className="truncate font-medium text-[#1d1d1d]">{a.title}</span>
+                  {mine ? (
+                    <span className="ml-auto shrink-0">
+                      <ReviewStatusBadge status={mine.reviewStatus} />
+                    </span>
+                  ) : null}
+                </li>
+              )
+            })}
           </ul>
         </>
       )}

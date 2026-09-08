@@ -204,8 +204,16 @@ export async function updateAssignmentRow(id: string, patch: Partial<MentorAssig
   }
   if (patch.description !== undefined) payload.description = patch.description
   if (patch.classId !== undefined) payload.class_id = patch.classId
+  if (patch.pdfUrl !== undefined) payload.pdf_url = patch.pdfUrl
+  if (patch.pdfName !== undefined) payload.pdf_name = patch.pdfName
   if (patch.mentorClerkId !== undefined) payload.mentor_clerk_id = patch.mentorClerkId
   const { error } = await supabase.from('assignments').update(payload).eq('id', id)
+  if (error) throw error
+}
+
+export async function deleteAssignmentRow(id: string) {
+  if (!supabase) return
+  const { error } = await supabase.from('assignments').delete().eq('id', id)
   if (error) throw error
 }
 

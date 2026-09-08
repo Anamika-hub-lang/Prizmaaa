@@ -2,15 +2,21 @@ import type { OnlineClass } from '../data/classCatalog'
 
 export type AssignmentSubmissionType = 'file' | 'link'
 
+export type AssignmentReviewStatus = 'pending' | 'approved' | 'rejected'
+
 export type AssignmentStudentSubmission = {
+  id: string
   clerkId: string
   studentName: string
   submittedAt: string
   note?: string
   type: AssignmentSubmissionType
-  fileUrl?: string
-  fileName?: string
-  link?: string
+  fileUrl?: string | null
+  fileName?: string | null
+  link?: string | null
+  reviewStatus: AssignmentReviewStatus
+  reviewNote?: string | null
+  reviewedAt?: string | null
 }
 
 export type MentorAssignment = {

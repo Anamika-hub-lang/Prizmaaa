@@ -1,61 +1,108 @@
-import { useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { CheckCircle2, ExternalLink, FileUp, Link2, Paperclip } from 'lucide-react'
+import { CheckCircle2, ExternalLink, FileUp, Link2, Paperclip, XCircle } from 'lucide-react'
 import { StudentPageHeader } from '../components/layout/StudentLayout'
 import { AppButton } from '../components/ui/AppButton'
 import { useMentorContent } from '../context/MentorContentContext'
 import { dashboardCardBorder, dashboardTint } from '../components/ui/dashboardCardStyles'
 import { AssignmentReferenceImages } from '../components/assignments/AssignmentReferenceImages'
+import { ReviewStatusBadge } from '../components/assignments/ReviewStatusBadge'
+import { useStudentSubmissions } from '../hooks/useStudentSubmissions'
 import {
   ASSIGNMENT_FILE_ACCEPT,
+  ASSIGNMENT_FILE_MAX_MB,
   isAllowedAssignmentFile,
   isHttpUrl,
 } from '../lib/studentAssignmentSubmitApi'
 import { formatSessionLabel } from '../lib/sessionSchedule'
+import type { StudentSubmissionReview } from '../lib/studentAssignmentReviewApi'
 import type { MentorAssignment } from '../types/mentorContent'
 
 type Tab = 'due' | 'submitted'
-type SubmitMode = 'file' | 'link'
 
-function SubmissionAttachment({ assignment }: { assignment: MentorAssignment }) {
-  if (assignment.submissionType === 'file' && assignment.submissionFileUrl) {
-    return (
-      <a
-        href={assignment.submissionFileUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="inline-flex items-center gap-1.5 text-sm font-semibold text-educture-orange mt-2 hover:underline"
+function SubmissionAttachment({
+  assignment,
+  mine,
+}: {
+  assignment: MentorAssignment
+  mine?: StudentSubmissionReview
+}) {
+  const fileUrl = mine?.fileUrl ?? assignment.submissionFileUrl
+  const fileName = mine?.fileName ?? assignment.submissionFileName
+  const link = mine?.link ?? assignment.submissionLink
+  if (!fileUrl && !link) return null
+  return (
+    <div className="flex flex-col gap-1">
+      {fileUrl ? (
+        <a
+          href={fileUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 text-sm font-semibold text-educture-orange mt-2 hover:underline"
+        >
+          <Paperclip className="w-4 h-4" />
+          {fileName || 'Open file'}
+          <ExternalLink className="w-3.5 h-3.5" />
+        </a>
+      ) : null}
+      {link ? (
+        <a
+          href={link}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 text-sm font-semibold text-educture-orange mt-2 hover:underline break-all"
+        >
+          <Link2 className="w-4 h-4 shrink-0" />
+          {link}
+          <ExternalLink className="w-3.5 h-3.5" />
+        </a>
+      ) : null}
+    </div>
+  )
+}
+
+/** The mentor's decision on this student's work, with the note explaining a rejection. */
+function MentorDecision({ mine }: { mine: StudentSubmissionReview }) {
+  if (mine.reviewStatus === 'pending') return null
+  const rejected = mine.reviewStatus === 'rejected'
+  return (
+    <div
+      className={`mt-3 p-3 rounded-xl border-2 ${
+        rejected ? 'bg-rose-50 border-rose-200' : 'bg-emerald-50 border-emerald-200'
+      }`}
+    >
+      <p
+        className={`text-sm font-bold flex items-center gap-2 ${
+          rejected ? 'text-rose-800' : 'text-emerald-800'
+        }`}
       >
-        <Paperclip className="w-4 h-4" />
-        {assignment.submissionFileName || 'Open file'}
-        <ExternalLink className="w-3.5 h-3.5" />
-      </a>
-    )
-  }
-  if (assignment.submissionType === 'link' && assignment.submissionLink) {
-    return (
-      <a
-        href={assignment.submissionLink}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="inline-flex items-center gap-1.5 text-sm font-semibold text-educture-orange mt-2 hover:underline break-all"
-      >
-        <Link2 className="w-4 h-4 shrink-0" />
-        {assignment.submissionLink}
-        <ExternalLink className="w-3.5 h-3.5 shrink-0" />
-      </a>
-    )
-  }
-  return null
+        {rejected ? <XCircle className="w-4 h-4" /> : <CheckCircle2 className="w-4 h-4" />}
+        {rejected ? 'Mentor asked for changes' : 'Approved by your mentor'}
+      </p>
+      {mine.reviewNote ? (
+        <p className="text-sm text-gray-800 mt-2 whitespace-pre-wrap">{mine.reviewNote}</p>
+      ) : null}
+      {mine.reviewedAt ? (
+        <p className="text-xs text-gray-600 mt-2">
+          Reviewed {formatSessionLabel(mine.reviewedAt)}
+        </p>
+      ) : null}
+      {rejected ? (
+        <p className="text-xs text-gray-600 mt-1">
+          Fix it and submit again from the Due tab.
+        </p>
+      ) : null}
+    </div>
+  )
 }
 
 export function StudentAssignmentsPage() {
   const { assignments, submitAssignment } = useMentorContent()
+  const { byAssignment, refresh: refreshSubmissions } = useStudentSubmissions()
   const [searchParams] = useSearchParams()
   const initialTab = searchParams.get('tab') === 'submitted' ? 'submitted' : 'due'
   const [tab, setTab] = useState<Tab>(initialTab)
   const [submittingId, setSubmittingId] = useState<string | null>(null)
-  const [submitMode, setSubmitMode] = useState<SubmitMode>('file')
   const [note, setNote] = useState('')
   const [submissionLink, setSubmissionLink] = useState('')
   const [file, setFile] = useState<File | null>(null)
@@ -63,12 +110,20 @@ export function StudentAssignmentsPage() {
   const [busy, setBusy] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const pending = assignments.filter((a) => a.status === 'pending')
-  const submitted = assignments.filter((a) => a.status === 'submitted')
+  // A record in `byAssignment` means this student personally submitted; the assignment-level
+  // `status` is shared across the class, so it only decides the legacy case.
+  const { pending, submitted } = useMemo(() => {
+    const pendingList: MentorAssignment[] = []
+    const submittedList: MentorAssignment[] = []
+    for (const a of assignments) {
+      if (byAssignment.has(a.id) || a.status === 'submitted') submittedList.push(a)
+      else pendingList.push(a)
+    }
+    return { pending: pendingList, submitted: submittedList }
+  }, [assignments, byAssignment])
 
   const resetForm = () => {
     setSubmittingId(null)
-    setSubmitMode('file')
     setNote('')
     setSubmissionLink('')
     setFile(null)
@@ -78,21 +133,23 @@ export function StudentAssignmentsPage() {
   }
 
   const handleSubmit = async (id: string) => {
-    if (submitMode === 'file') {
-      if (!file) {
-        setFormError('Choose a file to upload.')
-        return
-      }
+    const link = submissionLink.trim()
+    if (file) {
       if (!isAllowedAssignmentFile(file)) {
-        setFormError('Upload a PDF, PNG, JPEG, WebP, DOC, or DOCX file.')
+        setFormError('That file type is not allowed. Use a zip, PDF, image, Office file, or similar.')
         return
       }
-      if (file.size > 8 * 1024 * 1024) {
-        setFormError('File must be 8 MB or smaller.')
+      if (file.size > ASSIGNMENT_FILE_MAX_MB * 1024 * 1024) {
+        setFormError(`File must be ${ASSIGNMENT_FILE_MAX_MB} MB or smaller.`)
         return
       }
-    } else if (!isHttpUrl(submissionLink)) {
-      setFormError('Enter a valid http or https link.')
+    }
+    if (link && !isHttpUrl(link)) {
+      setFormError('Enter a valid http or https link, or leave it blank.')
+      return
+    }
+    if (!file && !link && !note.trim()) {
+      setFormError('Add a file, a link, or a note — whichever you want to send.')
       return
     }
 
@@ -101,10 +158,11 @@ export function StudentAssignmentsPage() {
     try {
       await submitAssignment(id, {
         note,
-        file: submitMode === 'file' ? file : null,
-        link: submitMode === 'link' ? submissionLink.trim() : undefined,
+        file,
+        link: link || undefined,
       })
       resetForm()
+      await refreshSubmissions()
       setTab('submitted')
     } catch (e) {
       setBusy(false)
@@ -115,11 +173,6 @@ export function StudentAssignmentsPage() {
   const tabs: { id: Tab; label: string; count: number }[] = [
     { id: 'due', label: 'Due', count: pending.length },
     { id: 'submitted', label: 'Submitted', count: submitted.length },
-  ]
-
-  const modeTabs: { id: SubmitMode; label: string }[] = [
-    { id: 'file', label: 'File' },
-    { id: 'link', label: 'Link' },
   ]
 
   return (
@@ -200,76 +253,52 @@ export function StudentAssignmentsPage() {
                       </div>
                       {submittingId === a.id ? (
                         <div className="w-full sm:w-80 space-y-3">
-                          <div className="flex gap-1 p-1 rounded-full bg-white/80 border-2 border-white">
-                            {modeTabs.map((mode) => {
-                              const active = submitMode === mode.id
-                              return (
-                                <button
-                                  key={mode.id}
-                                  type="button"
-                                  onClick={() => {
-                                    setSubmitMode(mode.id)
-                                    setFormError(null)
-                                  }}
-                                  className={`flex-1 px-3 py-1.5 rounded-full text-xs font-semibold ${
-                                    active
-                                      ? 'bg-educture-orange text-white'
-                                      : 'text-gray-600 hover:text-[#1d1d1d]'
-                                  }`}
-                                >
-                                  {mode.label}
-                                </button>
-                              )
-                            })}
+                          <div className="space-y-2">
+                            <label className="text-xs font-semibold text-gray-600">File (optional)</label>
+                            <input
+                              ref={fileInputRef}
+                              type="file"
+                              accept={ASSIGNMENT_FILE_ACCEPT}
+                              className="sr-only"
+                              onChange={(e) => {
+                                const next = e.target.files?.[0] ?? null
+                                setFile(next)
+                                setFormError(null)
+                              }}
+                            />
+                            <AppButton
+                              size="sm"
+                              variant="outlineOrange"
+                              className="w-full"
+                              onClick={() => fileInputRef.current?.click()}
+                            >
+                              <FileUp className="w-4 h-4" />
+                              {file ? 'Change file' : 'Choose file'}
+                            </AppButton>
+                            {file ? (
+                              <p className="text-xs text-gray-700 truncate" title={file.name}>
+                                {file.name}
+                              </p>
+                            ) : (
+                              <p className="text-xs text-gray-500">
+                                Zip, PDF, image, Word, or other common files — {ASSIGNMENT_FILE_MAX_MB} MB max
+                              </p>
+                            )}
                           </div>
-
-                          {submitMode === 'file' ? (
-                            <div className="space-y-2">
-                              <input
-                                ref={fileInputRef}
-                                type="file"
-                                accept={ASSIGNMENT_FILE_ACCEPT}
-                                className="sr-only"
-                                onChange={(e) => {
-                                  const next = e.target.files?.[0] ?? null
-                                  setFile(next)
-                                  setFormError(null)
-                                }}
-                              />
-                              <AppButton
-                                size="sm"
-                                variant="outlineOrange"
-                                className="w-full"
-                                onClick={() => fileInputRef.current?.click()}
-                              >
-                                <FileUp className="w-4 h-4" />
-                                {file ? 'Change file' : 'Choose file'}
-                              </AppButton>
-                              {file ? (
-                                <p className="text-xs text-gray-700 truncate" title={file.name}>
-                                  {file.name}
-                                </p>
-                              ) : (
-                                <p className="text-xs text-gray-500">PDF, image, or Word — 8 MB max</p>
-                              )}
-                            </div>
-                          ) : (
-                            <div className="space-y-1">
-                              <label className="text-xs font-semibold text-gray-600">Submission link</label>
-                              <input
-                                type="url"
-                                value={submissionLink}
-                                onChange={(e) => {
-                                  setSubmissionLink(e.target.value)
-                                  setFormError(null)
-                                }}
-                                placeholder="https://"
-                                className="w-full px-3 py-2 rounded-xl border-2 border-orange-200 bg-white text-sm outline-none focus:border-educture-orange"
-                              />
-                            </div>
-                          )}
-
-                          <label className="text-xs font-semibold text-gray-600">Note for mentor (optional)</label>
+                          <div className="space-y-1">
+                            <label className="text-xs font-semibold text-gray-600">Link (optional)</label>
+                            <input
+                              type="url"
+                              value={submissionLink}
+                              onChange={(e) => {
+                                setSubmissionLink(e.target.value)
+                                setFormError(null)
+                              }}
+                              placeholder="https://"
+                              className="w-full px-3 py-2 rounded-xl border-2 border-orange-200 bg-white text-sm outline-none focus:border-educture-orange"
+                            />
+                          </div>
+                          <label className="text-xs font-semibold text-gray-600">Note (optional)</label>
                           <textarea
                             value={note}
                             onChange={(e) => setNote(e.target.value)}
@@ -320,6 +349,11 @@ export function StudentAssignmentsPage() {
               <div className="space-y-4">
                 {submitted.map((a, i) => {
                   const tint = dashboardTint(i + 1)
+                  const mine = byAssignment.get(a.id)
+                  const submittedLabel = mine?.submittedAt
+                    ? formatSessionLabel(mine.submittedAt)
+                    : (a.submittedAt ?? formatSessionLabel(a.due))
+                  const ownNote = mine?.note || a.studentNote
                   return (
                     <article
                       key={a.id}
@@ -329,24 +363,27 @@ export function StudentAssignmentsPage() {
                       <div className="flex-1 min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
                           <p className="font-bold text-[#1d1d1d]">{a.title}</p>
-                          <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded-full border-2 border-emerald-200">
-                            <CheckCircle2 className="w-3 h-3" /> Submitted
-                          </span>
+                          {mine ? (
+                            <ReviewStatusBadge status={mine.reviewStatus} />
+                          ) : (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded-full border-2 border-emerald-200">
+                              <CheckCircle2 className="w-3 h-3" /> Submitted
+                            </span>
+                          )}
                         </div>
                         <p className="text-sm text-educture-orange">{a.course}</p>
-                        <p className="text-xs text-gray-600 mt-1">
-                          Submitted on {a.submittedAt ?? formatSessionLabel(a.due)}
-                        </p>
+                        <p className="text-xs text-gray-600 mt-1">Submitted on {submittedLabel}</p>
                         {a.description ? (
                           <p className="text-sm text-gray-700 mt-2 whitespace-pre-wrap">{a.description}</p>
                         ) : null}
                         <AssignmentReferenceImages urls={a.referenceImages ?? []} />
-                        <SubmissionAttachment assignment={a} />
-                        {a.studentNote && (
+                        <SubmissionAttachment assignment={a} mine={mine} />
+                        {ownNote && (
                           <p className="text-sm text-gray-700 mt-2 p-3 rounded-xl bg-white/70 border-2 border-white">
-                            {a.studentNote}
+                            {ownNote}
                           </p>
                         )}
+                        {mine ? <MentorDecision mine={mine} /> : null}
                       </div>
                     </article>
                   )

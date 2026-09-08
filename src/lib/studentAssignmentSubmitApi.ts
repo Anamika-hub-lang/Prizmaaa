@@ -1,6 +1,31 @@
-const MAX_FILE_BYTES = 8 * 1024 * 1024
+const MAX_FILE_BYTES = 20 * 1024 * 1024
 
-const ALLOWED_EXTENSIONS = new Set(['.pdf', '.png', '.jpg', '.jpeg', '.webp', '.doc', '.docx'])
+const BLOCKED_EXTENSIONS = new Set([
+  '.exe',
+  '.bat',
+  '.cmd',
+  '.com',
+  '.scr',
+  '.pif',
+  '.msi',
+  '.dll',
+  '.js',
+  '.mjs',
+  '.cjs',
+  '.html',
+  '.htm',
+  '.php',
+  '.sh',
+  '.bash',
+  '.ps1',
+  '.vbs',
+  '.jar',
+  '.apk',
+  '.app',
+  '.dmg',
+  '.iso',
+  '.svg',
+])
 
 async function authFetch(path: string, getToken: () => Promise<string | null>, init?: RequestInit) {
   const token = await getToken()
@@ -43,7 +68,9 @@ function fileExtension(name: string): string {
 }
 
 export function isAllowedAssignmentFile(file: File): boolean {
-  return ALLOWED_EXTENSIONS.has(fileExtension(file.name))
+  const ext = fileExtension(file.name)
+  if (!ext) return true
+  return !BLOCKED_EXTENSIONS.has(ext)
 }
 
 export function isHttpUrl(value: string): boolean {
@@ -67,11 +94,11 @@ export async function submitStudentAssignment(
   let fileBase64: string | undefined
   let fileName: string | undefined
   if (input.file) {
-    if (input.file.size > MAX_FILE_BYTES) {
-      throw new Error('File must be 8 MB or smaller')
-    }
     if (!isAllowedAssignmentFile(input.file)) {
-      throw new Error('Upload a PDF, PNG, JPEG, WebP, DOC, or DOCX file')
+      throw new Error('That file type is not allowed. Use a zip, PDF, image, Office file, or similar.')
+    }
+    if (input.file.size > MAX_FILE_BYTES) {
+      throw new Error('File must be 20 MB or smaller')
     }
     fileBase64 = await fileToBase64(input.file)
     fileName = input.file.name
@@ -89,5 +116,6 @@ export async function submitStudentAssignment(
   })
 }
 
+export const ASSIGNMENT_FILE_MAX_MB = 20
 export const ASSIGNMENT_FILE_ACCEPT =
-  '.pdf,.png,.jpg,.jpeg,.webp,.doc,.docx,application/pdf,image/png,image/jpeg,image/webp,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+  '.zip,.rar,.7z,.pdf,.png,.jpg,.jpeg,.webp,.gif,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.csv,.rtf,.odt,.odp,.ods,.mp4,.mov,application/zip,application/pdf,image/*'

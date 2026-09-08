@@ -36,6 +36,14 @@ function isMissingColumn(error: { code?: string; message?: string } | null | und
   return msg.includes('attachment_url') || msg.includes('attachment_name') || msg.includes('column')
 }
 
+/**
+ * Broadcast notifications leave `target_clerk_id` null; review decisions set it to one student.
+ * Both must reach this student, so match either.
+ */
+function targetFilter(clerkId: string): string {
+  return `target_clerk_id.is.null,target_clerk_id.eq.${clerkId}`
+}
+
 function sanitizeFileName(name: string): string {
   const base = name.replace(/[^a-zA-Z0-9._-]+/g, '_').replace(/_+/g, '_').slice(0, 80)
   return base.toLowerCase().endsWith('.pdf') ? base : `${base || 'syllabus'}.pdf`
@@ -300,8 +308,11 @@ async function handleStudentList(
 
   let { data: rows, error } = await supabase
     .from('class_notifications')
-    .select('id, class_id, type, title, body, link_path, attachment_url, attachment_name, created_at')
+    .select(
+      'id, class_id, type, title, body, link_path, attachment_url, attachment_name, created_at, target_clerk_id',
+    )
     .in('class_id', classIds)
+    .or(targetFilter(clerkId))
     .order('created_at', { ascending: false })
     .limit(50)
 
@@ -412,11 +423,21 @@ async function handleMarkRead(
       ),
     ]
     if (classIds.length > 0) {
-      const { data: notes } = await supabase
+      let { data: notes, error: notesErr } = await supabase
         .from('class_notifications')
         .select('id')
         .in('class_id', classIds)
+        .or(targetFilter(clerkId))
         .limit(100)
+      if (notesErr && isMissingColumn(notesErr)) {
+        const fallback = await supabase
+          .from('class_notifications')
+          .select('id')
+          .in('class_id', classIds)
+          .limit(100)
+        notes = fallback.data
+        notesErr = fallback.error
+      }
       ids = (notes ?? []).map((n) => String(n.id))
     }
   } else if (Array.isArray(body.ids)) {

@@ -1,4 +1,4 @@
-export type ClassNotificationType = 'assignment' | 'schedule' | 'syllabus' | 'update'
+export type ClassNotificationType = 'assignment' | 'schedule' | 'syllabus' | 'update' | 'review'
 
 export type ClassNotification = {
   id: string

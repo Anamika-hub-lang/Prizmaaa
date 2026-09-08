@@ -33,6 +33,7 @@ import {
   insertAssignment,
   submitAssignmentRow,
   updateAssignmentRow,
+  deleteAssignmentRow,
   subscribeContentRealtime,
 } from '../lib/supabaseContent'
 import {
@@ -74,6 +75,7 @@ type MentorContentContextValue = {
   removeFreeCourse: (id: string) => void
   addAssignment: (input: Omit<MentorAssignment, 'id' | 'status'> & { id?: string }) => Promise<void>
   updateAssignment: (id: string, patch: Partial<MentorAssignment>) => void
+  removeAssignment: (id: string) => Promise<void>
   submitAssignment: (
     id: string,
     input?: { note?: string; file?: File | null; link?: string },
@@ -327,6 +329,22 @@ export function MentorContentProvider({ children }: { children: ReactNode }) {
     [refresh],
   )
 
+  const removeAssignment = useCallback(
+    async (id: string) => {
+      const previous = assignments
+      setAssignments((prev) => prev.filter((a) => a.id !== id))
+      try {
+        await deleteAssignmentRow(id)
+      } catch (e) {
+        setAssignments(previous)
+        const message = e instanceof Error ? e.message : 'Could not delete assignment'
+        setSyncError(message)
+        throw e instanceof Error ? e : new Error(message)
+      }
+    },
+    [assignments],
+  )
+
   const submitAssignment = useCallback(
     async (id: string, input?: { note?: string; file?: File | null; link?: string }) => {
       const note = input?.note?.trim() || undefined
@@ -358,29 +376,48 @@ export function MentorContentProvider({ children }: { children: ReactNode }) {
       )
 
       if (usingLocalData || !isSupabaseConfigured) {
-        if (!file && link) {
-          await submitAssignmentRow(id, {
-            studentNote: note,
-            submissionType: 'link',
-            submissionLink: link,
-            submissionFileUrl: null,
-            submissionFileName: null,
-          }).catch((e) => {
-            setSyncError(e instanceof Error ? e.message : 'Could not submit assignment')
-            refresh()
-          })
-        }
+        await submitAssignmentRow(id, {
+          studentNote: note,
+          submissionType: file ? 'file' : link ? 'link' : undefined,
+          submissionLink: link ?? null,
+          submissionFileUrl: null,
+          submissionFileName: file?.name ?? null,
+        }).catch((e) => {
+          setSyncError(e instanceof Error ? e.message : 'Could not submit assignment')
+          refresh()
+        })
         return
       }
 
       try {
-        await submitStudentAssignment(getToken, {
+        const result = await submitStudentAssignment(getToken, {
           assignmentId: id,
           studentNote: note,
           file,
           submissionLink: link,
         })
         await refresh()
+        setAssignments((prev) =>
+          prev.map((a) =>
+            a.id === id
+              ? {
+                  ...a,
+                  submissionType:
+                    result.submissionType === 'file' || result.submissionType === 'link'
+                      ? result.submissionType
+                      : a.submissionType,
+                  submissionFileUrl:
+                    typeof result.submissionFileUrl === 'string' ? result.submissionFileUrl : a.submissionFileUrl,
+                  submissionFileName:
+                    typeof result.submissionFileName === 'string'
+                      ? result.submissionFileName
+                      : a.submissionFileName,
+                  submissionLink:
+                    typeof result.submissionLink === 'string' ? result.submissionLink : a.submissionLink,
+                }
+              : a,
+          ),
+        )
       } catch (e) {
         setSyncError(e instanceof Error ? e.message : 'Could not submit assignment')
         await refresh()
@@ -486,6 +523,7 @@ export function MentorContentProvider({ children }: { children: ReactNode }) {
       removeFreeCourse,
       addAssignment,
       updateAssignment,
+      removeAssignment,
       submitAssignment,
       getClassById,
       getClassesByCategory,
@@ -515,6 +553,7 @@ export function MentorContentProvider({ children }: { children: ReactNode }) {
       removeFreeCourse,
       addAssignment,
       updateAssignment,
+      removeAssignment,
       submitAssignment,
       getClassById,
       getClassesByCategory,

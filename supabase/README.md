@@ -125,7 +125,15 @@ Run `supabase/assignments-storage.sql` in the SQL Editor (after `schema.sql`).
 
 This adds `submission_type`, `submission_file_url`, `submission_file_name`, and `submission_link` on `assignments`, plus a public `assignments` bucket. Students upload a file or paste a link on `/student/assignments`. Mentors open the file or URL from Assignments → Student submitted.
 
-## 13. Security note
+## 13. Assignment submissions & mentor review
+
+Run `supabase/assignment-submissions.sql` in the SQL Editor (after `assignments-storage.sql`).
+
+Creates `assignment_submissions` — one row per student per assignment, holding the file/link, note, timestamp, and the mentor's `review_status` (`pending` / `approved` / `rejected`) plus `review_note`. Mentors review each submission at `/teacher/assignments/[assignmentId]/[submissionId]`; students see the decision and note on `/student/assignments`.
+
+Also adds `target_clerk_id` on `class_notifications` and a `review` notification type, so a review decision notifies only the student it belongs to. Older submissions stored as `meta.json` still show up read-only.
+
+## 14. Security note
 
 Current policies allow anyone with the anon key to read/write content tables. Privileged tables (uploads, counsellor profiles) deny anon select; use the service role from the API. Before launch, tighten RLS further.
 

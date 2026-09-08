@@ -1,3 +1,5 @@
+import type { AssignmentReviewStatus, AssignmentStudentSubmission } from '../types/mentorContent'
+
 const MAX_FILE_BYTES = 8 * 1024 * 1024
 const ALLOWED_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp'])
 const ALLOWED_EXTENSIONS = new Set(['.png', '.jpg', '.jpeg', '.webp'])
@@ -84,37 +86,66 @@ export async function uploadMentorAssignmentReferenceImages(
   return urls
 }
 
+export function parseSubmission(raw: unknown): AssignmentStudentSubmission {
+  const item = (raw ?? {}) as Record<string, unknown>
+  const status = item.reviewStatus
+  return {
+    id: String(item.id ?? ''),
+    clerkId: String(item.clerkId ?? ''),
+    studentName: String(item.studentName ?? 'Student'),
+    submittedAt: String(item.submittedAt ?? ''),
+    note: typeof item.note === 'string' ? item.note : '',
+    type: item.type === 'link' ? 'link' : 'file',
+    fileUrl: typeof item.fileUrl === 'string' ? item.fileUrl : null,
+    fileName: typeof item.fileName === 'string' ? item.fileName : null,
+    link: typeof item.link === 'string' ? item.link : null,
+    reviewStatus: status === 'approved' || status === 'rejected' ? status : 'pending',
+    reviewNote: typeof item.reviewNote === 'string' ? item.reviewNote : null,
+    reviewedAt: typeof item.reviewedAt === 'string' ? item.reviewedAt : null,
+  }
+}
+
+/** Submissions stored before the assignment_submissions table existed. Read-only. */
+export function isLegacySubmissionId(id: string): boolean {
+  return id.startsWith('legacy:')
+}
+
 export async function fetchAssignmentSubmissions(
   getToken: () => Promise<string | null>,
   assignmentId: string,
-): Promise<
-  {
-    clerkId: string
-    studentName: string
-    submittedAt: string
-    note?: string
-    type: 'file' | 'link'
-    fileUrl?: string | null
-    fileName?: string | null
-    link?: string | null
-  }[]
-> {
+): Promise<{ submissions: AssignmentStudentSubmission[]; enrolledCount: number }> {
   const data = await authFetch(
     `/api/mentor/assignments/submissions?assignmentId=${encodeURIComponent(assignmentId)}`,
     getToken,
   )
   const rows = Array.isArray(data.submissions) ? data.submissions : []
-  return rows.map((row) => {
-    const item = row as Record<string, unknown>
-    return {
-      clerkId: String(item.clerkId ?? ''),
-      studentName: String(item.studentName ?? 'Student'),
-      submittedAt: String(item.submittedAt ?? ''),
-      note: typeof item.note === 'string' ? item.note : '',
-      type: item.type === 'link' ? 'link' : 'file',
-      fileUrl: typeof item.fileUrl === 'string' ? item.fileUrl : null,
-      fileName: typeof item.fileName === 'string' ? item.fileName : null,
-      link: typeof item.link === 'string' ? item.link : null,
-    }
+  return {
+    submissions: rows.map(parseSubmission),
+    enrolledCount: Number(data.enrolledCount ?? 0),
+  }
+}
+
+export async function reviewAssignmentSubmission(
+  getToken: () => Promise<string | null>,
+  input: {
+    assignmentId: string
+    submissionId: string
+    decision: Exclude<AssignmentReviewStatus, 'pending'>
+    note?: string
+  },
+): Promise<AssignmentStudentSubmission> {
+  const note = input.note?.trim() ?? ''
+  if (input.decision === 'rejected' && !note) {
+    throw new Error('Add a note explaining why you are rejecting this work')
+  }
+  const data = await authFetch('/api/mentor/assignments/submissions/review', getToken, {
+    method: 'POST',
+    body: JSON.stringify({
+      assignmentId: input.assignmentId,
+      submissionId: input.submissionId,
+      decision: input.decision,
+      note,
+    }),
   })
+  return parseSubmission(data.submission)
 }

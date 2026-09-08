@@ -15,9 +15,66 @@ type Helpers = {
 }
 
 const ASSIGNMENTS_BUCKET = 'assignments'
-const MAX_FILE_BYTES = 8 * 1024 * 1024
+const MAX_FILE_BYTES = 20 * 1024 * 1024
 const MISSING_SQL =
   'Assignment storage is not set up. Run supabase/assignments-storage.sql in the Supabase SQL Editor.'
+const SUBMISSIONS_MISSING_SQL =
+  'Assignment submissions are not set up. Run supabase/assignment-submissions.sql in the Supabase SQL Editor.'
+
+const BLOCKED_EXTENSIONS = new Set([
+  '.exe',
+  '.bat',
+  '.cmd',
+  '.com',
+  '.scr',
+  '.pif',
+  '.msi',
+  '.dll',
+  '.js',
+  '.mjs',
+  '.cjs',
+  '.html',
+  '.htm',
+  '.php',
+  '.sh',
+  '.bash',
+  '.ps1',
+  '.vbs',
+  '.jar',
+  '.apk',
+  '.app',
+  '.dmg',
+  '.iso',
+  '.svg',
+])
+
+const EXT_CONTENT_TYPE: Record<string, string> = {
+  '.pdf': 'application/pdf',
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.webp': 'image/webp',
+  '.gif': 'image/gif',
+  '.zip': 'application/zip',
+  '.rar': 'application/vnd.rar',
+  '.7z': 'application/x-7z-compressed',
+  '.doc': 'application/msword',
+  '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  '.ppt': 'application/vnd.ms-powerpoint',
+  '.pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  '.xls': 'application/vnd.ms-excel',
+  '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  '.txt': 'text/plain',
+  '.csv': 'text/csv',
+  '.rtf': 'application/rtf',
+  '.odt': 'application/vnd.oasis.opendocument.text',
+  '.odp': 'application/vnd.oasis.opendocument.presentation',
+  '.ods': 'application/vnd.oasis.opendocument.spreadsheet',
+  '.mp4': 'video/mp4',
+  '.mov': 'video/quicktime',
+  '.mp3': 'audio/mpeg',
+  '.wav': 'audio/wav',
+}
 
 type DetectedFile = {
   contentType: string
@@ -82,32 +139,65 @@ function detectImageType(buffer: Buffer): 'image/png' | 'image/jpeg' | 'image/we
   return null
 }
 
-function detectAssignmentFile(buffer: Buffer, fileName: string): DetectedFile | null {
-  const lower = fileName.toLowerCase()
+function fileExtension(name: string): string {
+  const idx = name.lastIndexOf('.')
+  return idx >= 0 ? name.slice(idx).toLowerCase() : ''
+}
+
+function isZipBuffer(buffer: Buffer): boolean {
+  return (
+    buffer.length >= 4 &&
+    buffer[0] === 0x50 &&
+    buffer[1] === 0x4b &&
+    (buffer[2] === 0x03 || buffer[2] === 0x05 || buffer[2] === 0x07)
+  )
+}
+
+function detectAssignmentFile(buffer: Buffer, fileName: string): DetectedFile | { error: string } {
+  const ext = fileExtension(fileName)
+  if (ext && BLOCKED_EXTENSIONS.has(ext)) {
+    return { error: 'That file type is not allowed. Use a zip, PDF, image, Office file, or similar.' }
+  }
+
   if (buffer.subarray(0, 4).toString('utf8') === '%PDF') {
     return { contentType: 'application/pdf', ext: '.pdf' }
   }
   const image = detectImageType(buffer)
   if (image === 'image/png') return { contentType: image, ext: '.png' }
-  if (image === 'image/jpeg') return { contentType: image, ext: '.jpg' }
+  if (image === 'image/jpeg') return { contentType: image, ext: ext === '.jpeg' ? '.jpeg' : '.jpg' }
   if (image === 'image/webp') return { contentType: image, ext: '.webp' }
+  if (
+    buffer.length >= 6 &&
+    buffer[0] === 0x47 &&
+    buffer[1] === 0x49 &&
+    buffer[2] === 0x46 &&
+    buffer[3] === 0x38
+  ) {
+    return { contentType: 'image/gif', ext: '.gif' }
+  }
+
   const ole =
     buffer.length >= 8 && buffer[0] === 0xd0 && buffer[1] === 0xcf && buffer[2] === 0x11 && buffer[3] === 0xe0
-  if (ole && lower.endsWith('.doc')) {
-    return { contentType: 'application/msword', ext: '.doc' }
+  if (ole) {
+    if (ext === '.doc') return { contentType: EXT_CONTENT_TYPE['.doc']!, ext }
+    if (ext === '.ppt') return { contentType: EXT_CONTENT_TYPE['.ppt']!, ext }
+    if (ext === '.xls') return { contentType: EXT_CONTENT_TYPE['.xls']!, ext }
+    return { contentType: 'application/x-ole-storage', ext: ext || '.doc' }
   }
-  const zip =
-    buffer.length >= 4 &&
-    buffer[0] === 0x50 &&
-    buffer[1] === 0x4b &&
-    (buffer[2] === 0x03 || buffer[2] === 0x05 || buffer[2] === 0x07)
-  if (zip && lower.endsWith('.docx')) {
-    return {
-      contentType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      ext: '.docx',
-    }
+
+  if (isZipBuffer(buffer)) {
+    const zipExts = new Set(['.zip', '.docx', '.xlsx', '.pptx', '.odt', '.odp', '.ods'])
+    const zipExt = zipExts.has(ext) ? ext : '.zip'
+    return { contentType: EXT_CONTENT_TYPE[zipExt] ?? 'application/zip', ext: zipExt }
   }
-  return null
+
+  if (ext && EXT_CONTENT_TYPE[ext]) {
+    return { contentType: EXT_CONTENT_TYPE[ext]!, ext }
+  }
+  if (ext) {
+    return { contentType: 'application/octet-stream', ext }
+  }
+  return { contentType: 'application/octet-stream', ext: '.bin' }
 }
 
 function parseHttpUrl(raw: string): string | null {
@@ -147,10 +237,10 @@ async function uploadAssignmentFile(
 ): Promise<{ url: string; name: string } | { error: string }> {
   const buffer = decodeBase64Payload(fileBase64)
   if (!buffer) return { error: 'Invalid file data' }
-  if (buffer.length > MAX_FILE_BYTES) return { error: 'File must be 8 MB or smaller' }
+  if (buffer.length > MAX_FILE_BYTES) return { error: 'File must be 20 MB or smaller' }
   const detected = detectAssignmentFile(buffer, fileName)
-  if (!detected) {
-    return { error: 'Upload a PDF, PNG, JPEG, WebP, DOC, or DOCX file' }
+  if ('error' in detected) {
+    return { error: detected.error }
   }
 
   const safeName = sanitizeFileName(fileName || `assignment${detected.ext}`, detected.ext)
@@ -210,8 +300,9 @@ async function handleSubmitAssignment(
 
   const hasFile = Boolean(fileBase64 && fileName)
   const hasLink = Boolean(submissionLinkRaw)
-  if (!hasFile && !hasLink) {
-    helpers.json(res, 400, { error: 'Upload a file or paste a link' })
+  const hasNote = Boolean(studentNote)
+  if (!hasFile && !hasLink && !hasNote) {
+    helpers.json(res, 400, { error: 'Add a file, a link, or a note' })
     return
   }
 
@@ -228,7 +319,8 @@ async function handleSubmitAssignment(
     }
     submissionFileUrl = uploaded.url
     submissionFileName = uploaded.name
-  } else {
+  }
+  if (hasLink) {
     const parsed = parseHttpUrl(submissionLinkRaw)
     if (!parsed) {
       helpers.json(res, 400, { error: 'Enter a valid http or https link' })
@@ -292,6 +384,39 @@ async function handleSubmitAssignment(
     console.error('[assignment-submit] meta', metaErr.message)
   }
 
+  const { data: submissionRow, error: submissionErr } = await supabase
+    .from('assignment_submissions')
+    .upsert(
+      {
+        assignment_id: assignmentId,
+        clerk_id: clerkId,
+        student_name: studentName,
+        note: studentNote || '',
+        submission_type: submissionType,
+        file_url: submissionFileUrl,
+        file_name: submissionFileName,
+        link: submissionLink,
+        submitted_at: new Date().toISOString(),
+        review_status: 'pending',
+        review_note: null,
+        reviewed_at: null,
+        reviewed_by_clerk_id: null,
+      },
+      { onConflict: 'assignment_id,clerk_id' },
+    )
+    .select('id')
+    .maybeSingle()
+
+  if (submissionErr) {
+    // Before the migration runs there is no review record to write, but the meta.json blob and
+    // the assignments row still carry the submission, so let the student through.
+    if (!isMissingTable(submissionErr)) {
+      helpers.json(res, 500, { error: submissionErr.message || 'Could not save submission' })
+      return
+    }
+    console.error('[assignment-submit]', SUBMISSIONS_MISSING_SQL)
+  }
+
   const { error } = await supabase
     .from('assignments')
     .update({
@@ -314,6 +439,7 @@ async function handleSubmitAssignment(
   helpers.json(res, 200, {
     ok: true,
     assignmentId,
+    submissionId: submissionRow?.id ? String(submissionRow.id) : null,
     submittedAt,
     submissionType,
     submissionFileUrl,
